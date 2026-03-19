@@ -158,31 +158,32 @@ const MAPS = {
   },
   crossroads:{
     id:"crossroads",
-    name:"Pixel Perk",
-    desc:"Retro game-cafe layout with neon accents and trickier crossings.",
+    name:"Central Perks",
+    desc:"Sky-high couch cafe with city windows up top and the order line at the bottom.",
     raw:[
-      "WSSSSSSSSSSSSSSSW",
-      "W................W",
-      "E....CC..CC....A.W",
-      "e..U......I....B.W",
-      "M....CC..CC....T.W",
-      "m..F......R....H.W",
-      "Q........X.......W",
       "WWWWWWWWWWWWWWWWWW",
+      "WE..CC....CC....AW",
+      "We..............BW",
+      "WM..CC....CC....TW",
+      "Wm..............HW",
+      "WF..U.I..R..X...QW",
+      "W................W",
+      "WSSSSSSSSSSSSSSSSW",
     ],
     theme:{
-      deco:"pixelperk",
-      top:"#2d1536",
-      panel:"#32194a",
-      trim:"#62e6d6",
-      text:"#f9f3ff",
-      accent:"#ff8f5a",
-      wood:"#744531",
-      shelf:"#5f2d66",
-      lamp:"#ffb36c",
-      logo:"PIXEL PERK",
-      subtitle:"BREWS + BONUS XP",
-      glow:"98,230,214",
+      deco:"centralperks",
+      top:"#9fc9ec",
+      panel:"#2c685f",
+      trim:"#f0c989",
+      text:"#fff5e5",
+      accent:"#d9784f",
+      wood:"#8d5d45",
+      shelf:"#c6b18e",
+      lamp:"#f6d4a0",
+      logo:"CENTRAL PERKS",
+      subtitle:"SKYLINE BREWS + COUCH TALK",
+      glow:"212,231,255",
+      customerSide:"bottom",
     },
     spawns:[[4,6],[4,11]],
   },
@@ -732,21 +733,78 @@ function drawCafeDecor(ctx,T,BW,BH,f){
   ctx.fillStyle=mapTheme.top||"#201108";
   ctx.fillRect(0,0,BW,topH);
 
-  const menuX=T*2.1,menuY=T*.04,menuW=BW-T*4.2,menuH=T*.38;
-  ctx.fillStyle=mapTheme.wood||"#3a2618";
-  ctx.fillRect(menuX-4,menuY-4,menuW+8,menuH+8);
-  ctx.fillStyle=mapTheme.panel||"#223329";
-  ctx.fillRect(menuX,menuY,menuW,menuH);
-  ctx.strokeStyle=mapTheme.trim||"#a37b42";
-  ctx.lineWidth=2;
-  ctx.strokeRect(menuX+.5,menuY+.5,menuW-1,menuH-1);
-  ctx.fillStyle=mapTheme.text||"#f2e2c6";
-  ctx.font=`bold ${Math.max(10,T*.15)}px monospace`;
-  ctx.textAlign="center";
-  ctx.fillText(mapTheme.logo||"HOUSE SPECIALS",BW/2,menuY+T*.14);
-  ctx.font=`${Math.max(7,T*.1)}px monospace`;
-  ctx.fillStyle=mapTheme.accent||"#b6d5b5";
-  ctx.fillText(mapTheme.subtitle||"LATTE  MATCHA  CARAMEL  TEA",BW/2,menuY+T*.3);
+  if(mapTheme.deco==="centralperks"){
+    const winY=T*.04,winH=T*.36,pad=T*.4,paneGap=T*.08,paneW=(BW-pad*2-paneGap*3)/4;
+    for(let i=0;i<4;i++){
+      const px=pad+i*(paneW+paneGap);
+      ctx.fillStyle="#2f5d5a";
+      ctx.fillRect(px,winY,paneW,winH);
+      ctx.fillStyle="#dff2ff";
+      ctx.fillRect(px+2,winY+2,paneW-4,winH-4);
+      ctx.fillStyle="#b7d7ec";
+      ctx.fillRect(px+3,winY+3,paneW-6,winH*.45);
+      const skylineBase=winY+winH*.55;
+      ctx.fillStyle="#9bb3cb";
+      ctx.fillRect(px+4,skylineBase,paneW-8,winH*.38);
+      for(let b=0;b<5;b++){
+        const bx=px+6+b*(paneW/5.5);
+        const bw=Math.max(4,paneW*.1+((b+i)%3));
+        const bh=winH*(.12+.08*((b+i)%3));
+        ctx.fillStyle=["#92abc5","#7f97b0","#6f88a5","#a3bdd6"][(b+i)%4];
+        ctx.fillRect(bx,skylineBase-bh,bw,bh+2);
+        ctx.fillStyle="#eef7ff";
+        ctx.fillRect(bx+1,skylineBase-bh+2,1,1);
+        ctx.fillRect(bx+bw-2,skylineBase-bh+5,1,1);
+      }
+      ctx.fillStyle="#6d7c86";
+      ctx.fillRect(px+4,skylineBase+winH*.17,paneW-8,2);
+      const carSpan=Math.max(18,paneW-18);
+      const carA=(f*1.4+i*11)%carSpan;
+      const carB=(carSpan-((f*1.1+i*17)%carSpan));
+      ctx.fillStyle="#d9784f";
+      ctx.fillRect(px+8+carA,skylineBase+winH*.14,4,2);
+      ctx.fillStyle="#f0c989";
+      ctx.fillRect(px+8+carB,skylineBase+winH*.18,3,2);
+      const birdX=px+((f*1.8+i*23)%(paneW+18))-9;
+      const birdY=winY+8+Math.sin((f+i*20)*.06)*3;
+      ctx.fillStyle="#4a627b";
+      ctx.fillRect(birdX,birdY,3,1);
+      ctx.fillRect(birdX+4,birdY,3,1);
+      ctx.fillRect(birdX+1,birdY-1,1,1);
+      ctx.fillRect(birdX+5,birdY-1,1,1);
+      ctx.fillStyle="#325452";
+      ctx.fillRect(px+paneW*.48,winY,2,winH);
+      ctx.fillRect(px,winY+winH*.46,paneW,2);
+    }
+
+    ctx.fillStyle="#7b2030";
+    ctx.fillRect(BW/2-T*1.65,T*.03,T*3.3,T*.18);
+    ctx.fillStyle="#f7dfb3";
+    ctx.fillRect(BW/2-T*.52,T*.05,T*1.04,T*.14);
+    ctx.fillStyle="#214844";
+    ctx.font=`bold ${Math.max(10,T*.15)}px monospace`;
+    ctx.textAlign="center";
+    ctx.fillText(mapTheme.logo||"CENTRAL PERKS",BW/2,T*.17);
+    ctx.fillStyle="#fff4e2";
+    ctx.font=`${Math.max(7,T*.1)}px monospace`;
+    ctx.fillText(mapTheme.subtitle||"SKYLINE BREWS",BW/2,T*.31);
+  }else{
+    const menuX=T*2.1,menuY=T*.04,menuW=BW-T*4.2,menuH=T*.38;
+    ctx.fillStyle=mapTheme.wood||"#3a2618";
+    ctx.fillRect(menuX-4,menuY-4,menuW+8,menuH+8);
+    ctx.fillStyle=mapTheme.panel||"#223329";
+    ctx.fillRect(menuX,menuY,menuW,menuH);
+    ctx.strokeStyle=mapTheme.trim||"#a37b42";
+    ctx.lineWidth=2;
+    ctx.strokeRect(menuX+.5,menuY+.5,menuW-1,menuH-1);
+    ctx.fillStyle=mapTheme.text||"#f2e2c6";
+    ctx.font=`bold ${Math.max(10,T*.15)}px monospace`;
+    ctx.textAlign="center";
+    ctx.fillText(mapTheme.logo||"HOUSE SPECIALS",BW/2,menuY+T*.14);
+    ctx.font=`${Math.max(7,T*.1)}px monospace`;
+    ctx.fillStyle=mapTheme.accent||"#b6d5b5";
+    ctx.fillText(mapTheme.subtitle||"LATTE  MATCHA  CARAMEL  TEA",BW/2,menuY+T*.3);
+  }
 
   const lightXs=PENDANT_COLS.map((n)=>n*T);
   lightXs.forEach((lx,idx)=>{
@@ -769,15 +827,17 @@ function drawCafeDecor(ctx,T,BW,BH,f){
     ctx.fill();
   });
 
-  ctx.fillStyle=mapTheme.shelf||"#4f311f";
-  ctx.fillRect(T*.45,topH-T*.12,T*1.2,T*.12);
-  ctx.fillRect(BW-T*1.65,topH-T*.12,T*1.2,T*.12);
-  ctx.fillStyle=mapTheme.accent||"#5b8d46";
-  ctx.fillRect(T*.6,topH-T*.42,T*.9,T*.3);
-  ctx.fillRect(BW-T*1.5,topH-T*.46,T*.9,T*.34);
-  ctx.fillStyle="#d9f4de";
-  ctx.fillRect(T*.7,topH-T*.52,T*.3,T*.14);
-  ctx.fillRect(BW-T*1.25,topH-T*.6,T*.28,T*.16);
+  if(mapTheme.deco!=="centralperks"){
+    ctx.fillStyle=mapTheme.shelf||"#4f311f";
+    ctx.fillRect(T*.45,topH-T*.12,T*1.2,T*.12);
+    ctx.fillRect(BW-T*1.65,topH-T*.12,T*1.2,T*.12);
+    ctx.fillStyle=mapTheme.accent||"#5b8d46";
+    ctx.fillRect(T*.6,topH-T*.42,T*.9,T*.3);
+    ctx.fillRect(BW-T*1.5,topH-T*.46,T*.9,T*.34);
+    ctx.fillStyle="#d9f4de";
+    ctx.fillRect(T*.7,topH-T*.52,T*.3,T*.14);
+    ctx.fillRect(BW-T*1.25,topH-T*.6,T*.28,T*.16);
+  }
 
   if(mapTheme.deco==="sunbooks"){
     ctx.fillStyle="#f4e8cf";
@@ -827,6 +887,16 @@ function drawCafeDecor(ctx,T,BW,BH,f){
       ctx.fillRect(lx,T*.03,T*.06,T*.06);
       ctx.fillRect(lx+T*.02,T*.1,T*.02,T*.02);
     }
+  }else if(mapTheme.deco==="centralperks"){
+    ctx.fillStyle="#214844";
+    ctx.fillRect(T*.42,topH-T*.11,T*1.55,3);
+    ctx.fillRect(BW-T*1.97,topH-T*.11,T*1.55,3);
+    ctx.fillStyle="#d9784f";
+    ctx.fillRect(T*.62,topH-T*.26,T*.24,T*.15);
+    ctx.fillRect(BW-T*1.42,topH-T*.28,T*.22,T*.17);
+    ctx.fillStyle="#f3e5d0";
+    ctx.fillRect(T*.68,topH-T*.22,T*.06,T*.06);
+    ctx.fillRect(BW-T*1.34,topH-T*.22,T*.05,T*.05);
   }else if(mapTheme.deco==="pixelperk"){
     ctx.fillStyle="#211229";
     ctx.fillRect(T*.52,T*.1,T*.96,T*.24);
@@ -848,12 +918,17 @@ function drawSt(ctx,x,y,T,key,f){
   const st=STATIONS[key];if(!st)return;const s=T/16;
   const mapTheme=getActiveMapDef().theme||{};
   const px=(a,b,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(x+a*s,y+b*s,w*s,h*s);};
-  const shell=mapTheme.deco==="catcafe"?"#6b473c":P.wallHi;
-  const panel=mapTheme.deco==="catcafe"?"#2d1913":"#2a1608";
+  const isCatCafe=mapTheme.deco==="catcafe";
+  const isCentralPerks=mapTheme.deco==="centralperks";
+  const shell=isCatCafe?"#6b473c":isCentralPerks?"#7b5848":P.wallHi;
+  const panel=isCatCafe?"#2d1913":isCentralPerks?"#eadcc7":"#2a1608";
   px(0,0,16,16,shell);px(1,1,14,14,panel);
-  if(mapTheme.deco==="catcafe"){
+  if(isCatCafe){
     px(2,2,12,1,"#f2dfc5");
     px(2,13,12,1,"#7d5845");
+  }else if(isCentralPerks){
+    px(2,2,12,1,"#2d655d");
+    px(2,13,12,1,"#744b3f");
   }
   switch(st.id){
     case"espresso":case"espresso2":{
@@ -903,9 +978,9 @@ function drawSt(ctx,x,y,T,key,f){
     case"trash":px(4,3,8,10,"#666");px(5,4,6,8,"#555");px(3,2,10,1,"#777");px(6,1,4,1,"#888");break;
   }
   const label=T<42?(st.short||st.label):st.label;
-  ctx.fillStyle=mapTheme.deco==="catcafe"?"#2a1712dd":"#120904cc";
+  ctx.fillStyle=isCatCafe?"#2a1712dd":isCentralPerks?"#efe3d1dd":"#120904cc";
   ctx.fillRect(x+1,y+T-Math.max(11,T*.24),T-2,Math.max(10,T*.22));
-  ctx.fillStyle=mapTheme.deco==="catcafe"?"#ffe7cb":"#e7c49d";
+  ctx.fillStyle=isCatCafe?"#ffe7cb":isCentralPerks?"#2d655d":"#e7c49d";
   ctx.font=`bold ${Math.max(8,T*.18)}px monospace`;
   ctx.textAlign="center";
   ctx.fillText(label,x+T/2,y+T-2);
@@ -1264,6 +1339,108 @@ function drawCatCafeAmbient(ctx,T,BW,BH,f){
   drawCafeCat(ctx,consoleX+T*.9,consoleY-T*.22,T*.72,f+90,{body:"#e5d2c1",chest:"#fff5e8",accent:"#efbe98",pose:"sit",alpha:.96});
 }
 
+function drawCentralPerksFloor(ctx,x,y,T,r,c){
+  const base=(r+c)%2===0?"#a06e4f":"#946446";
+  ctx.fillStyle=base;
+  ctx.fillRect(x,y,T,T);
+  ctx.fillStyle="#c39167";
+  ctx.fillRect(x,y,1,T);
+  ctx.fillRect(x+T-1,y,1,T);
+  if(r>=2&&r<=4&&c>=5&&c<=12){
+    ctx.fillStyle="#6b4f70";
+    ctx.fillRect(x+1,y+1,T-2,T-2);
+    ctx.fillStyle="#d7a464";
+    ctx.fillRect(x+1,y+1,T-2,2);
+    ctx.fillRect(x+1,y+T-3,T-2,2);
+    if((r+c)%2===0){
+      ctx.fillStyle="#8f7092";
+      ctx.fillRect(x+4,y+4,T-8,2);
+      ctx.fillRect(x+4,y+T-6,T-8,2);
+    }
+  }else{
+    for(let i=1;i<4;i++){
+      ctx.fillStyle=i%2===0?"#ffffff08":"#0000000c";
+      ctx.fillRect(x,y+i*(T/4),T,1);
+    }
+  }
+}
+
+function drawCentralPerksWall(ctx,x,y,T,r,c){
+  ctx.fillStyle="#d4c6b2";
+  ctx.fillRect(x,y,T,T);
+  ctx.fillStyle="#e9dfd0";
+  ctx.fillRect(x,y, T, 3);
+  ctx.fillStyle="#2d655d";
+  ctx.fillRect(x,y+T-7,T,7);
+  if(r===0){
+    ctx.fillStyle="#2d655d";
+    ctx.fillRect(x+1,y+1,T-2,2);
+    if(c>0&&c<COLS-1){
+      ctx.fillStyle="#f0e5d8";
+      ctx.fillRect(x+3,y+4,T-6,T-8);
+      ctx.fillStyle="#bfd8ea";
+      ctx.fillRect(x+4,y+5,T-8,T-10);
+    }
+  }else{
+    ctx.fillStyle=(c%3===0)?"#b48774":"#c7baa7";
+    ctx.fillRect(x+2,y+2,2,T-9);
+  }
+}
+
+function drawCentralPerksCounter(ctx,x,y,T,item,f){
+  drawCentralPerksFloor(ctx,x,y,T,Math.round(y/T),Math.round(x/T));
+  ctx.fillStyle="#36251d";
+  ctx.fillRect(x+T/2-2,y+11,4,T-16);
+  ctx.fillStyle="#d2c2ad";
+  ctx.fillRect(x+4,y+5,T-8,5);
+  ctx.fillStyle="#4a3328";
+  ctx.fillRect(x+5,y+10,T-10,2);
+  ctx.fillStyle="#835d4b";
+  ctx.fillRect(x+T/2-6,y+T-6,12,2);
+  if(item){
+    drawCup(ctx,x+T/2-8,y+T/2-8,16,item.ingredients||[]);
+  }else if((Math.round(x/T)+Math.round(y/T))%2===0){
+    ctx.fillStyle="#d9784f";
+    ctx.fillRect(x+7,y+8,5,3);
+    ctx.fillStyle="#f7e6cd";
+    ctx.fillRect(x+8,y+9,3,1);
+  }else{
+    ctx.fillStyle="#2d655d";
+    ctx.fillRect(x+7,y+7,4,4);
+    ctx.fillStyle="#f3d799";
+    ctx.fillRect(x+8,y+8,2,2);
+    if(Math.sin(f*.03+x*.04)>0.3){
+      ctx.fillStyle="#ffffff22";
+      ctx.fillRect(x+5,y+5,T-10,2);
+    }
+  }
+}
+
+function drawCentralPerksServe(ctx,x,y,T,f){
+  const s=T/16;
+  ctx.fillStyle="#2d655d";
+  ctx.fillRect(x,y,T,T);
+  ctx.fillStyle="#eadcc7";
+  ctx.fillRect(x,y,T,4*s);
+  ctx.fillStyle="#744b3f";
+  ctx.fillRect(x,y+T-3*s,T,3*s);
+  ctx.fillStyle="#d9784f";
+  ctx.fillRect(x+3*s,y+5*s,10*s,5*s);
+  ctx.fillStyle="#fff1dc";
+  ctx.fillRect(x+6*s,y+4*s,4*s,1*s);
+  ctx.fillRect(x+7*s,y+6*s,2*s,2*s);
+  ctx.fillStyle="#5d2d23";
+  ctx.fillRect(x+5*s,y+5*s,1*s,1*s);
+  ctx.fillRect(x+10*s,y+5*s,1*s,1*s);
+  ctx.fillRect(x+7*s,y+8*s,2*s,1*s);
+  ctx.fillStyle="#f0c989";
+  ctx.fillRect(x+11*s,y+10*s,2*s,2*s);
+  if(f%60<10){
+    ctx.fillStyle="#ffe2a066";
+    ctx.fillRect(x+11*s,y+4*s,2*s,2*s);
+  }
+}
+
 function drawServe(ctx,x,y,T,f){
   const s=T/16;ctx.fillStyle=P.counter;ctx.fillRect(x,y,T,T);
   ctx.fillStyle=P.counterTop;ctx.fillRect(x,y,T,4*s);
@@ -1325,9 +1502,56 @@ function drawOrderBubble(ctx,x,y,T,order){
   ctx.fillRect(rx+4,ry+h-5,(w-8)*Math.max(0,Math.min(1,pct)),2);
 }
 
-function drawCustomerArea(ctx,T,BW,orders,f){
+function drawCustomerArea(ctx,T,BW,BH,orders,f){
   const mapTheme=getActiveMapDef().theme||{};
   ctx.save();
+  if(mapTheme.deco==="centralperks"){
+    const areaY=BH-T*.78;
+    ctx.fillStyle="#2f4f4b";
+    ctx.fillRect(0,areaY+T*.44,BW,T*.34);
+    ctx.fillStyle="#d9ccb8";
+    ctx.fillRect(0,areaY+T*.4,BW,2);
+    ctx.fillStyle="#20403c";
+    ctx.fillRect(0,areaY+T*.68,BW,T*.1);
+
+    const couchY=areaY+T*.28;
+    ctx.fillStyle="#c87046";
+    ctx.fillRect(T*.35,couchY,T*2.2,T*.26);
+    ctx.fillRect(BW-T*2.55,couchY,T*2.2,T*.26);
+    ctx.fillStyle="#2d655d";
+    ctx.fillRect(T*.6,couchY+T*.22,T*1.7,T*.12);
+    ctx.fillRect(BW-T*2.3,couchY+T*.22,T*1.7,T*.12);
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0,areaY,BW,T*.78);
+    ctx.clip();
+    drawCustomer(ctx,T*.44,areaY+T*.08,T*.82,AMBIENT_CUSTOMERS[0],f+12,{alpha:.86,showCup:true});
+    drawCustomer(ctx,BW-T*1.5,areaY+T*.06,T*.86,AMBIENT_CUSTOMERS[1],f+25,{alpha:.88,showCup:true});
+    orders.slice(0,QUEUE_COLS.length).forEach((order,idx)=>{
+      const qx=QUEUE_COLS[idx]*T-T*.42;
+      const qy=BH-T*.66+(idx%2)*2;
+      drawCustomer(ctx,qx,qy,T*.92,order.cust,f+idx*9,{showCup:idx%3===0});
+    });
+    ctx.restore();
+
+    orders.slice(0,QUEUE_COLS.length).forEach((order,idx)=>{
+      const bx=QUEUE_COLS[idx]*T;
+      const by=BH-T*.28+(idx%2)*2;
+      drawOrderBubble(ctx,bx,by,T,order);
+      ctx.fillStyle="#fff1dd";
+      ctx.font=`bold ${Math.max(7,T*.13)}px monospace`;
+      ctx.textAlign="center";
+      ctx.fillText(order.cust.name,bx,BH-6);
+    });
+
+    ctx.fillStyle="#f0c989";
+    ctx.font=`bold ${Math.max(7,T*.13)}px monospace`;
+    ctx.textAlign="left";
+    ctx.fillText("COUCH SERVICE",T*.46,BH-T*.7);
+    ctx.restore();
+    return;
+  }
   ctx.fillStyle=mapTheme.deco==="sunbooks"?"#18392dcc":mapTheme.deco==="catcafe"?"#4b312bcc":"#120904aa";
   ctx.fillRect(0,0,BW,T*.18);
   if(mapTheme.deco==="sunbooks"){
@@ -1445,6 +1669,15 @@ function drawLighting(ctx,T,BW,BH,f,gameState){
   const mapTheme=getActiveMapDef().theme||{};
   ctx.save();
 
+  if(mapTheme.deco==="centralperks"){
+    const skyWash=ctx.createLinearGradient(0,0,0,BH*.62);
+    skyWash.addColorStop(0,"rgba(210,234,255,0.22)");
+    skyWash.addColorStop(.34,"rgba(255,247,228,0.08)");
+    skyWash.addColorStop(1,"rgba(255,255,255,0)");
+    ctx.fillStyle=skyWash;
+    ctx.fillRect(0,0,BW,BH*.62);
+  }
+
   const pendants=PENDANT_COLS.map((n)=>n*T);
   pendants.forEach((lx,idx)=>{
     const sway=Math.sin(f*.02+idx)*1.5;
@@ -1515,8 +1748,8 @@ function drawLighting(ctx,T,BW,BH,f,gameState){
 
   const vignette=ctx.createRadialGradient(BW/2,BH*.42,T*2.3,BW/2,BH*.55,BW*.72);
   vignette.addColorStop(0,"rgba(0,0,0,0)");
-  vignette.addColorStop(.72,"rgba(12,6,4,0.08)");
-  vignette.addColorStop(1,"rgba(8,4,2,0.26)");
+  vignette.addColorStop(.72,mapTheme.deco==="centralperks"?"rgba(22,18,14,0.05)":"rgba(12,6,4,0.08)");
+  vignette.addColorStop(1,mapTheme.deco==="centralperks"?"rgba(12,10,8,0.18)":"rgba(8,4,2,0.26)");
   ctx.fillStyle=vignette;
   ctx.fillRect(0,0,BW,BH);
 
@@ -2375,28 +2608,32 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
         if(cell.type==="floor"){
           if(mapTheme.deco==="sunbooks")drawSunbooksFloor(ctx,x,y,T,r,c);
           else if(mapTheme.deco==="catcafe")drawCatCafeFloor(ctx,x,y,T,r,c);
+          else if(mapTheme.deco==="centralperks")drawCentralPerksFloor(ctx,x,y,T,r,c);
           else{ctx.fillStyle=(r+c)%2===0?P.floor1:P.floor2;ctx.fillRect(x,y,T,T);ctx.fillStyle=P.floor3+"18";ctx.fillRect(x,y,T,1);ctx.fillRect(x,y,1,T);}
         }
         else if(cell.type==="wall"){
           if(mapTheme.deco==="sunbooks")drawSunbooksWall(ctx,x,y,T,r,c);
           else if(mapTheme.deco==="catcafe")drawCatCafeWall(ctx,x,y,T,r,c);
+          else if(mapTheme.deco==="centralperks")drawCentralPerksWall(ctx,x,y,T,r,c);
           else{ctx.fillStyle=P.wall;ctx.fillRect(x,y,T,T);const bh=T/4;for(let by=0;by<4;by++){const off=by%2===0?0:T/2;ctx.fillStyle=P.wallLine+"30";ctx.fillRect(x,y+by*bh,T,1);ctx.fillRect(x+off,y+by*bh,1,bh);ctx.fillRect(x+off+T/2,y+by*bh,1,bh);}}
         }
         else if(cell.type==="counter"){
           const it=g.counters[`${r},${c}`];
           if(mapTheme.deco==="sunbooks")drawSunbooksCounter(ctx,x,y,T,it,f);
           else if(mapTheme.deco==="catcafe")drawCatCafeCounter(ctx,x,y,T,it,f);
+          else if(mapTheme.deco==="centralperks")drawCentralPerksCounter(ctx,x,y,T,it,f);
           else{ctx.fillStyle=(r+c)%2===0?P.floor1:P.floor2;ctx.fillRect(x,y,T,T);ctx.fillStyle=P.counter;ctx.fillRect(x+3,y+3,T-6,T-6);ctx.fillStyle=P.counterTop;ctx.fillRect(x+3,y+3,T-6,5);ctx.fillStyle=P.counterEdge;ctx.fillRect(x+3,y+T-8,T-6,4);if(it)drawCup(ctx,x+T/2-8,y+T/2-10,16,it.ingredients||[]);}
         }
         else if(cell.type==="station"){
           if(cell.station==="serve"&&mapTheme.deco==="sunbooks")drawSunbooksServe(ctx,x,y,T,f);
           else if(cell.station==="serve"&&mapTheme.deco==="catcafe")drawCatCafeServe(ctx,x,y,T,f);
+          else if(cell.station==="serve"&&mapTheme.deco==="centralperks")drawCentralPerksServe(ctx,x,y,T,f);
           else if(cell.station==="serve")drawServe(ctx,x,y,T,f);
           else drawSt(ctx,x,y,T,cell.station,f);
         }
       }
       if(mapTheme.deco==="catcafe")drawCatCafeAmbient(ctx,T,BW,BH,f);
-      drawCustomerArea(ctx,T,BW,g.orders,f);
+      drawCustomerArea(ctx,T,BW,BH,g.orders,f);
       drawLighting(ctx,T,BW,BH,f,g);
       const rushActive=(g.rushEnd||0)>Date.now();
       const freezeActive=(g.freezeEnd||0)>Date.now();
