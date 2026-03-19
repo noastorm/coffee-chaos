@@ -13,7 +13,7 @@ import {
 // CAFÉ CHAOS v4 — Difficulty + Sound + Movement Overhaul
 // ═══════════════════════════════════════════════════════════════
 
-const COLS = 14, ROWS = 10;
+const COLS = 18, ROWS = 8;
 const DIRS = { up:[-1,0], down:[1,0], left:[0,-1], right:[0,1] };
 
 const DIFF = {
@@ -58,26 +58,31 @@ const ING_C = {
 };
 
 const STATIONS = {
-  E:{id:"espresso",  label:"Espresso",adds:"espresso",    time:1800,clr:P.esp},
-  e:{id:"espresso2", label:"2x Esp",  adds:"espresso2",   time:1800,clr:"#2a1008"},
-  M:{id:"steamer",   label:"Steam",   adds:"steamed_milk",time:1400,clr:P.milk},
-  m:{id:"milk",      label:"Milk",    adds:"milk",        clr:P.milk},
-  F:{id:"foam",      label:"Foam",    adds:"foam",        clr:P.foam},
-  I:{id:"ice",       label:"Ice",     adds:"ice",         clr:P.ice},
-  R:{id:"caramel",   label:"Caramel", adds:"caramel",     clr:P.car},
-  A:{id:"matcha",    label:"Matcha",  adds:"matcha",      clr:P.mat},
-  B:{id:"strawberry",label:"Berry",   adds:"strawberry",  clr:P.str},
-  T:{id:"tea",       label:"Tea",     adds:"tea",         time:1600,clr:P.tea},
-  H:{id:"hot_water", label:"Hot Wtr", adds:"hot_water",   clr:P.hot},
-  Q:{id:"water",     label:"Water",   adds:"water",       clr:P.wat},
-  U:{id:"cups",      label:"Cups",    action:"give_cup"},
-  X:{id:"trash",     label:"Trash",   action:"trash"},
+  E:{id:"espresso",  label:"Espresso",adds:"espresso",    time:1800,clr:P.esp,short:"ESP"},
+  e:{id:"espresso2", label:"2x Esp",  adds:"espresso2",   time:1800,clr:"#2a1008",short:"2X"},
+  M:{id:"steamer",   label:"Steam",   adds:"steamed_milk",time:1400,clr:P.milk,short:"STM"},
+  m:{id:"milk",      label:"Milk",    adds:"milk",        clr:P.milk,short:"MLK"},
+  F:{id:"foam",      label:"Foam",    adds:"foam",        clr:P.foam,short:"FOAM"},
+  I:{id:"ice",       label:"Ice",     adds:"ice",         clr:P.ice,short:"ICE"},
+  R:{id:"caramel",   label:"Caramel", adds:"caramel",     clr:P.car,short:"CARM"},
+  A:{id:"matcha",    label:"Matcha",  adds:"matcha",      clr:P.mat,short:"MCHA"},
+  B:{id:"strawberry",label:"Berry",   adds:"strawberry",  clr:P.str,short:"BERR"},
+  T:{id:"tea",       label:"Tea",     adds:"tea",         time:1600,clr:P.tea,short:"TEA"},
+  H:{id:"hot_water", label:"Hot Wtr", adds:"hot_water",   clr:P.hot,short:"HOT"},
+  Q:{id:"water",     label:"Water",   adds:"water",       clr:P.wat,short:"WATR"},
+  U:{id:"cups",      label:"Cups",    action:"give_cup",short:"CUPS"},
+  X:{id:"trash",     label:"Trash",   action:"trash",short:"BIN"},
 };
 
 const MAP_RAW = [
-  "WSSSSSSSSSSSWW","W............W","E..CC..CC....A",
-  "e............B","M..CC..CC....T","m............H",
-  "F............Q","W............W","WU.I.R..X..C.W","WWWWWWWWWWWWWW",
+  "WSSSSSSSSSSSSSSSW",
+  "W................W",
+  "E..CC....CC....A.W",
+  "e................B",
+  "M..CC....CC....T.W",
+  "m.............H.Q.",
+  "F..U.I..R..X..C..W",
+  "WWWWWWWWWWWWWWWWWW",
 ];
 const MAP = [];
 for(let r=0;r<ROWS;r++){MAP[r]=[];for(let c=0;c<COLS;c++){
@@ -104,7 +109,9 @@ const CUSTOMER_STYLES=[
   { shirt:"#ffa726", accent:"#ffcc80", hair:"#1f1209" },
   { shirt:"#26a69a", accent:"#80cbc4", hair:"#342116" },
 ];
-const QUEUE_COLS=[1.7,3.5,5.3,7.1,8.9,10.7];
+const MAX_QUEUE_SLOTS=6;
+const QUEUE_COLS=Array.from({length:MAX_QUEUE_SLOTS},(_,idx)=>1.9+idx*((COLS-3.8)/Math.max(1,MAX_QUEUE_SLOTS-1)));
+const PENDANT_COLS=Array.from({length:8},(_,idx)=>1.6+idx*((COLS-3.2)/7));
 const AMBIENT_CUSTOMERS=[
   { name:"Nia", skin:CUSTOMER_SKINS[1], shirt:"#5c6bc0", accent:"#9fa8da", hair:"#312014", mood:"laptop", side:"left", scale:.8 },
   { name:"Owen", skin:CUSTOMER_SKINS[3], shirt:"#8d6e63", accent:"#bcaaa4", hair:"#21140b", mood:"drink", side:"right", scale:.86 },
@@ -116,6 +123,94 @@ function readViewport(){const vv=window.visualViewport;return{w:Math.round(vv?.w
 function useScreen(){const[s,set]=useState(()=>readViewport());useEffect(()=>{const r=()=>set(readViewport());const vv=window.visualViewport;r();window.addEventListener("resize",r);window.addEventListener("orientationchange",r);vv?.addEventListener("resize",r);vv?.addEventListener("scroll",r);return ()=>{window.removeEventListener("resize",r);window.removeEventListener("orientationchange",r);vv?.removeEventListener("resize",r);vv?.removeEventListener("scroll",r);};},[]);return s;}
 
 const haptic=(t="light")=>{try{navigator?.vibrate?.({light:10,medium:25,heavy:50}[t]||10);}catch(e){}};
+const IOS_RE=/iPad|iPhone|iPod/i;
+
+function isStandaloneDisplay(){
+  return window.matchMedia?.("(display-mode: standalone)")?.matches || window.navigator?.standalone === true;
+}
+
+function useShellActions(){
+  const deferredInstall=useRef(null);
+  const[installHelpOpen,setInstallHelpOpen]=useState(false);
+  const[state,setState]=useState({isIos:false,isStandalone:false,isFullscreen:false,canFullscreen:false,hasInstallPrompt:false});
+
+  const refresh=useCallback(()=>{
+    setState({
+      isIos:IOS_RE.test(window.navigator.userAgent||""),
+      isStandalone:isStandaloneDisplay(),
+      isFullscreen:!!document.fullscreenElement,
+      canFullscreen:!!document.documentElement?.requestFullscreen && !!document.fullscreenEnabled,
+      hasInstallPrompt:!!deferredInstall.current,
+    });
+  },[]);
+
+  useEffect(()=>{
+    refresh();
+    const media=window.matchMedia?.("(display-mode: standalone)");
+    const onMedia=()=>refresh();
+    const onBeforeInstallPrompt=(event)=>{
+      event.preventDefault();
+      deferredInstall.current=event;
+      refresh();
+    };
+    const onInstalled=()=>{
+      deferredInstall.current=null;
+      setInstallHelpOpen(false);
+      refresh();
+    };
+
+    window.addEventListener("beforeinstallprompt",onBeforeInstallPrompt);
+    window.addEventListener("appinstalled",onInstalled);
+    document.addEventListener("fullscreenchange",refresh);
+    window.addEventListener("orientationchange",refresh);
+    media?.addEventListener?.("change",onMedia);
+    media?.addListener?.(onMedia);
+
+    return ()=>{
+      window.removeEventListener("beforeinstallprompt",onBeforeInstallPrompt);
+      window.removeEventListener("appinstalled",onInstalled);
+      document.removeEventListener("fullscreenchange",refresh);
+      window.removeEventListener("orientationchange",refresh);
+      media?.removeEventListener?.("change",onMedia);
+      media?.removeListener?.(onMedia);
+    };
+  },[refresh]);
+
+  const promptInstall=useCallback(async()=>{
+    if(deferredInstall.current){
+      const prompt=deferredInstall.current;
+      try{
+        await prompt.prompt();
+        await prompt.userChoice;
+      }catch(e){}
+      deferredInstall.current=null;
+      refresh();
+      return;
+    }
+    if(IOS_RE.test(window.navigator.userAgent||"")&&!isStandaloneDisplay()){
+      setInstallHelpOpen(true);
+    }
+  },[refresh]);
+
+  const toggleFullscreen=useCallback(async()=>{
+    try{
+      if(document.fullscreenElement){await document.exitFullscreen?.();}
+      else{await document.documentElement?.requestFullscreen?.({navigationUI:"hide"});}
+      refresh();
+    }catch(e){}
+  },[refresh]);
+
+  return {
+    ...state,
+    installHelpOpen,
+    showInstallAction:state.hasInstallPrompt||(state.isIos&&!state.isStandalone),
+    showFullscreenAction:state.canFullscreen&&!state.isStandalone,
+    promptInstall,
+    toggleFullscreen,
+    openInstallHelp:()=>setInstallHelpOpen(true),
+    closeInstallHelp:()=>setInstallHelpOpen(false),
+  };
+}
 
 // ═══════════════════════════════════════════════════════════════
 // AUDIO ENGINE — Musical & Fun
@@ -350,7 +445,7 @@ function drawCafeDecor(ctx,T,BW,BH,f){
   ctx.fillStyle="#b6d5b5";
   ctx.fillText("LATTE  MATCHA  CARAMEL  TEA",BW/2,menuY+T*.3);
 
-  const lightXs=[1.4,3.4,5.4,7.4,9.4,11.4].map((n)=>n*T);
+  const lightXs=PENDANT_COLS.map((n)=>n*T);
   lightXs.forEach((lx,idx)=>{
     const sway=Math.sin(f*.02+idx)*1.5;
     ctx.strokeStyle="#7b5b2c";
@@ -434,7 +529,13 @@ function drawSt(ctx,x,y,T,key,f){
     case"cups":px(3,4,4,8,P.cupW);px(4,3,2,1,P.cupR);px(8,6,4,7,P.cupW);px(9,5,2,1,P.cupR);px(6,8,5,5,P.cupW);break;
     case"trash":px(4,3,8,10,"#666");px(5,4,6,8,"#555");px(3,2,10,1,"#777");px(6,1,4,1,"#888");break;
   }
-  ctx.fillStyle="#d2a979";ctx.font=`bold ${Math.max(7,T*.16)}px monospace`;ctx.textAlign="center";ctx.fillText(st.label,x+T/2,y+T-1);
+  const label=T<42?(st.short||st.label):st.label;
+  ctx.fillStyle="#120904cc";
+  ctx.fillRect(x+1,y+T-Math.max(11,T*.24),T-2,Math.max(10,T*.22));
+  ctx.fillStyle="#e7c49d";
+  ctx.font=`bold ${Math.max(8,T*.18)}px monospace`;
+  ctx.textAlign="center";
+  ctx.fillText(label,x+T/2,y+T-2);
 }
 
 function drawServe(ctx,x,y,T,f){
@@ -550,7 +651,7 @@ function drawCustomerArea(ctx,T,BW,orders,f){
 function drawLighting(ctx,T,BW,BH,f,gameState){
   ctx.save();
 
-  const pendants=[1.4,3.4,5.4,7.4,9.4,11.4].map((n)=>n*T);
+  const pendants=PENDANT_COLS.map((n)=>n*T);
   pendants.forEach((lx,idx)=>{
     const sway=Math.sin(f*.02+idx)*1.5;
     const lampX=lx+sway;
@@ -576,23 +677,29 @@ function drawLighting(ctx,T,BW,BH,f,gameState){
     ctx.fill();
   });
 
-  const stationGlows=[
-    { c:.65, r:2.25, color:"255,196,110", size:1.15 },
-    { c:.65, r:3.2, color:"255,196,110", size:1.05 },
-    { c:12.35, r:4.2, color:"130,220,255", size:1.1 },
-    { c:12.35, r:5.2, color:"255,164,110", size:1.05 },
-    { c:12.35, r:3.2, color:"225,176,108", size:1.05 },
-    { c:12.35, r:1.2, color:"104,206,120", size:1.08 },
-  ];
-  stationGlows.forEach(({c,r,color,size})=>{
+  const glowPalette={
+    E:{color:"255,196,110",size:1.18},
+    e:{color:"255,196,110",size:1.08},
+    M:{color:"255,244,214",size:1.12},
+    A:{color:"104,206,120",size:1.1},
+    B:{color:"240,96,144",size:1.05},
+    T:{color:"225,176,108",size:1.05},
+    H:{color:"255,164,110",size:1.08},
+    Q:{color:"130,220,255",size:1.1},
+    R:{color:"216,170,74",size:1.02},
+  };
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    const cell=MAP[r][c];
+    const glow=cell.type==="station"?glowPalette[cell.station]:null;
+    if(!glow)continue;
     const x=c*T+T/2,y=r*T+T/2;
-    const g=ctx.createRadialGradient(x,y,0,x,y,T*size);
-    g.addColorStop(0,`rgba(${color},0.14)`);
-    g.addColorStop(.55,`rgba(${color},0.05)`);
-    g.addColorStop(1,`rgba(${color},0)`);
+    const g=ctx.createRadialGradient(x,y,0,x,y,T*glow.size);
+    g.addColorStop(0,`rgba(${glow.color},0.14)`);
+    g.addColorStop(.55,`rgba(${glow.color},0.05)`);
+    g.addColorStop(1,`rgba(${glow.color},0)`);
     ctx.fillStyle=g;
-    ctx.fillRect(x-T*size,y-T*size,T*size*2,T*size*2);
-  });
+    ctx.fillRect(x-T*glow.size,y-T*glow.size,T*glow.size*2,T*glow.size*2);
+  }
 
   (gameState?.players||[]).forEach((player)=>{
     if(!player.processing?.st)return;
@@ -664,8 +771,8 @@ function createGameState(playerCount, diff){
 
   return {
     players:[
-      createPlayerState(0, 3, 4),
-      ...(playerCount===2 ? [createPlayerState(1, 3, 9)] : []),
+      createPlayerState(0, 4, 6),
+      ...(playerCount===2 ? [createPlayerState(1, 4, 11)] : []),
     ],
     orders:[mkOrder(0, diff)],
     score:0,
@@ -856,25 +963,75 @@ function DPad({pid,onInput,label,color}){
 
 function OrderTicket({o,compact}){
   const pct=1-o.elapsed/o.patience;const urg=pct<.25;
-  return (<div style={{background:urg?"linear-gradient(180deg,#3a0a0a 0%,#241008 100%)":"linear-gradient(180deg,#322014 0%,#211309 100%)",border:`2px solid ${pct>.5?"#8b5e34":pct>.25?P.orange:P.red}`,borderRadius:10,padding:compact?"5px 8px":"7px 10px",minWidth:compact?110:132,flexShrink:0,animation:urg?"pulse .6s infinite":undefined,boxShadow:"0 4px 10px #00000033"}}>
+  return (<div style={{background:urg?"linear-gradient(180deg,#3a0a0a 0%,#241008 100%)":"linear-gradient(180deg,#322014 0%,#211309 100%)",border:`2px solid ${pct>.5?"#8b5e34":pct>.25?P.orange:P.red}`,borderRadius:10,padding:compact?"6px 10px":"8px 12px",minWidth:compact?134:152,flexShrink:0,animation:urg?"pulse .6s infinite":undefined,boxShadow:"0 4px 10px #00000033"}}>
     <div style={{display:"flex",alignItems:"center",gap:4}}>
       <div style={{width:compact?12:16,height:compact?12:16,borderRadius:"50%",background:o.cust.skin,border:"1px solid #0003",fontSize:compact?5:6,display:"flex",alignItems:"center",justifyContent:"center"}}>☺</div>
       <span style={{color:"#d8b48c",fontSize:compact?7:8,fontFamily:"'Silkscreen',monospace"}}>{o.cust.name}</span>
     </div>
-    <div style={{color:getRecipeUiColor(o.drink),fontSize:compact?8:9,marginTop:3,fontWeight:"bold",fontFamily:"'Silkscreen',monospace",whiteSpace:"nowrap",textShadow:"0 1px 0 #120904"}}>{o.drink}</div>
-    <div style={{height:4,background:"#0a0604",borderRadius:3,marginTop:5,overflow:"hidden"}}>
+    <div style={{color:getRecipeUiColor(o.drink),fontSize:compact?10:10,marginTop:4,fontWeight:"bold",fontFamily:"'Silkscreen',monospace",whiteSpace:"nowrap",textShadow:"0 1px 0 #120904"}}>{o.drink}</div>
+    <div style={{height:5,background:"#0a0604",borderRadius:3,marginTop:6,overflow:"hidden"}}>
       <div style={{height:"100%",width:`${pct*100}%`,borderRadius:2,background:pct>.5?P.green:pct>.25?P.orange:P.red,transition:"width 1s linear"}}/>
     </div>
-    <div style={{display:"flex",gap:3,marginTop:4,flexWrap:"wrap"}}>
-      {o.recipe.ing.map((ing,i)=><div key={i} style={{width:compact?10:12,height:compact?10:12,borderRadius:2,background:ING_C[ing],border:"1px solid #fff2",boxShadow:"inset 0 1px 0 #ffffff33"}}/>)}
+    <div style={{display:"flex",gap:4,marginTop:5,flexWrap:"wrap"}}>
+      {o.recipe.ing.map((ing,i)=><div key={i} style={{width:compact?11:13,height:compact?11:13,borderRadius:2,background:ING_C[ing],border:"1px solid #fff2",boxShadow:"inset 0 1px 0 #ffffff33"}}/>)}
     </div>
   </div>);
+}
+
+function ShellActionRow({appShell,compact=false,align="center"}){
+  if(!appShell||(!appShell.showInstallAction&&!appShell.showFullscreenAction))return null;
+  const btnStyle={
+    fontFamily:"'Silkscreen',monospace",
+    fontWeight:"bold",
+    fontSize:compact?8:10,
+    padding:compact?"6px 10px":"8px 12px",
+    borderRadius:999,
+    cursor:"pointer",
+    border:"1px solid #6b3a1f88",
+    background:"#120904dd",
+    color:"#f5e6d3",
+    boxShadow:"0 6px 16px #0000002a",
+  };
+  return (
+    <div style={{display:"flex",gap:6,justifyContent:align,flexWrap:"wrap"}}>
+      {appShell.showInstallAction&&<button onClick={appShell.promptInstall} style={btnStyle}>INSTALL APP</button>}
+      {appShell.showFullscreenAction&&<button onClick={appShell.toggleFullscreen} style={btnStyle}>{appShell.isFullscreen?"EXIT FULLSCREEN":"FULLSCREEN"}</button>}
+    </div>
+  );
+}
+
+function InstallHelpModal({appShell}){
+  if(!appShell?.installHelpOpen)return null;
+  const isIos=appShell.isIos;
+  return (
+    <div style={{position:"absolute",inset:0,zIndex:30,background:"#00000088",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+      <div style={{maxWidth:420,width:"100%",background:"#1a0f08f2",border:`2px solid ${P.gold}55`,borderRadius:22,padding:"20px 18px",display:"flex",flexDirection:"column",gap:12,fontFamily:"'Silkscreen',monospace",color:"#f5e6d3",boxShadow:"0 24px 50px #00000055"}}>
+        <div style={{fontSize:18,color:P.gold,textAlign:"center"}}>INSTALL CAFE CHAOS</div>
+        <div style={{fontSize:10,lineHeight:1.8,color:"#d8b48c"}}>
+          {isIos?"For iPhone and iPad, the clean full-screen experience comes from adding the game to your Home Screen. Safari tabs cannot hide their browser chrome the same way.":"Install the game from your browser for the cleanest full-screen app experience and faster relaunches."}
+        </div>
+        {isIos&&<div style={{fontSize:9,lineHeight:1.9,color:"#f5e6d3"}}>
+          1. Tap the Share button in Safari.
+          <br />
+          2. Choose Add to Home Screen.
+          <br />
+          3. Launch Cafe Chaos from the new home-screen icon.
+        </div>}
+        {!isIos&&<div style={{fontSize:9,lineHeight:1.9,color:"#f5e6d3"}}>
+          Use the browser install prompt or menu option to install the app, then reopen it from your desktop or home screen.
+        </div>}
+        <div style={{display:"flex",justifyContent:"center"}}>
+          <button onClick={appShell.closeInstallHelp} style={{fontFamily:"'Silkscreen',monospace",fontWeight:"bold",fontSize:10,padding:"10px 18px",borderRadius:999,border:"1px solid #6b3a1f88",background:"#2d1b0e",color:"#f5e6d3",cursor:"pointer"}}>CLOSE</button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // ═══════════════════════════════════════════════════════════════
 // GAME
 // ═══════════════════════════════════════════════════════════════
-function Game({playerCount,diff,onEnd,isMobile,onlineSession}){
+function Game({playerCount,diff,onEnd,isMobile,onlineSession,appShell}){
   const canvasRef=useRef(null);const gs=useRef(null);const keys=useRef(new Set());
   const frame=useRef(0);const lastMove=useRef({0:0,1:0});
   const[hud,setHud]=useState({score:0,time:DIFF[diff].time,combo:0,orders:[],holding:[null,null]});
@@ -1609,16 +1766,17 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession}){
             <div style={{fontSize:8,lineHeight:1.8,color:"#8a6a4a",maxWidth:320}}>
               Menus and room setup work in portrait. Gameplay is landscape-first for a cleaner cross-platform feel.
             </div>
+            <ShellActionRow appShell={appShell} />
           </div>
         </div>
       );
     }
 
-    const hudH = 38;
-    const ordH = 58;
-    const stageGap = 10;
-    const joySize = singleControlMode ? Math.min(108, Math.max(82, Math.round(screen.h * 0.22))) : Math.min(82, Math.max(68, Math.round(screen.h * 0.17)));
-    const actSize = singleControlMode ? Math.min(84, Math.max(68, Math.round(screen.h * 0.16))) : 48;
+    const hudH = appShell?.showInstallAction || appShell?.showFullscreenAction ? 46 : 40;
+    const ordH = 72;
+    const stageGap = 8;
+    const joySize = singleControlMode ? Math.min(104, Math.max(80, Math.round(screen.h * 0.21))) : Math.min(82, Math.max(68, Math.round(screen.h * 0.17)));
+    const actSize = singleControlMode ? Math.min(82, Math.max(68, Math.round(screen.h * 0.15))) : 48;
     const leftDockW = singleControlMode ? joySize + 22 : joySize + 28;
     const rightDockW = singleControlMode ? Math.max(96, actSize + 24) : joySize + 28;
     const boardAreaW = Math.max(220, screen.w - leftDockW - rightDockW - stageGap * 2 - 12);
@@ -1629,20 +1787,21 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession}){
 
     return (
       <div style={{width:"100vw",height:"100dvh",minHeight:"100vh",background:P.bg,overflow:"hidden",display:"flex",flexDirection:"column",fontFamily:"'Silkscreen','Press Start 2P',monospace",paddingTop:safeTop,paddingBottom:safeBottom,paddingLeft:safeLeft,paddingRight:safeRight,gap:4}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"0 10px",height:hudH,flexShrink:0,background:"linear-gradient(180deg,#00000088 0%,#00000035 100%)",border:"1px solid #6b3a1f55",borderRadius:18}}>
+        <div style={{display:"grid",gridTemplateColumns:"auto 1fr auto",alignItems:"center",padding:"0 10px",height:hudH,flexShrink:0,background:"linear-gradient(180deg,#00000088 0%,#00000035 100%)",border:"1px solid #6b3a1f55",borderRadius:18,columnGap:8}}>
           <div style={{display:"flex",alignItems:"center",gap:6}}>
-            <span style={{fontSize:13}}>☕</span>
-            <span style={{color:P.gold,fontSize:16,fontWeight:"bold"}}>{hud.score}</span>
+            <span style={{fontSize:14}}>☕</span>
+            <span style={{color:P.gold,fontSize:17,fontWeight:"bold"}}>{hud.score}</span>
           </div>
+          <div style={{justifySelf:"center"}}><ShellActionRow appShell={appShell} compact /></div>
           <div style={{display:"flex",alignItems:"center",gap:8}}>
             {hud.combo >= 2 && <div style={{color:"#ff7ab8",fontSize:10,animation:"pulse .5s infinite"}}>x{hud.combo}</div>}
-            <div style={{color:hud.time<=30?P.red:hud.time<=60?P.orange:"#d2a979",fontSize:13,fontWeight:"bold",...(hud.time<=10?{animation:"pulse .3s infinite"}:{})}}>{~~(hud.time/60)}:{String(hud.time%60).padStart(2,"0")}</div>
+            <div style={{color:hud.time<=30?P.red:hud.time<=60?P.orange:"#d2a979",fontSize:14,fontWeight:"bold",...(hud.time<=10?{animation:"pulse .3s infinite"}:{})}}>{~~(hud.time/60)}:{String(hud.time%60).padStart(2,"0")}</div>
           </div>
         </div>
 
-        <div style={{display:"flex",gap:4,padding:"2px 2px 4px",overflowX:"auto",flexShrink:0,height:ordH,alignItems:"center",WebkitOverflowScrolling:"touch",touchAction:"pan-x"}}>
+        <div style={{display:"flex",gap:6,padding:"4px 2px 6px",overflowX:"auto",flexShrink:0,height:ordH,alignItems:"center",WebkitOverflowScrolling:"touch",touchAction:"pan-x"}}>
           {hud.orders.map(o => <OrderTicket key={o.id} o={o} compact />)}
-          {!hud.orders.length && <span style={{color:"#8a6a4a",fontSize:8,padding:"0 8px"}}>Waiting for customers...</span>}
+          {!hud.orders.length && <span style={{color:"#8a6a4a",fontSize:9,padding:"0 8px"}}>Waiting for customers...</span>}
         </div>
 
         <div style={{flex:1,minHeight:0,display:"flex",alignItems:"center",gap:stageGap,padding:"0 2px 2px"}}>
@@ -1668,7 +1827,7 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession}){
             {singleControlMode ? (
               <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6}}>
                 <ActBtn onAction={() => mobileAct(localPid)} color={localColor} holding={localHolding} sz={actSize} />
-                <div style={{fontSize:7,color:"#8a6a4a",textAlign:"center",lineHeight:1.6,maxWidth:100}}>Tap stations to auto-walk</div>
+                <div style={{fontSize:8,color:"#8a6a4a",textAlign:"center",lineHeight:1.6,maxWidth:112}}>Tap stations to auto-walk</div>
               </div>
             ) : (
               <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
@@ -1705,7 +1864,7 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession}){
 }
 
 // ─── TITLE ────────────────────────────────────────────────────
-function TitleScreen({onStart,onOpenOnline,isMobile,forceMode,setForceMode}){
+function TitleScreen({onStart,onOpenOnline,isMobile,forceMode,setForceMode,appShell}){
   const[mode,setMode]=useState(null);const[dif,setDif]=useState(null);const[help,setHelp]=useState(false);
   const canvasRef=useRef(null);
 
@@ -1739,6 +1898,7 @@ function TitleScreen({onStart,onOpenOnline,isMobile,forceMode,setForceMode}){
         <div style={{fontSize:isMobile?"clamp(28px,10vw,48px)":"clamp(24px,7vw,48px)",fontWeight:"bold",color:P.gold,textShadow:`0 0 20px ${P.gold}44, 0 4px 0 #8b6914, 0 6px 0 #6b5010`,letterSpacing:4}}>CAFÉ CHAOS</div>
         <div style={{fontSize:isMobile?12:10,color:"#c4956a",letterSpacing:2}}>☕ A Barista Frenzy ☕</div>
         {isMobile&&<div style={{fontSize:8,color:"#8a6a4a",letterSpacing:1,textAlign:"center",maxWidth:280}}>Portrait for menus and room setup. Rotate to landscape when the shift starts.</div>}
+        <ShellActionRow appShell={appShell} />
 
         {/* Mode toggle */}
         <div style={{display:"flex",gap:4,alignItems:"center"}}>
@@ -1810,7 +1970,7 @@ function TitleScreen({onStart,onOpenOnline,isMobile,forceMode,setForceMode}){
   );
 }
 
-function OnlineRoomScreen({isMobile,onBack,onLaunch,initialRoomCode}){
+function OnlineRoomScreen({isMobile,onBack,onLaunch,initialRoomCode,appShell}){
   const [stage,setStage]=useState(initialRoomCode?"join":"menu");
   const [joinCode,setJoinCode]=useState(normalizeRoomCode(initialRoomCode));
   const [roomSession,setRoomSession]=useState(null);
@@ -1916,6 +2076,7 @@ function OnlineRoomScreen({isMobile,onBack,onLaunch,initialRoomCode}){
     <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"100%",background:"radial-gradient(circle at top,#3a2215 0%,#1a0f08 55%,#120904 100%)",fontFamily:"'Silkscreen',monospace",color:"#f5e6d3",padding:isMobile?20:28,textAlign:"center",gap:isMobile?14:10}}>
       <div style={{fontSize:isMobile?28:24,color:P.gold,textShadow:`0 0 20px ${P.gold}44`}}>ONLINE SHIFT</div>
       <div style={{fontSize:isMobile?10:9,color:"#c4956a",maxWidth:520}}>Host the game on Vercel or GitHub Pages, then use a Supabase room link or code so a friend can join your shift. On phones, gameplay is tuned for landscape.</div>
+      <ShellActionRow appShell={appShell} />
       {!hasOnlineConfig()&&<div style={{maxWidth:560,background:"#2d1b0e",border:"2px solid #6b3a1f",borderRadius:14,padding:isMobile?16:14,fontSize:isMobile?10:9,lineHeight:1.8,color:"#e8a87c"}}>Online mode needs public realtime keys in <code>.env</code>: <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code>.</div>}
       {error&&<div style={{color:P.red,fontSize:isMobile?10:9,maxWidth:520}}>{error}</div>}
 
@@ -1999,6 +2160,7 @@ export default function CafeChaos(){
   const[diff,setDiff]=useState("normal");const[finalScore,setFs]=useState(0);
   const[onlineSession,setOnlineSession]=useState(null);
   const[gameKey,setGameKey]=useState(0);
+  const appShell=useShellActions();
   const autoMobile = useIsMobile();
   const[forceMode,setForceMode]=useState(null); // null=auto, "mobile", "pc"
   const isMobile = forceMode === "mobile" ? true : forceMode === "pc" ? false : autoMobile;
@@ -2038,10 +2200,11 @@ export default function CafeChaos(){
         html,body,#root{width:100%;height:100%;margin:0;padding:0;background:#1a0f08;overflow:hidden;}
         body{overscroll-behavior:none;}
       `}</style>
-      {screen==="title"&&<TitleScreen isMobile={isMobile} forceMode={forceMode} setForceMode={setForceMode} onStart={startLocalGame} onOpenOnline={()=>setScreen("online")}/>}
-      {screen==="online"&&<OnlineRoomScreen isMobile={isMobile} initialRoomCode={initialRoomCode} onBack={returnToTitle} onLaunch={startOnlineGame}/>}
-      {screen==="game"&&<Game key={gameKey} playerCount={pCount} diff={diff} isMobile={isMobile} onlineSession={onlineSession} onEnd={s=>{setFs(s);setScreen("over");}}/>}
+      {screen==="title"&&<TitleScreen appShell={appShell} isMobile={isMobile} forceMode={forceMode} setForceMode={setForceMode} onStart={startLocalGame} onOpenOnline={()=>setScreen("online")}/>}
+      {screen==="online"&&<OnlineRoomScreen appShell={appShell} isMobile={isMobile} initialRoomCode={initialRoomCode} onBack={returnToTitle} onLaunch={startOnlineGame}/>}
+      {screen==="game"&&<Game key={gameKey} appShell={appShell} playerCount={pCount} diff={diff} isMobile={isMobile} onlineSession={onlineSession} onEnd={s=>{setFs(s);setScreen("over");}}/>}
       {screen==="over"&&<GameOver score={finalScore} diff={diff} isMobile={isMobile} onRestart={returnToTitle}/>}
+      <InstallHelpModal appShell={appShell} />
     </div>
   );
 }

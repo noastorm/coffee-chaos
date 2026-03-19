@@ -6,6 +6,7 @@ Cafe Chaos is a React + Vite browser game with:
 - local couch co-op
 - online room-based co-op with invite links / room codes
 - click/tap-to-move pathfinding alongside the original direct controls
+- installable PWA support for a cleaner home-screen app experience on phones
 
 ## Local setup
 
@@ -39,6 +40,12 @@ npm run build
 ```
 
 The compiled site is output to `dist/`.
+
+## Phone experience
+
+- On iPhone and iPad, the cleanest full-screen experience is the installed home-screen app.
+- Safari tabs still show browser chrome; use `INSTALL APP` in-game or Safari's `Add to Home Screen`.
+- Browsers that support the Fullscreen API also get an in-app `FULLSCREEN` button.
 
 ## Realtime setup
 
