@@ -256,9 +256,20 @@ function trackLabel(stem){
   return stem.replace(/[-_]+/g," ").replace(/\b\w/g,(m)=>m.toUpperCase());
 }
 
+function normalizeAudioStem(stem){
+  return (stem||"").toLowerCase().replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,"");
+}
+
+function isMenuMusicStem(stem){
+  const normalized=normalizeAudioStem(stem);
+  return normalized==="main_theme" || normalized.includes("menu_theme") || normalized.includes("title_theme") || normalized.startsWith("menu_") || normalized.startsWith("title_");
+}
+
 const MUSIC_TRACKS=Object.entries(MUSIC_MODULES)
   .sort(([a],[b])=>a.localeCompare(b))
   .map(([path,url],idx)=>({id:idx,stem:audioStem(path),name:trackLabel(audioStem(path)),url}));
+const MENU_MUSIC_TRACKS=MUSIC_TRACKS.filter((track)=>isMenuMusicStem(track.stem));
+const GAMEPLAY_MUSIC_TRACKS=MUSIC_TRACKS.filter((track)=>!isMenuMusicStem(track.stem));
 const SFX_FILE_URLS=Object.fromEntries(
   Object.entries(SFX_MODULES).map(([path,url])=>[audioStem(path),url])
 );
@@ -289,7 +300,10 @@ class SFX {
     this.musicEnabled=true;
     this.musicVolume=.32;
     this.sfxVolume=.72;
-    this.musicTracks=MUSIC_TRACKS;
+    this.menuMusicTracks=MENU_MUSIC_TRACKS.length?MENU_MUSIC_TRACKS:(MUSIC_TRACKS[0]?[MUSIC_TRACKS[0]]:[]);
+    this.gameplayMusicTracks=GAMEPLAY_MUSIC_TRACKS.length?GAMEPLAY_MUSIC_TRACKS:MUSIC_TRACKS;
+    this.musicMode="gameplay";
+    this.musicTracks=this.gameplayMusicTracks;
     this.musicIndex=0;
     this.musicEl=null;
     this.filePool={};
@@ -318,6 +332,17 @@ class SFX {
   musicCount(){return this.musicTracks.length;}
   hasMusic(){return this.musicTracks.length>0;}
   currentTrack(){return this.musicTracks[this.musicIndex]||null;}
+  setMusicMode(mode="gameplay"){
+    const nextMode=mode==="menu"?"menu":"gameplay";
+    if(this.musicMode===nextMode)return;
+    const currentStem=this.currentTrack()?.stem;
+    this.musicMode=nextMode;
+    this.musicTracks=nextMode==="menu"?this.menuMusicTracks:this.gameplayMusicTracks;
+    const carryIndex=currentStem?this.musicTracks.findIndex((track)=>track.stem===currentStem):-1;
+    this.musicIndex=carryIndex>=0?carryIndex:0;
+    if(!this.musicEnabled){this.pauseMusic();return;}
+    this.startMusic(true);
+  }
   startMusic(force=false){
     if(!this.musicEnabled||!this.musicTracks.length)return;
     const track=this.currentTrack();if(!track)return;
@@ -2504,6 +2529,10 @@ export default function CafeChaos(){
     sfx.setPrefs(audioPrefs);
     try{window.localStorage.setItem(AUDIO_PREFS_KEY,JSON.stringify(audioPrefs));}catch(e){}
   },[audioPrefs]);
+
+  useEffect(()=>{
+    sfx.setMusicMode(screen==="game"?"gameplay":"menu");
+  },[screen]);
 
   useEffect(()=>{
     const unlock=()=>sfx.init();
