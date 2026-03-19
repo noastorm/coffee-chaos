@@ -752,14 +752,14 @@ function drawCentralPerksWindowScene(ctx,x,y,w,h,f,paneIdx){
     ctx.fillRect(x+drift+w*.08,cy+h*.02,w*.08,h*.03);
   }
 
-  const skylineBase=y+h*.66;
+  const skylineBase=y+h*.68;
   ctx.fillStyle="#c5d3df";
   ctx.fillRect(x,skylineBase,w,h*.08);
 
-  for(let i=0;i<6;i++){
-    const bx=x+4+i*(w/6.1);
-    const bw=Math.max(4,w*(.08+.01*((i+paneIdx)%2)));
-    const bh=h*(.16+.07*((i+paneIdx)%4));
+  for(let i=0;i<4;i++){
+    const bx=x+4+i*(w/4.3);
+    const bw=Math.max(4,w*(.11+.02*((i+paneIdx)%2)));
+    const bh=h*(.18+.1*((i+paneIdx)%3));
     ctx.fillStyle=["#8ea2b6","#8295ab","#768ba1","#a2b5c8"][(i+paneIdx)%4];
     ctx.fillRect(bx,skylineBase-bh,bw,bh+2);
     ctx.fillStyle="#edf7ff";
@@ -768,10 +768,10 @@ function drawCentralPerksWindowScene(ctx,x,y,w,h,f,paneIdx){
     if(i%2===0)ctx.fillRect(bx+Math.max(2,bw-3),skylineBase-bh+8,1,1);
   }
 
-  for(let i=0;i<4;i++){
-    const bx=x+8+i*(w/4.8);
-    const bw=Math.max(5,w*(.11+.015*((i+paneIdx)%3)));
-    const bh=h*(.24+.08*((i+paneIdx*2)%3));
+  for(let i=0;i<3;i++){
+    const bx=x+8+i*(w/3.4);
+    const bw=Math.max(5,w*(.16+.025*((i+paneIdx)%2)));
+    const bh=h*(.28+.12*((i+paneIdx*2)%3));
     ctx.fillStyle=["#5f7389","#54687d","#72879f","#495c71"][(i+paneIdx)%4];
     ctx.fillRect(bx,skylineBase-bh,bw,bh+2);
     ctx.fillStyle="#f7fbff";
@@ -793,12 +793,12 @@ function drawCentralPerksWindowScene(ctx,x,y,w,h,f,paneIdx){
   const carC=(f*.95+paneIdx*31)%carSpan;
   const drawCar=(cx,cy,body,roof)=>{
     ctx.fillStyle=body;
-    ctx.fillRect(cx,cy,5,2);
+    ctx.fillRect(cx,cy,6,2);
     ctx.fillStyle=roof;
-    ctx.fillRect(cx+1,cy-1,3,1);
+    ctx.fillRect(cx+1,cy-1,4,1);
     ctx.fillStyle="#eef7ff";
     ctx.fillRect(cx+1,cy,1,1);
-    ctx.fillRect(cx+3,cy,1,1);
+    ctx.fillRect(cx+4,cy,1,1);
   };
   drawCar(x+7+carA,avenueY-1,"#d9784f","#f7d9c5");
   drawCar(x+7+carB,avenueY+2,"#f0c989","#fff0d2");
@@ -827,23 +827,23 @@ function drawCentralPerksBlackboard(ctx,x,y,w,h,title="HOUSE MENU"){
   ctx.strokeRect(x+.5,y+.5,w-1,h-1);
 
   ctx.fillStyle="#efe3d1";
-  ctx.font=`bold ${Math.max(7,h*.18)}px monospace`;
+  ctx.font=`bold ${Math.max(8,h*.18)}px monospace`;
   ctx.textAlign="left";
   ctx.fillText(title,x+8,y+10);
 
   ctx.fillStyle="#f0c989";
-  ctx.fillRect(x+8,y+16,10,1);
-  ctx.fillRect(x+11,y+13,4,1);
-  ctx.fillRect(x+11,y+17,4,1);
-  ctx.fillRect(x+10,y+18,6,4);
+  ctx.fillRect(x+8,y+17,12,1);
+  ctx.fillRect(x+12,y+13,4,1);
+  ctx.fillRect(x+12,y+18,4,1);
+  ctx.fillRect(x+10,y+19,10,5);
   ctx.fillStyle="#efe3d1";
-  ctx.fillRect(x+11,y+10,1,3);
-  ctx.fillRect(x+14,y+9,1,4);
-  ctx.fillRect(x+17,y+10,1,3);
-  ctx.fillRect(x+16,y+20,2,1);
+  ctx.fillRect(x+11,y+10,2,4);
+  ctx.fillRect(x+15,y+8,2,5);
+  ctx.fillRect(x+19,y+10,2,4);
+  ctx.fillRect(x+16,y+24,4,1);
 
-  const lineX=x+28;
-  const widths=[w*.34,w*.28,w*.31,w*.23];
+  const lineX=x+34;
+  const widths=[w*.34,w*.28,w*.31,w*.23,w*.18];
   widths.forEach((lineW,idx)=>{
     ctx.fillStyle=idx===1?"#f0c989":"#f5efe6";
     ctx.fillRect(lineX,y+12+idx*5,Math.max(12,lineW),1);
@@ -1066,8 +1066,8 @@ function drawCafeDecor(ctx,T,BW,BH,f){
       ctx.fillRect(lx+T*.02,T*.1,T*.02,T*.02);
     }
   }else if(mapTheme.deco==="centralperks"){
-    drawCentralPerksBlackboard(ctx,T*.52,topH-T*.35,T*2.35,T*.25,"ESPRESSO");
-    drawCentralPerksBlackboard(ctx,BW-T*2.92,topH-T*.35,T*2.35,T*.25,"SPECIALS");
+    drawCentralPerksBlackboard(ctx,T*.46,topH-T*.43,T*2.65,T*.34,"ESPRESSO");
+    drawCentralPerksBlackboard(ctx,BW-T*3.11,topH-T*.43,T*2.65,T*.34,"SPECIALS");
     ctx.fillStyle="#214844";
     ctx.fillRect(T*.42,topH-T*.11,T*1.55,3);
     ctx.fillRect(BW-T*1.97,topH-T*.11,T*1.55,3);
@@ -1545,7 +1545,7 @@ function drawCentralPerksFloor(ctx,x,y,T,r,c){
   }
 }
 
-function drawCentralPerksWall(ctx,x,y,T,r,c){
+function drawCentralPerksWall(ctx,x,y,T,r,c,f){
   ctx.fillStyle="#d4c6b2";
   ctx.fillRect(x,y,T,T);
   ctx.fillStyle="#e9dfd0";
@@ -1558,8 +1558,10 @@ function drawCentralPerksWall(ctx,x,y,T,r,c){
     if(c>0&&c<COLS-1){
       ctx.fillStyle="#f0e5d8";
       ctx.fillRect(x+3,y+4,T-6,T-8);
-      ctx.fillStyle="#bfd8ea";
-      ctx.fillRect(x+4,y+5,T-8,T-10);
+      drawCentralPerksWindowScene(ctx,x+4,y+5,T-8,T-10,f,c);
+      ctx.fillStyle="#355b58";
+      ctx.fillRect(x+T/2-1,y+5,2,T-10);
+      ctx.fillRect(x+4,y+T/2,T-8,2);
     }
   }else{
     ctx.fillStyle=(c%3===0)?"#b48774":"#c7baa7";
@@ -2787,7 +2789,7 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
         else if(cell.type==="wall"){
           if(mapTheme.deco==="sunbooks")drawSunbooksWall(ctx,x,y,T,r,c);
           else if(mapTheme.deco==="catcafe")drawCatCafeWall(ctx,x,y,T,r,c);
-          else if(mapTheme.deco==="centralperks")drawCentralPerksWall(ctx,x,y,T,r,c);
+          else if(mapTheme.deco==="centralperks")drawCentralPerksWall(ctx,x,y,T,r,c,f);
           else{ctx.fillStyle=P.wall;ctx.fillRect(x,y,T,T);const bh=T/4;for(let by=0;by<4;by++){const off=by%2===0?0:T/2;ctx.fillStyle=P.wallLine+"30";ctx.fillRect(x,y+by*bh,T,1);ctx.fillRect(x+off,y+by*bh,1,bh);ctx.fillRect(x+off+T/2,y+by*bh,1,bh);}}
         }
         else if(cell.type==="counter"){
