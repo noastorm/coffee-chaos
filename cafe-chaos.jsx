@@ -1721,15 +1721,22 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession,appShell}){
   const handleCanvasTarget=useCallback((e)=>{
     const cv=canvasRef.current;
     if(!cv)return;
-    e.preventDefault();
+    if(e.cancelable)e.preventDefault();
+    e.stopPropagation?.();
+    const point=("touches" in e&&e.touches?.length)?e.touches[0]:("changedTouches" in e&&e.changedTouches?.length)?e.changedTouches[0]:e;
+    if(point?.clientX==null||point?.clientY==null)return;
     const rect=cv.getBoundingClientRect();
-    const x=(e.clientX-rect.left)*(BW/rect.width);
-    const y=(e.clientY-rect.top)*(BH/rect.height);
+    const x=(point.clientX-rect.left)*(BW/rect.width);
+    const y=(point.clientY-rect.top)*(BH/rect.height);
     const r=Math.max(0,Math.min(ROWS-1,Math.floor(y/T)));
     const c=Math.max(0,Math.min(COLS-1,Math.floor(x/T)));
     if(online&&!isHost){sendOnlineInput({type:"target",r,c});return;}
     setAutoTarget(localPid,r,c);
   },[BW,BH,T,online,isHost,sendOnlineInput,setAutoTarget,localPid]);
+  const handleCanvasPointerDown=useCallback((e)=>{
+    if(e.pointerType==="touch")return;
+    handleCanvasTarget(e);
+  },[handleCanvasTarget]);
   const singleControlMode = playerCount === 1 || online;
   const localColor = localPid === 1 ? P.p2 : P.p1;
   const localHolding = hud.holding[localPid];
@@ -1819,7 +1826,7 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession,appShell}){
           <div style={{flex:1,minWidth:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
             <div style={{position:"relative",width:displayW + 14,height:displayH + 14,borderRadius:24,padding:7,background:"radial-gradient(circle at top,#3a2215 0%,#1a0f08 68%,#120904 100%)",boxShadow:"inset 0 1px 0 #ffffff08,0 20px 40px #00000044"}}>
               <div style={{position:"absolute",inset:0,pointerEvents:"none",borderRadius:24,background:"radial-gradient(circle at center,#ffffff08 0%,transparent 58%),linear-gradient(180deg,#ffffff05 0%,transparent 26%,#00000022 100%)"}}/>
-              <canvas ref={canvasRef} width={BW} height={BH} onPointerDown={handleCanvasTarget} style={{width:displayW,height:displayH,imageRendering:"pixelated",display:"block",cursor:"pointer",borderTop:`2px solid ${P.wallLine}`,borderBottom:`2px solid ${P.wallLine}`,boxShadow:"0 16px 30px #00000055",borderRadius:16,position:"relative",zIndex:1}} />
+              <canvas ref={canvasRef} width={BW} height={BH} onPointerDown={handleCanvasPointerDown} onTouchStart={handleCanvasTarget} style={{width:displayW,height:displayH,imageRendering:"pixelated",display:"block",cursor:"pointer",borderTop:`2px solid ${P.wallLine}`,borderBottom:`2px solid ${P.wallLine}`,boxShadow:"0 16px 30px #00000055",borderRadius:16,position:"relative",zIndex:1,touchAction:"manipulation"}} />
             </div>
           </div>
 
@@ -1851,7 +1858,7 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession,appShell}){
       <div style={{display:"flex",gap:6,maxWidth:BW+18,padding:"0 10px 8px",overflowX:"auto",flexShrink:0,minHeight:72}}>
         {hud.orders.map(o=><OrderTicket key={o.id} o={o}/>)}{!hud.orders.length&&<span style={{color:"#6b3a1f",fontSize:9,padding:12}}>Waiting for customers...</span>}
       </div>
-      <canvas ref={canvasRef} width={BW} height={BH} onPointerDown={handleCanvasTarget} style={{width:BW,height:BH,imageRendering:"pixelated",flexShrink:0,borderTop:`2px solid ${P.wallLine}`,borderBottom:`2px solid ${P.wallLine}`,boxShadow:"0 16px 30px #0000004d",cursor:"pointer"}}/>
+      <canvas ref={canvasRef} width={BW} height={BH} onPointerDown={handleCanvasPointerDown} onTouchStart={handleCanvasTarget} style={{width:BW,height:BH,imageRendering:"pixelated",flexShrink:0,borderTop:`2px solid ${P.wallLine}`,borderBottom:`2px solid ${P.wallLine}`,boxShadow:"0 16px 30px #0000004d",cursor:"pointer",touchAction:"manipulation"}}/>
       <div style={{display:"flex",flexWrap:"wrap",gap:4,maxWidth:BW+18,padding:"8px 10px 6px",justifyContent:"center",flexShrink:0}}>
         {Object.entries(RECIPES).map(([n,r])=><div key={n} style={{background:"#2d1b0e",borderRadius:6,padding:"4px 7px",fontSize:7,color:"#9f7d59",border:"1px solid #4a2a18",display:"flex",alignItems:"center",gap:3,fontFamily:"'Silkscreen',monospace",boxShadow:"inset 0 1px 0 #ffffff12"}}>
           <span style={{color:getRecipeUiColor(n),fontWeight:"bold"}}>{n}</span>{r.ing.map((ing,i)=><div key={i} style={{width:9,height:9,borderRadius:1,background:ING_C[ing],border:"1px solid #fff1"}}/>)}
