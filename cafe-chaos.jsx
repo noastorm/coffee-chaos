@@ -95,26 +95,129 @@ const STATIONS = {
   X:{id:"trash",     label:"Trash",   action:"trash",short:"BIN"},
 };
 
-const MAP_RAW = [
-  "WSSSSSSSSSSSSSSSW",
-  "W................W",
-  "E..CC....CC....A.W",
-  "e................B",
-  "M..CC....CC....T.W",
-  "m.............H.Q.",
-  "F..U.I..R..X..C..W",
-  "WWWWWWWWWWWWWWWWWW",
-];
-const MAP = [];
-for(let r=0;r<ROWS;r++){MAP[r]=[];for(let c=0;c<COLS;c++){
-  const ch=(MAP_RAW[r]||"")[c]||"W";
-  if(ch===".")MAP[r][c]={type:"floor"};
-  else if(ch==="W")MAP[r][c]={type:"wall"};
-  else if(ch==="S")MAP[r][c]={type:"station",station:"serve"};
-  else if(ch==="C")MAP[r][c]={type:"counter"};
-  else if(STATIONS[ch])MAP[r][c]={type:"station",station:ch};
-  else MAP[r][c]={type:"floor"};
-}}
+const MAPS = {
+  classic:{
+    id:"classic",
+    name:"SunBooks",
+    desc:"Green-logo bookstore cafe with warm shelves and window bar seating.",
+    raw:[
+      "WSSSSSSSSSSSSSSSW",
+      "W................W",
+      "E..CC....CC....A.W",
+      "e................B",
+      "M..CC....CC....T.W",
+      "m.............H.Q.",
+      "F..U.I..R..X..C..W",
+      "WWWWWWWWWWWWWWWWWW",
+    ],
+    theme:{
+      deco:"sunbooks",
+      top:"#18392d",
+      panel:"#21473a",
+      trim:"#92d0a5",
+      text:"#ecf7ef",
+      accent:"#5ab97f",
+      wood:"#6e4b2d",
+      shelf:"#7b5a36",
+      lamp:"#f4c66b",
+      logo:"SUNBOOKS",
+      subtitle:"COFFEE + STORIES",
+      glow:"90,185,127",
+    },
+    spawns:[[4,6],[4,11]],
+  },
+  speedway:{
+    id:"speedway",
+    name:"Night Owl",
+    desc:"Late-night study cafe with navy walls, laptops, and amber lamps.",
+    raw:[
+      "WSSSSSSSSSSSSSSSW",
+      "W................W",
+      "EA.CC......CC..T.W",
+      "e..............B.W",
+      "M..CC......CC..H.W",
+      "m..............Q.W",
+      "F..U.I..R..X.....W",
+      "WWWWWWWWWWWWWWWWWW",
+    ],
+    theme:{
+      deco:"nightowl",
+      top:"#1d2338",
+      panel:"#293149",
+      trim:"#e0bf77",
+      text:"#f6ecd5",
+      accent:"#79a8d1",
+      wood:"#624430",
+      shelf:"#31415d",
+      lamp:"#e5b76a",
+      logo:"NIGHT OWL",
+      subtitle:"ESPRESSO + ESSAYS",
+      glow:"120,168,209",
+    },
+    spawns:[[4,6],[4,11]],
+  },
+  crossroads:{
+    id:"crossroads",
+    name:"Pixel Perk",
+    desc:"Retro game-cafe layout with neon accents and trickier crossings.",
+    raw:[
+      "WSSSSSSSSSSSSSSSW",
+      "W................W",
+      "E....CC..CC....A.W",
+      "e..U......I....B.W",
+      "M....CC..CC....T.W",
+      "m..F......R....H.W",
+      "Q........X.......W",
+      "WWWWWWWWWWWWWWWWWW",
+    ],
+    theme:{
+      deco:"pixelperk",
+      top:"#2d1536",
+      panel:"#32194a",
+      trim:"#62e6d6",
+      text:"#f9f3ff",
+      accent:"#ff8f5a",
+      wood:"#744531",
+      shelf:"#5f2d66",
+      lamp:"#ffb36c",
+      logo:"PIXEL PERK",
+      subtitle:"BREWS + BONUS XP",
+      glow:"98,230,214",
+    },
+    spawns:[[4,6],[4,11]],
+  },
+};
+
+function buildMapGrid(raw){
+  const grid=[];
+  for(let r=0;r<ROWS;r++){
+    grid[r]=[];
+    for(let c=0;c<COLS;c++){
+      const ch=(raw[r]||"")[c]||"W";
+      if(ch===".")grid[r][c]={type:"floor"};
+      else if(ch==="W")grid[r][c]={type:"wall"};
+      else if(ch==="S")grid[r][c]={type:"station",station:"serve"};
+      else if(ch==="C")grid[r][c]={type:"counter"};
+      else if(STATIONS[ch])grid[r][c]={type:"station",station:ch};
+      else grid[r][c]={type:"floor"};
+    }
+  }
+  return grid;
+}
+
+let ACTIVE_MAP_KEY="classic";
+let MAP=buildMapGrid(MAPS[ACTIVE_MAP_KEY].raw);
+
+function setActiveMap(key="classic"){
+  ACTIVE_MAP_KEY=MAPS[key]?key:"classic";
+  MAP=buildMapGrid(MAPS[ACTIVE_MAP_KEY].raw);
+  return MAPS[ACTIVE_MAP_KEY];
+}
+
+function getActiveMapDef(){
+  return MAPS[ACTIVE_MAP_KEY]||MAPS.classic;
+}
+
 const isFloor=(r,c)=>r>=0&&r<ROWS&&c>=0&&c<COLS&&(MAP[r][c].type==="floor"||MAP[r][c].type==="counter");
 const CUST=["Alex","Sam","Jo","Max","Lee","Sky","Ash","Bay","Kit","Ren","Kai","Pip","Zoe","Cam"];
 const PLAYER_STYLES = [
@@ -580,39 +683,40 @@ function getRecipeUiColor(drink){
 }
 
 function drawCafeDecor(ctx,T,BW,BH,f){
+  const mapTheme=getActiveMapDef().theme||{};
   ctx.save();
   const topH=T*.75;
-  ctx.fillStyle="#201108";
+  ctx.fillStyle=mapTheme.top||"#201108";
   ctx.fillRect(0,0,BW,topH);
 
   const menuX=T*2.1,menuY=T*.04,menuW=BW-T*4.2,menuH=T*.38;
-  ctx.fillStyle="#3a2618";
+  ctx.fillStyle=mapTheme.wood||"#3a2618";
   ctx.fillRect(menuX-4,menuY-4,menuW+8,menuH+8);
-  ctx.fillStyle="#223329";
+  ctx.fillStyle=mapTheme.panel||"#223329";
   ctx.fillRect(menuX,menuY,menuW,menuH);
-  ctx.strokeStyle="#a37b42";
+  ctx.strokeStyle=mapTheme.trim||"#a37b42";
   ctx.lineWidth=2;
   ctx.strokeRect(menuX+.5,menuY+.5,menuW-1,menuH-1);
-  ctx.fillStyle="#f2e2c6";
+  ctx.fillStyle=mapTheme.text||"#f2e2c6";
   ctx.font=`bold ${Math.max(10,T*.15)}px monospace`;
   ctx.textAlign="center";
-  ctx.fillText("HOUSE SPECIALS",BW/2,menuY+T*.14);
+  ctx.fillText(mapTheme.logo||"HOUSE SPECIALS",BW/2,menuY+T*.14);
   ctx.font=`${Math.max(7,T*.1)}px monospace`;
-  ctx.fillStyle="#b6d5b5";
-  ctx.fillText("LATTE  MATCHA  CARAMEL  TEA",BW/2,menuY+T*.3);
+  ctx.fillStyle=mapTheme.accent||"#b6d5b5";
+  ctx.fillText(mapTheme.subtitle||"LATTE  MATCHA  CARAMEL  TEA",BW/2,menuY+T*.3);
 
   const lightXs=PENDANT_COLS.map((n)=>n*T);
   lightXs.forEach((lx,idx)=>{
     const sway=Math.sin(f*.02+idx)*1.5;
-    ctx.strokeStyle="#7b5b2c";
+    ctx.strokeStyle=mapTheme.wood||"#7b5b2c";
     ctx.lineWidth=2;
     ctx.beginPath();
     ctx.moveTo(lx,0);
     ctx.lineTo(lx+sway,T*.18);
     ctx.stroke();
-    ctx.fillStyle="#d8a73a";
+    ctx.fillStyle=mapTheme.lamp||"#d8a73a";
     ctx.fillRect(lx-7+sway,T*.18,14,8);
-    ctx.fillStyle="#ffe08a22";
+    ctx.fillStyle=`rgba(${mapTheme.glow||"255,224,138"},0.16)`;
     ctx.beginPath();
     ctx.moveTo(lx-26+sway,T*.26);
     ctx.lineTo(lx+26+sway,T*.26);
@@ -622,15 +726,54 @@ function drawCafeDecor(ctx,T,BW,BH,f){
     ctx.fill();
   });
 
-  ctx.fillStyle="#4f311f";
+  ctx.fillStyle=mapTheme.shelf||"#4f311f";
   ctx.fillRect(T*.45,topH-T*.12,T*1.2,T*.12);
   ctx.fillRect(BW-T*1.65,topH-T*.12,T*1.2,T*.12);
-  ctx.fillStyle="#5b8d46";
+  ctx.fillStyle=mapTheme.accent||"#5b8d46";
   ctx.fillRect(T*.6,topH-T*.42,T*.9,T*.3);
   ctx.fillRect(BW-T*1.5,topH-T*.46,T*.9,T*.34);
-  ctx.fillStyle="#7ebd60";
+  ctx.fillStyle="#d9f4de";
   ctx.fillRect(T*.7,topH-T*.52,T*.3,T*.14);
   ctx.fillRect(BW-T*1.25,topH-T*.6,T*.28,T*.16);
+
+  if(mapTheme.deco==="sunbooks"){
+    ctx.fillStyle="#f4e8cf";
+    ctx.fillRect(T*.58,T*.14,T*.72,T*.18);
+    ctx.fillStyle=mapTheme.accent||"#5ab97f";
+    ctx.beginPath();ctx.arc(T*.94,T*.23,T*.17,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#f4fbf5";
+    ctx.fillRect(T*.87,T*.16,T*.05,T*.14);
+    ctx.fillRect(T*.96,T*.16,T*.05,T*.14);
+    ctx.fillRect(T*.91,T*.17,T*.05,T*.1);
+    for(let i=0;i<5;i++){
+      ctx.fillStyle=["#d8b48c","#8ec7a0","#f1d17a","#9bc2ff","#d7a0ff"][i%5];
+      ctx.fillRect(BW-T*(1.8+i*.12),T*.06+i*2,T*.09,T*.22);
+    }
+  }else if(mapTheme.deco==="nightowl"){
+    ctx.fillStyle="#c9b18a";
+    ctx.fillRect(T*.62,T*.14,T*.76,T*.04);
+    ctx.fillStyle="#21293b";
+    ctx.fillRect(T*.62,T*.18,T*.76,T*.1);
+    ctx.fillStyle="#f0ddb7";
+    ctx.fillText("NIGHT READS",T*1.02,T*.28);
+    ctx.fillStyle="#79a8d1";
+    ctx.fillRect(BW-T*1.65,T*.1,T*.78,T*.08);
+    ctx.fillStyle="#f6ecd5";
+    for(let i=0;i<3;i++)ctx.fillRect(BW-T*(1.58-i*.18),T*.11,T*.08,T*.06);
+  }else if(mapTheme.deco==="pixelperk"){
+    ctx.fillStyle="#211229";
+    ctx.fillRect(T*.52,T*.1,T*.96,T*.24);
+    ctx.strokeStyle=mapTheme.trim||"#62e6d6";
+    ctx.lineWidth=2;
+    ctx.strokeRect(T*.52+.5,T*.1+.5,T*.96-1,T*.24-1);
+    ctx.fillStyle=mapTheme.trim||"#62e6d6";
+    ctx.fillText("INSERT COIN",T, T*.28);
+    ctx.fillStyle="#ff8f5a";
+    ctx.fillRect(BW-T*1.7,T*.08,T*.4,T*.18);
+    ctx.fillStyle="#ffd6c5";
+    ctx.fillRect(BW-T*1.64,T*.12,T*.1,T*.1);
+    ctx.fillRect(BW-T*1.48,T*.12,T*.1,T*.1);
+  }
   ctx.restore();
 }
 
@@ -805,6 +948,7 @@ function drawCustomerArea(ctx,T,BW,orders,f){
 }
 
 function drawLighting(ctx,T,BW,BH,f,gameState){
+  const mapTheme=getActiveMapDef().theme||{};
   ctx.save();
 
   const pendants=PENDANT_COLS.map((n)=>n*T);
@@ -813,16 +957,16 @@ function drawLighting(ctx,T,BW,BH,f,gameState){
     const lampX=lx+sway;
     const lampY=T*.24;
     const glow=ctx.createRadialGradient(lampX,lampY,0,lampX,lampY,T*1.75);
-    glow.addColorStop(0,"rgba(255,224,138,0.28)");
-    glow.addColorStop(.35,"rgba(255,200,90,0.12)");
-    glow.addColorStop(1,"rgba(255,180,70,0)");
+    glow.addColorStop(0,`rgba(${mapTheme.glow||"255,224,138"},0.28)`);
+    glow.addColorStop(.35,`rgba(${mapTheme.glow||"255,200,90"},0.12)`);
+    glow.addColorStop(1,`rgba(${mapTheme.glow||"255,180,70"},0)`);
     ctx.fillStyle=glow;
     ctx.fillRect(lampX-T*1.75,lampY-T*.8,T*3.5,T*3);
 
     const cone=ctx.createLinearGradient(lampX,0,lampX,T*1.8);
-    cone.addColorStop(0,"rgba(255,220,120,0.12)");
-    cone.addColorStop(.5,"rgba(255,210,110,0.06)");
-    cone.addColorStop(1,"rgba(255,190,90,0)");
+    cone.addColorStop(0,`rgba(${mapTheme.glow||"255,220,120"},0.12)`);
+    cone.addColorStop(.5,`rgba(${mapTheme.glow||"255,210,110"},0.06)`);
+    cone.addColorStop(1,`rgba(${mapTheme.glow||"255,190,90"},0)`);
     ctx.fillStyle=cone;
     ctx.beginPath();
     ctx.moveTo(lampX-T*.18,lampY-T*.05);
@@ -869,9 +1013,9 @@ function drawLighting(ctx,T,BW,BH,f,gameState){
   });
 
   const counterGlow=ctx.createLinearGradient(0,T*.82,0,T*1.95);
-  counterGlow.addColorStop(0,"rgba(255,212,120,0.08)");
-  counterGlow.addColorStop(.65,"rgba(255,190,90,0.03)");
-  counterGlow.addColorStop(1,"rgba(255,160,80,0)");
+  counterGlow.addColorStop(0,`rgba(${mapTheme.glow||"255,212,120"},0.08)`);
+  counterGlow.addColorStop(.65,`rgba(${mapTheme.glow||"255,190,90"},0.03)`);
+  counterGlow.addColorStop(1,`rgba(${mapTheme.glow||"255,160,80"},0)`);
   ctx.fillStyle=counterGlow;
   ctx.fillRect(0,T*.82,BW,T*1.3);
 
@@ -915,7 +1059,8 @@ function createPlayerState(id, r, c){
   };
 }
 
-function createGameState(playerCount, diff){
+function createGameState(playerCount, diff, mapKey="classic"){
+  const mapDef=setActiveMap(mapKey);
   const counters = {};
   for (let r = 0; r < ROWS; r += 1) {
     for (let c = 0; c < COLS; c += 1) {
@@ -926,9 +1071,10 @@ function createGameState(playerCount, diff){
   }
 
   return {
+    mapKey:mapDef.id,
     players:[
-      createPlayerState(0, 4, 6),
-      ...(playerCount===2 ? [createPlayerState(1, 4, 11)] : []),
+      createPlayerState(0, ...(mapDef.spawns[0]||[4,6])),
+      ...(playerCount===2 ? [createPlayerState(1, ...(mapDef.spawns[1]||[4,11]))] : []),
     ],
     orders:[mkOrder(0, diff)],
     score:0,
@@ -1245,6 +1391,39 @@ function PowerButtons({hud,onUsePower,compact=false,stack=false}){
   );
 }
 
+function MapMini({mapDef,active=false,compact=false}){
+  const cell=compact?5:6;
+  const fill=(ch)=>{
+    if(ch==="W")return "#2d1b0e";
+    if(ch==="S")return mapDef.theme?.trim||"#d7b25a";
+    if(ch==="C")return "#9d7722";
+    if(ch===".")return "#6b4226";
+    return mapDef.theme?.accent||"#8fce7e";
+  };
+  return (
+    <div style={{display:"grid",gridTemplateColumns:`repeat(${COLS},${cell}px)`,gap:1,padding:compact?6:8,borderRadius:10,background:active?"#120904":"#1a0f08",border:`1px solid ${active?P.gold+"88":"#3a2215"}`,boxShadow:active?`0 0 18px ${P.gold}22`:"none"}}>
+      {mapDef.raw.join("").split("").map((ch,idx)=><div key={idx} style={{width:cell,height:cell,borderRadius:1,background:fill(ch),opacity:ch==="." ? 0.82 : 1}}/>)}
+    </div>
+  );
+}
+
+function MapChoiceGrid({selected,onSelect,isMobile,compact=false}){
+  return (
+    <div style={{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"center",width:"100%"}}>
+      {Object.entries(MAPS).map(([key,mapDef])=>{
+        const active=selected===key;
+        return (
+          <button key={key} onClick={()=>onSelect(key)} style={{fontFamily:"'Silkscreen',monospace",background:active?"#2d1b0e":"#1a0f08dd",border:`2px solid ${active?P.gold+"aa":"#4a2a18"}`,borderRadius:14,padding:compact?10:12,minWidth:isMobile?compact?152:168:compact?160:180,cursor:"pointer",display:"flex",flexDirection:"column",gap:8,alignItems:"center",boxShadow:active?"0 10px 24px #00000044":"none"}}>
+            <div style={{fontSize:isMobile?compact?10:11:10,color:active?P.gold:"#f5e6d3"}}>{mapDef.name}</div>
+            <MapMini mapDef={mapDef} active={active} compact={compact} />
+            <div style={{fontSize:isMobile?compact?8:9:8,color:active?"#d8b48c":"#8a6a4a",lineHeight:1.7,maxWidth:160,textAlign:"center"}}>{mapDef.desc}</div>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 function InstallHelpModal({appShell}){
   if(!appShell?.installHelpOpen)return null;
   const isIos=appShell.isIos;
@@ -1276,7 +1455,7 @@ function InstallHelpModal({appShell}){
 // ═══════════════════════════════════════════════════════════════
 // GAME
 // ═══════════════════════════════════════════════════════════════
-function Game({playerCount,diff,onEnd,isMobile,onlineSession,appShell,audioUi}){
+function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,audioUi}){
   const canvasRef=useRef(null);const gs=useRef(null);const keys=useRef(new Set());
   const frame=useRef(0);const lastMove=useRef({0:0,1:0});
   const[hud,setHud]=useState({score:0,time:DIFF[diff].time,combo:0,flow:0,rushLeft:0,freezeLeft:0,orders:[],holding:[null,null]});
@@ -1307,7 +1486,7 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession,appShell,audioUi}){
   const BW = COLS * T, BH = ROWS * T;
 
   useEffect(()=>{
-    gs.current=createGameState(playerCount,diff);
+    gs.current=createGameState(playerCount,diff,mapKey);
     setHud(toHudState(gs.current));
     frame.current=0;
     lastMove.current={0:0,1:0};
@@ -1317,7 +1496,7 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession,appShell,audioUi}){
     lastSnapshot.current=0;
     endedRemotely.current=false;
     parts.current=new Particles();
-  },[playerCount,diff]);
+  },[playerCount,diff,mapKey]);
 
   const addPop=useCallback((text,x,y,type="good")=>{if(gs.current)gs.current.popups.push({text,x,y,type,life:60,ml:60});},[]);
 
@@ -2220,8 +2399,8 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession,appShell,audioUi}){
 }
 
 // ─── TITLE ────────────────────────────────────────────────────
-function TitleScreen({onStart,onOpenOnline,isMobile,forceMode,setForceMode,appShell,audioUi}){
-  const[mode,setMode]=useState(null);const[dif,setDif]=useState(null);const[help,setHelp]=useState(false);
+function TitleScreen({onStart,onOpenOnline,isMobile,forceMode,setForceMode,appShell,audioUi,initialMapKey="classic"}){
+  const[mode,setMode]=useState(null);const[dif,setDif]=useState(null);const[help,setHelp]=useState(false);const[mapKey,setMapKey]=useState(initialMapKey);
   const canvasRef=useRef(null);
 
   useEffect(()=>{
@@ -2319,7 +2498,9 @@ function TitleScreen({onStart,onOpenOnline,isMobile,forceMode,setForceMode,appSh
         :
           <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:isMobile?14:10,marginTop:8}}>
             <div style={{fontSize:isMobile?14:12,color:P.gold}}>{mode===1?"👤 SOLO":"👥 DUO"} • {DIFF[dif].label}</div>
-            <Bt onClick={()=>{sfx.init();onStart(mode,dif);}} big>▶ START SHIFT</Bt>
+            <div style={{fontSize:isMobile?10:9,color:"#c4956a"}}>Choose your cafÃ© layout:</div>
+            <MapChoiceGrid selected={mapKey} onSelect={setMapKey} isMobile={isMobile} />
+            <Bt onClick={()=>{sfx.init();onStart(mode,dif,mapKey);}} big>▶ START SHIFT</Bt>
             <Bt onClick={()=>setDif(null)} dim>← BACK</Bt>
           </div>
         }
@@ -2328,7 +2509,7 @@ function TitleScreen({onStart,onOpenOnline,isMobile,forceMode,setForceMode,appSh
   );
 }
 
-function OnlineRoomScreen({isMobile,onBack,onLaunch,initialRoomCode,appShell,audioUi}){
+function OnlineRoomScreen({isMobile,onBack,onLaunch,initialRoomCode,appShell,audioUi,initialMapKey="classic"}){
   const [stage,setStage]=useState(initialRoomCode?"join":"menu");
   const [joinCode,setJoinCode]=useState(normalizeRoomCode(initialRoomCode));
   const [roomSession,setRoomSession]=useState(null);
@@ -2336,6 +2517,7 @@ function OnlineRoomScreen({isMobile,onBack,onLaunch,initialRoomCode,appShell,aud
   const [status,setStatus]=useState("idle");
   const [error,setError]=useState("");
   const [diff,setDiff]=useState("normal");
+  const [mapKey,setMapKey]=useState(initialMapKey);
   const [busy,setBusy]=useState(false);
   const [copied,setCopied]=useState(false);
   const launched=useRef(false);
@@ -2376,7 +2558,7 @@ function OnlineRoomScreen({isMobile,onBack,onLaunch,initialRoomCode,appShell,aud
       onStatus:(next)=>setStatus(next),
       onStart:(payload)=>{
         launched.current=true;
-        onLaunch({session:roomSession,diff:payload?.diff||"normal"});
+        onLaunch({session:roomSession,diff:payload?.diff||"normal",mapKey:payload?.mapKey||"classic"});
       },
     });
     return ()=>roomSession.setHandlers({});
@@ -2412,9 +2594,9 @@ function OnlineRoomScreen({isMobile,onBack,onLaunch,initialRoomCode,appShell,aud
   const startOnlineGame=useCallback(()=>{
     if(!roomSession||roomSession.role!=="host"||members.length<2)return;
     launched.current=true;
-    roomSession.sendStart({diff}).catch(()=>{});
-    onLaunch({session:roomSession,diff});
-  },[roomSession,members.length,diff,onLaunch]);
+    roomSession.sendStart({diff,mapKey}).catch(()=>{});
+    onLaunch({session:roomSession,diff,mapKey});
+  },[roomSession,members.length,diff,mapKey,onLaunch]);
 
   const copyInvite=useCallback(async ()=>{
     if(!roomSession)return;
@@ -2476,6 +2658,8 @@ function OnlineRoomScreen({isMobile,onBack,onLaunch,initialRoomCode,appShell,aud
               <div style={{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"center"}}>
                 {Object.entries(DIFF).map(([key,entry])=><button key={key} onClick={()=>setDiff(key)} style={{fontFamily:"'Silkscreen',monospace",fontWeight:"bold",fontSize:isMobile?10:9,padding:isMobile?"12px 14px":"10px 12px",background:diff===key?`${entry.clr}22`:"#2d1b0e",color:entry.clr,border:`2px solid ${diff===key?entry.clr:entry.clr+"55"}`,borderRadius:12,cursor:"pointer",minWidth:isMobile?150:132}}>{entry.label}</button>)}
               </div>
+              <div style={{fontSize:isMobile?11:10,color:"#c4956a",marginTop:4}}>Choose the floor plan for this room</div>
+              <MapChoiceGrid selected={mapKey} onSelect={setMapKey} isMobile={isMobile} compact />
               <button onClick={startOnlineGame} disabled={!roomReady} style={{fontFamily:"'Silkscreen',monospace",fontWeight:"bold",fontSize:isMobile?15:13,padding:isMobile?"16px 24px":"14px 22px",background:roomReady?"#6b3a1f":"#3a2215",color:roomReady?"#f5e6d3":"#8a6a4a",border:`2px solid ${roomReady?P.gold+"88":"#5a3a20"}`,borderRadius:12,cursor:roomReady?"pointer":"not-allowed",width:"100%",maxWidth:320}}>START ONLINE SHIFT</button>
               {!roomReady&&<div style={{fontSize:isMobile?9:8,color:"#8a6a4a"}}>Share the link or room code and wait for player 2.</div>}
             </div>
@@ -2516,7 +2700,7 @@ function GameOver({score,diff,onRestart,isMobile}){
 export default function CafeChaos(){
   const initialRoomCode=getRoomCodeFromLocation();
   const[screen,setScreen]=useState(initialRoomCode?"online":"title");const[pCount,setPc]=useState(1);
-  const[diff,setDiff]=useState("normal");const[finalScore,setFs]=useState(0);
+  const[diff,setDiff]=useState("normal");const[mapKey,setMapKey]=useState("classic");const[finalScore,setFs]=useState(0);
   const[onlineSession,setOnlineSession]=useState(null);
   const[gameKey,setGameKey]=useState(0);
   const appShell=useShellActions();
@@ -2560,19 +2744,21 @@ export default function CafeChaos(){
     setScreen("title");
   },[onlineSession]);
 
-  const startLocalGame=useCallback((n,d)=>{
+  const startLocalGame=useCallback((n,d,nextMapKey="classic")=>{
     if(onlineSession){onlineSession.destroy().catch(()=>{});}
     setOnlineSession(null);
     setPc(n);
     setDiff(d);
+    setMapKey(nextMapKey);
     setGameKey((key)=>key+1);
     setScreen("game");
   },[onlineSession]);
 
-  const startOnlineGame=useCallback(({session,diff:nextDiff})=>{
+  const startOnlineGame=useCallback(({session,diff:nextDiff,mapKey:nextMapKey="classic"})=>{
     setOnlineSession(session);
     setPc(2);
     setDiff(nextDiff);
+    setMapKey(nextMapKey);
     setGameKey((key)=>key+1);
     setScreen("game");
   },[]);
@@ -2588,9 +2774,9 @@ export default function CafeChaos(){
         html,body,#root{width:100%;height:100%;margin:0;padding:0;background:#1a0f08;overflow:hidden;}
         body{overscroll-behavior:none;}
       `}</style>
-      {screen==="title"&&<TitleScreen audioUi={audioUi} appShell={appShell} isMobile={isMobile} forceMode={forceMode} setForceMode={setForceMode} onStart={startLocalGame} onOpenOnline={()=>setScreen("online")}/>}
-      {screen==="online"&&<OnlineRoomScreen audioUi={audioUi} appShell={appShell} isMobile={isMobile} initialRoomCode={initialRoomCode} onBack={returnToTitle} onLaunch={startOnlineGame}/>}
-      {screen==="game"&&<Game key={gameKey} audioUi={audioUi} appShell={appShell} playerCount={pCount} diff={diff} isMobile={isMobile} onlineSession={onlineSession} onEnd={s=>{setFs(s);setScreen("over");}}/>}
+      {screen==="title"&&<TitleScreen audioUi={audioUi} appShell={appShell} isMobile={isMobile} forceMode={forceMode} setForceMode={setForceMode} initialMapKey={mapKey} onStart={startLocalGame} onOpenOnline={()=>setScreen("online")}/>}
+      {screen==="online"&&<OnlineRoomScreen audioUi={audioUi} appShell={appShell} isMobile={isMobile} initialMapKey={mapKey} initialRoomCode={initialRoomCode} onBack={returnToTitle} onLaunch={startOnlineGame}/>}
+      {screen==="game"&&<Game key={gameKey} audioUi={audioUi} appShell={appShell} playerCount={pCount} diff={diff} mapKey={mapKey} isMobile={isMobile} onlineSession={onlineSession} onEnd={s=>{setFs(s);setScreen("over");}}/>}
       {screen==="over"&&<GameOver score={finalScore} diff={diff} isMobile={isMobile} onRestart={returnToTitle}/>}
       <InstallHelpModal appShell={appShell} />
     </div>
