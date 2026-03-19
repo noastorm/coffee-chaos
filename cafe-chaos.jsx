@@ -837,6 +837,102 @@ function drawSt(ctx,x,y,T,key,f){
   ctx.fillText(label,x+T/2,y+T-2);
 }
 
+function drawSunbooksFloor(ctx,x,y,T,r,c){
+  const base=(r+c)%2===0?"#8a5a34":"#7b4e2d";
+  const line="#a77850";
+  ctx.fillStyle=base;
+  ctx.fillRect(x,y,T,T);
+  for(let i=0;i<4;i++){
+    ctx.fillStyle=i%2===0?"#ffffff08":"#00000010";
+    ctx.fillRect(x,y+i*(T/4),T,1);
+  }
+  if(r>=2&&r<=5&&c>=6&&c<=11){
+    ctx.fillStyle="#496752";
+    ctx.fillRect(x+1,y+1,T-2,T-2);
+    ctx.fillStyle="#d7c7a7";
+    ctx.fillRect(x+1,y+1,T-2,2);
+    ctx.fillRect(x+1,y+T-3,T-2,2);
+    ctx.fillStyle="#5d8269";
+    ctx.fillRect(x+3,y+T/2-1,T-6,2);
+  }else{
+    ctx.fillStyle=line+"22";
+    ctx.fillRect(x,y,1,T);
+    ctx.fillRect(x+T-1,y,1,T);
+  }
+}
+
+function drawSunbooksWall(ctx,x,y,T,r,c){
+  ctx.fillStyle="#203b31";
+  ctx.fillRect(x,y,T,T);
+  ctx.fillStyle="#2f5a49";
+  ctx.fillRect(x,y,3,T);
+  ctx.fillRect(x+T-3,y,3,T);
+  ctx.fillStyle="#6a4a2b";
+  ctx.fillRect(x,y+T-6,T,6);
+  for(let shelf=0;shelf<2;shelf++){
+    const sy=y+4+shelf*(T/2.2);
+    ctx.fillStyle="#7c5d3b";
+    ctx.fillRect(x+3,sy,T-6,2);
+    for(let i=0;i<4;i++){
+      const bw=2+(i%2);
+      const bx=x+4+i*(T/5);
+      const bh=5+((r+c+i)%4);
+      ctx.fillStyle=["#d8b48c","#84c69b","#f0c36b","#96b8f4","#d2a1ea"][(r+c+i)%5];
+      ctx.fillRect(bx,sy-bh,bw,bh);
+    }
+  }
+}
+
+function drawSunbooksCounter(ctx,x,y,T,item,f){
+  drawSunbooksFloor(ctx,x,y,T,0,0);
+  ctx.fillStyle="#f0e4cf";
+  ctx.fillRect(x+4,y+5,T-8,8);
+  ctx.fillStyle="#d6c3a5";
+  ctx.fillRect(x+6,y+6,T-12,2);
+  ctx.fillStyle="#6f4a2a";
+  ctx.fillRect(x+7,y+13,3,T-16);
+  ctx.fillRect(x+T-10,y+13,3,T-16);
+  ctx.fillStyle="#4a2e18";
+  ctx.fillRect(x+6,y+T-5,T-12,3);
+  if(item){
+    drawCup(ctx,x+T/2-8,y+T/2-8,16,item.ingredients||[]);
+  }else{
+    ctx.fillStyle="#3a774f";
+    ctx.fillRect(x+6,y+8,5,3);
+    ctx.fillStyle="#f3eadc";
+    ctx.fillRect(x+11,y+8,4,3);
+    ctx.fillStyle="#c69b6d";
+    ctx.fillRect(x+6,y+11,9,1);
+    if(Math.sin(f*.03+x*.05)>0.3){
+      ctx.fillStyle="#ffffff22";
+      ctx.fillRect(x+5,y+5,T-10,2);
+    }
+  }
+}
+
+function drawSunbooksServe(ctx,x,y,T,f){
+  const s=T/16;
+  ctx.fillStyle="#21473a";
+  ctx.fillRect(x,y,T,T);
+  ctx.fillStyle="#f0e4cf";
+  ctx.fillRect(x,y, T, 4*s);
+  ctx.fillStyle="#6b4c2c";
+  ctx.fillRect(x,y+T-3*s,T,3*s);
+  ctx.fillStyle="#5ab97f";
+  ctx.fillRect(x+3*s,y+5*s,10*s,5*s);
+  ctx.fillStyle="#f7f4ea";
+  ctx.fillRect(x+6*s,y+4*s,4*s,1*s);
+  ctx.fillRect(x+6.5*s,y+5*s,1*s,3*s);
+  ctx.fillRect(x+8.5*s,y+5*s,1*s,3*s);
+  ctx.fillStyle="#d8b45b";
+  ctx.fillRect(x+11*s,y+4*s,2*s,2*s);
+  ctx.fillRect(x+10*s,y+10*s,4*s,2*s);
+  if(f%60<10){
+    ctx.fillStyle="#ffd70066";
+    ctx.fillRect(x+10*s,y+4*s,1*s,1*s);
+  }
+}
+
 function drawServe(ctx,x,y,T,f){
   const s=T/16;ctx.fillStyle=P.counter;ctx.fillRect(x,y,T,T);
   ctx.fillStyle=P.counterTop;ctx.fillRect(x,y,T,4*s);
@@ -899,9 +995,34 @@ function drawOrderBubble(ctx,x,y,T,order){
 }
 
 function drawCustomerArea(ctx,T,BW,orders,f){
+  const mapTheme=getActiveMapDef().theme||{};
   ctx.save();
-  ctx.fillStyle="#120904aa";
+  ctx.fillStyle=mapTheme.deco==="sunbooks"?"#18392dcc":"#120904aa";
   ctx.fillRect(0,0,BW,T*.18);
+  if(mapTheme.deco==="sunbooks"){
+    const paneW=BW/6;
+    for(let i=0;i<6;i++){
+      const px=i*paneW+2;
+      ctx.fillStyle="#f4efdc";
+      ctx.fillRect(px,2,paneW-4,T*.54);
+      ctx.fillStyle="#9bd2a5";
+      ctx.fillRect(px+1,2,2,T*.54);
+      ctx.fillRect(px+paneW-7,2,2,T*.54);
+      ctx.fillRect(px+paneW/2-1,2,2,T*.54);
+      ctx.fillStyle="#d8f0b8";
+      ctx.fillRect(px+8,6,paneW-18,T*.18);
+      ctx.fillStyle="#6f8d57";
+      ctx.fillRect(px+10,8,4,4);
+      ctx.fillRect(px+18,10,5,3);
+    }
+    for(let i=0;i<5;i++){
+      const stoolX=T*(2.1+i*2.4);
+      ctx.fillStyle="#6b4c2c";
+      ctx.fillRect(stoolX,T*.68,T*.22,T*.16);
+      ctx.fillRect(stoolX+T*.05,T*.84,T*.04,T*.14);
+      ctx.fillRect(stoolX+T*.13,T*.84,T*.04,T*.14);
+    }
+  }
   for(let i=0;i<8;i++){
     const lx=(i+.5)*(BW/8);
     ctx.fillStyle=i%2?P.gold:"#c4956a";
@@ -944,6 +1065,18 @@ function drawCustomerArea(ctx,T,BW,orders,f){
     ctx.textAlign="center";
     ctx.fillText(order.cust.name,bx,T*.76+(idx%2)*2);
   });
+  if(mapTheme.deco==="sunbooks"){
+    ctx.fillStyle="#7c5d3b";
+    ctx.fillRect(T*.3,T*.58,T*2.1,3);
+    for(let i=0;i<7;i++){
+      ctx.fillStyle=["#d8b48c","#84c69b","#f0c36b","#96b8f4","#d2a1ea"][i%5];
+      ctx.fillRect(T*.42+i*T*.22,T*.4,Math.max(3,T*.08),T*.18);
+    }
+    ctx.fillStyle="#eaf6ec";
+    ctx.font=`bold ${Math.max(7,T*.13)}px monospace`;
+    ctx.textAlign="left";
+    ctx.fillText("BOOK PICKUP",T*.42,T*.37);
+  }
   ctx.restore();
 }
 
@@ -1869,13 +2002,28 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
       ctx.save();ctx.translate(g.shake.x,g.shake.y);
       ctx.fillStyle=P.bg;ctx.fillRect(-10,-10,BW+20,BH+20);
       drawCafeDecor(ctx,T,BW,BH,f);
+      const mapTheme=getActiveMapDef().theme||{};
 
       for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
         const cell=MAP[r][c],x=c*T,y=r*T;
-        if(cell.type==="floor"){ctx.fillStyle=(r+c)%2===0?P.floor1:P.floor2;ctx.fillRect(x,y,T,T);ctx.fillStyle=P.floor3+"18";ctx.fillRect(x,y,T,1);ctx.fillRect(x,y,1,T);}
-        else if(cell.type==="wall"){ctx.fillStyle=P.wall;ctx.fillRect(x,y,T,T);const bh=T/4;for(let by=0;by<4;by++){const off=by%2===0?0:T/2;ctx.fillStyle=P.wallLine+"30";ctx.fillRect(x,y+by*bh,T,1);ctx.fillRect(x+off,y+by*bh,1,bh);ctx.fillRect(x+off+T/2,y+by*bh,1,bh);}}
-        else if(cell.type==="counter"){ctx.fillStyle=(r+c)%2===0?P.floor1:P.floor2;ctx.fillRect(x,y,T,T);ctx.fillStyle=P.counter;ctx.fillRect(x+3,y+3,T-6,T-6);ctx.fillStyle=P.counterTop;ctx.fillRect(x+3,y+3,T-6,5);ctx.fillStyle=P.counterEdge;ctx.fillRect(x+3,y+T-8,T-6,4);const it=g.counters[`${r},${c}`];if(it)drawCup(ctx,x+T/2-8,y+T/2-10,16,it.ingredients||[]);}
-        else if(cell.type==="station"){if(cell.station==="serve")drawServe(ctx,x,y,T,f);else drawSt(ctx,x,y,T,cell.station,f);}
+        if(cell.type==="floor"){
+          if(mapTheme.deco==="sunbooks")drawSunbooksFloor(ctx,x,y,T,r,c);
+          else{ctx.fillStyle=(r+c)%2===0?P.floor1:P.floor2;ctx.fillRect(x,y,T,T);ctx.fillStyle=P.floor3+"18";ctx.fillRect(x,y,T,1);ctx.fillRect(x,y,1,T);}
+        }
+        else if(cell.type==="wall"){
+          if(mapTheme.deco==="sunbooks")drawSunbooksWall(ctx,x,y,T,r,c);
+          else{ctx.fillStyle=P.wall;ctx.fillRect(x,y,T,T);const bh=T/4;for(let by=0;by<4;by++){const off=by%2===0?0:T/2;ctx.fillStyle=P.wallLine+"30";ctx.fillRect(x,y+by*bh,T,1);ctx.fillRect(x+off,y+by*bh,1,bh);ctx.fillRect(x+off+T/2,y+by*bh,1,bh);}}
+        }
+        else if(cell.type==="counter"){
+          const it=g.counters[`${r},${c}`];
+          if(mapTheme.deco==="sunbooks")drawSunbooksCounter(ctx,x,y,T,it,f);
+          else{ctx.fillStyle=(r+c)%2===0?P.floor1:P.floor2;ctx.fillRect(x,y,T,T);ctx.fillStyle=P.counter;ctx.fillRect(x+3,y+3,T-6,T-6);ctx.fillStyle=P.counterTop;ctx.fillRect(x+3,y+3,T-6,5);ctx.fillStyle=P.counterEdge;ctx.fillRect(x+3,y+T-8,T-6,4);if(it)drawCup(ctx,x+T/2-8,y+T/2-10,16,it.ingredients||[]);}
+        }
+        else if(cell.type==="station"){
+          if(cell.station==="serve"&&mapTheme.deco==="sunbooks")drawSunbooksServe(ctx,x,y,T,f);
+          else if(cell.station==="serve")drawServe(ctx,x,y,T,f);
+          else drawSt(ctx,x,y,T,cell.station,f);
+        }
       }
       drawCustomerArea(ctx,T,BW,g.orders,f);
       drawLighting(ctx,T,BW,BH,f,g);
