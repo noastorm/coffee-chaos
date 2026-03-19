@@ -7,6 +7,7 @@ Cafe Chaos is a React + Vite browser game with:
 - online room-based co-op with invite links / room codes
 - click/tap-to-move pathfinding alongside the original direct controls
 - installable PWA support for a cleaner home-screen app experience on phones
+- file-based music and sound-effect support with in-game toggles
 
 ## Local setup
 
@@ -46,6 +47,13 @@ The compiled site is output to `dist/`.
 - On iPhone and iPad, the cleanest full-screen experience is the installed home-screen app.
 - Safari tabs still show browser chrome; use `INSTALL APP` in-game or Safari's `Add to Home Screen`.
 - Browsers that support the Fullscreen API also get an in-app `FULLSCREEN` button.
+
+## Audio files
+
+- Put music in `assets/audio/music/`
+- Put sound effects in `assets/audio/sfx/`
+- The game will automatically load matching audio files and fall back to the built-in generated sounds when files are missing
+- The exact filenames and recommended durations are listed in `AUDIO_ASSETS.md`
 
 ## Realtime setup
 

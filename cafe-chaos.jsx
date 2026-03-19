@@ -212,23 +212,123 @@ function useShellActions(){
   };
 }
 
+const AUDIO_PREFS_KEY="cafe-chaos-audio-prefs";
+const DEFAULT_AUDIO_PREFS={music:true,sfx:true};
+const MUSIC_MODULES=import.meta.glob("./assets/audio/music/*.{mp3,ogg,wav,m4a}",{eager:true,import:"default"});
+const SFX_MODULES=import.meta.glob("./assets/audio/sfx/*.{mp3,ogg,wav,m4a}",{eager:true,import:"default"});
+
+function audioStem(path){
+  return path.split("/").pop()?.replace(/\.(mp3|ogg|wav|m4a)$/i,"")||"";
+}
+
+function trackLabel(stem){
+  return stem.replace(/[-_]+/g," ").replace(/\b\w/g,(m)=>m.toUpperCase());
+}
+
+const MUSIC_TRACKS=Object.entries(MUSIC_MODULES)
+  .sort(([a],[b])=>a.localeCompare(b))
+  .map(([path,url],idx)=>({id:idx,stem:audioStem(path),name:trackLabel(audioStem(path)),url}));
+const SFX_FILE_URLS=Object.fromEntries(
+  Object.entries(SFX_MODULES).map(([path,url])=>[audioStem(path),url])
+);
+
+function loadAudioPrefs(){
+  try{
+    const stored=window.localStorage.getItem(AUDIO_PREFS_KEY);
+    if(!stored)return DEFAULT_AUDIO_PREFS;
+    const parsed=JSON.parse(stored);
+    return {
+      music:parsed?.music!==false,
+      sfx:parsed?.sfx!==false,
+    };
+  }catch(e){
+    return DEFAULT_AUDIO_PREFS;
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════
 // AUDIO ENGINE — Musical & Fun
 // ═══════════════════════════════════════════════════════════════
 class SFX {
-  constructor(){this.ctx=null;this.vol=null;this.compressor=null;}
-  init(){
-    if(this.ctx)return;
-    try{
-      this.ctx=new(window.AudioContext||window.webkitAudioContext)();
-      this.compressor=this.ctx.createDynamicsCompressor();
-      this.compressor.threshold.value=-24;this.compressor.knee.value=30;
-      this.compressor.ratio.value=12;this.compressor.attack.value=.003;this.compressor.release.value=.25;
-      this.vol=this.ctx.createGain();this.vol.gain.value=.35;
-      this.vol.connect(this.compressor);this.compressor.connect(this.ctx.destination);
-    }catch(e){}
+  constructor(){
+    this.ctx=null;
+    this.vol=null;
+    this.compressor=null;
+    this.sfxEnabled=true;
+    this.musicEnabled=true;
+    this.musicVolume=.32;
+    this.sfxVolume=.72;
+    this.musicTracks=MUSIC_TRACKS;
+    this.musicIndex=0;
+    this.musicEl=null;
+    this.filePool={};
   }
-  play(t){if(!this.ctx)this.init();if(!this.ctx)return;try{this._p(t);}catch(e){}}
+  init(){
+    if(!this.ctx){
+      try{
+        this.ctx=new(window.AudioContext||window.webkitAudioContext)();
+        this.compressor=this.ctx.createDynamicsCompressor();
+        this.compressor.threshold.value=-24;this.compressor.knee.value=30;
+        this.compressor.ratio.value=12;this.compressor.attack.value=.003;this.compressor.release.value=.25;
+        this.vol=this.ctx.createGain();this.vol.gain.value=.35;
+        this.vol.connect(this.compressor);this.compressor.connect(this.ctx.destination);
+      }catch(e){}
+    }
+    this.ctx?.resume?.().catch(()=>{});
+    this.startMusic();
+  }
+  setPrefs(prefs={}){
+    this.musicEnabled=prefs.music!==false;
+    this.sfxEnabled=prefs.sfx!==false;
+    if(this.musicEl)this.musicEl.volume=this.musicVolume*(this.musicEnabled?1:0);
+    if(!this.musicEnabled)this.pauseMusic();
+    else this.startMusic();
+  }
+  musicCount(){return this.musicTracks.length;}
+  hasMusic(){return this.musicTracks.length>0;}
+  currentTrack(){return this.musicTracks[this.musicIndex]||null;}
+  startMusic(force=false){
+    if(!this.musicEnabled||!this.musicTracks.length)return;
+    const track=this.currentTrack();if(!track)return;
+    if(!this.musicEl){
+      this.musicEl=new Audio();
+      this.musicEl.preload="auto";
+      this.musicEl.loop=false;
+      this.musicEl.addEventListener("ended",()=>this.nextTrack());
+    }
+    const nextUrl=new URL(track.url,window.location.href).href;
+    if(force||this.musicEl.src!==nextUrl){
+      this.musicEl.src=track.url;
+      this.musicEl.load();
+    }
+    this.musicEl.volume=this.musicVolume;
+    this.musicEl.play().catch(()=>{});
+  }
+  pauseMusic(){
+    if(!this.musicEl)return;
+    this.musicEl.pause();
+  }
+  nextTrack(){
+    if(!this.musicTracks.length)return;
+    this.musicIndex=(this.musicIndex+1)%this.musicTracks.length;
+    this.startMusic(true);
+  }
+  _playFile(name){
+    const url=SFX_FILE_URLS[name];
+    if(!url||!this.sfxEnabled)return false;
+    const base=this.filePool[name]||(this.filePool[name]=new Audio(url));
+    const clip=base.cloneNode();
+    clip.volume=this.sfxVolume;
+    clip.play().catch(()=>{});
+    return true;
+  }
+  play(t){
+    this.init();
+    if(!this.sfxEnabled)return;
+    if(this._playFile(t))return;
+    if(!this.ctx)return;
+    try{this._p(t);}catch(e){}
+  }
   _p(t){
     const c=this.ctx, now=c.currentTime;
     switch(t){
@@ -1000,6 +1100,34 @@ function ShellActionRow({appShell,compact=false,align="center"}){
   );
 }
 
+function AudioToggleRow({audioUi,compact=false,align="center"}){
+  if(!audioUi)return null;
+  const btn=(active,disabled)=>({
+    fontFamily:"'Silkscreen',monospace",
+    fontWeight:"bold",
+    fontSize:compact?8:10,
+    padding:compact?"6px 10px":"8px 12px",
+    borderRadius:999,
+    cursor:disabled?"default":"pointer",
+    border:`1px solid ${active?"#d2a979aa":"#6b3a1f88"}`,
+    background:disabled?"#12090488":active?"#2d1b0e":"#120904dd",
+    color:disabled?"#7a5b45":active?"#f5e6d3":"#b58a64",
+    boxShadow:"0 6px 16px #0000002a",
+    opacity:disabled?0.7:1,
+  });
+  return (
+    <div style={{display:"flex",gap:6,justifyContent:align,flexWrap:"wrap"}}>
+      <button onClick={audioUi.toggleMusic} disabled={!audioUi.hasMusic} style={btn(audioUi.prefs.music,!audioUi.hasMusic)}>
+        {audioUi.hasMusic?(audioUi.prefs.music?"MUSIC ON":"MUSIC OFF"):"ADD MUSIC"}
+      </button>
+      <button onClick={audioUi.toggleSfx} style={btn(audioUi.prefs.sfx,false)}>
+        {audioUi.prefs.sfx?"SFX ON":"SFX OFF"}
+      </button>
+      {audioUi.hasMultipleTracks&&<button onClick={audioUi.nextTrack} style={btn(true,false)}>{compact?"NEXT":"NEXT SONG"}</button>}
+    </div>
+  );
+}
+
 function InstallHelpModal({appShell}){
   if(!appShell?.installHelpOpen)return null;
   const isIos=appShell.isIos;
@@ -1031,7 +1159,7 @@ function InstallHelpModal({appShell}){
 // ═══════════════════════════════════════════════════════════════
 // GAME
 // ═══════════════════════════════════════════════════════════════
-function Game({playerCount,diff,onEnd,isMobile,onlineSession,appShell}){
+function Game({playerCount,diff,onEnd,isMobile,onlineSession,appShell,audioUi}){
   const canvasRef=useRef(null);const gs=useRef(null);const keys=useRef(new Set());
   const frame=useRef(0);const lastMove=useRef({0:0,1:0});
   const[hud,setHud]=useState({score:0,time:DIFF[diff].time,combo:0,orders:[],holding:[null,null]});
@@ -1785,7 +1913,8 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession,appShell}){
       );
     }
 
-    const hudH = appShell?.showInstallAction || appShell?.showFullscreenAction ? 46 : 40;
+    const mobileTopRows=(appShell?.showInstallAction || appShell?.showFullscreenAction ? 1 : 0) + 1;
+    const hudH = mobileTopRows>1 ? 62 : 46;
     const ordH = 72;
     const stageGap = 8;
     const joySize = singleControlMode ? Math.min(104, Math.max(80, Math.round(screen.h * 0.21))) : Math.min(82, Math.max(68, Math.round(screen.h * 0.17)));
@@ -1805,7 +1934,10 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession,appShell}){
             <span style={{fontSize:14}}>☕</span>
             <span style={{color:P.gold,fontSize:17,fontWeight:"bold"}}>{hud.score}</span>
           </div>
-          <div style={{justifySelf:"center"}}><ShellActionRow appShell={appShell} compact /></div>
+          <div style={{justifySelf:"center",display:"flex",flexDirection:"column",gap:4}}>
+            <ShellActionRow appShell={appShell} compact />
+            <AudioToggleRow audioUi={audioUi} compact />
+          </div>
           <div style={{display:"flex",alignItems:"center",gap:8}}>
             {hud.combo >= 2 && <div style={{color:"#ff7ab8",fontSize:10,animation:"pulse .5s infinite"}}>x{hud.combo}</div>}
             <div style={{color:hud.time<=30?P.red:hud.time<=60?P.orange:"#d2a979",fontSize:14,fontWeight:"bold",...(hud.time<=10?{animation:"pulse .3s infinite"}:{})}}>{~~(hud.time/60)}:{String(hud.time%60).padStart(2,"0")}</div>
@@ -1861,6 +1993,10 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession,appShell}){
         {hud.combo>=2&&<div style={{color:"#ff4081",fontSize:12,animation:"pulse .5s infinite"}}>×{hud.combo} COMBO!</div>}
         <div style={{color:hud.time<=30?P.red:hud.time<=60?P.orange:"#d2a979",fontSize:16,fontWeight:"bold",...(hud.time<=10?{animation:"pulse .3s infinite"}:{})}}>{~~(hud.time/60)}:{String(hud.time%60).padStart(2,"0")}</div>
       </div>
+      <div style={{display:"flex",gap:8,maxWidth:BW+12,padding:"0 10px 8px",justifyContent:"center",flexWrap:"wrap",flexShrink:0}}>
+        <ShellActionRow appShell={appShell} compact />
+        <AudioToggleRow audioUi={audioUi} compact />
+      </div>
       <div style={{display:"flex",gap:6,maxWidth:BW+18,padding:"0 10px 8px",overflowX:"auto",flexShrink:0,minHeight:72}}>
         {hud.orders.map(o=><OrderTicket key={o.id} o={o}/>)}{!hud.orders.length&&<span style={{color:"#6b3a1f",fontSize:9,padding:12}}>Waiting for customers...</span>}
       </div>
@@ -1877,7 +2013,7 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession,appShell}){
 }
 
 // ─── TITLE ────────────────────────────────────────────────────
-function TitleScreen({onStart,onOpenOnline,isMobile,forceMode,setForceMode,appShell}){
+function TitleScreen({onStart,onOpenOnline,isMobile,forceMode,setForceMode,appShell,audioUi}){
   const[mode,setMode]=useState(null);const[dif,setDif]=useState(null);const[help,setHelp]=useState(false);
   const canvasRef=useRef(null);
 
@@ -1912,6 +2048,7 @@ function TitleScreen({onStart,onOpenOnline,isMobile,forceMode,setForceMode,appSh
         <div style={{fontSize:isMobile?12:10,color:"#c4956a",letterSpacing:2}}>☕ A Barista Frenzy ☕</div>
         {isMobile&&<div style={{fontSize:8,color:"#8a6a4a",letterSpacing:1,textAlign:"center",maxWidth:280}}>Portrait for menus and room setup. Rotate to landscape when the shift starts.</div>}
         <ShellActionRow appShell={appShell} />
+        <AudioToggleRow audioUi={audioUi} />
 
         {/* Mode toggle */}
         <div style={{display:"flex",gap:4,alignItems:"center"}}>
@@ -1983,7 +2120,7 @@ function TitleScreen({onStart,onOpenOnline,isMobile,forceMode,setForceMode,appSh
   );
 }
 
-function OnlineRoomScreen({isMobile,onBack,onLaunch,initialRoomCode,appShell}){
+function OnlineRoomScreen({isMobile,onBack,onLaunch,initialRoomCode,appShell,audioUi}){
   const [stage,setStage]=useState(initialRoomCode?"join":"menu");
   const [joinCode,setJoinCode]=useState(normalizeRoomCode(initialRoomCode));
   const [roomSession,setRoomSession]=useState(null);
@@ -2090,6 +2227,7 @@ function OnlineRoomScreen({isMobile,onBack,onLaunch,initialRoomCode,appShell}){
       <div style={{fontSize:isMobile?28:24,color:P.gold,textShadow:`0 0 20px ${P.gold}44`}}>ONLINE SHIFT</div>
       <div style={{fontSize:isMobile?10:9,color:"#c4956a",maxWidth:520}}>Host the game on Vercel or GitHub Pages, then use a Supabase room link or code so a friend can join your shift. On phones, gameplay is tuned for landscape.</div>
       <ShellActionRow appShell={appShell} />
+      <AudioToggleRow audioUi={audioUi} />
       {!hasOnlineConfig()&&<div style={{maxWidth:560,background:"#2d1b0e",border:"2px solid #6b3a1f",borderRadius:14,padding:isMobile?16:14,fontSize:isMobile?10:9,lineHeight:1.8,color:"#e8a87c"}}>Online mode needs public realtime keys in <code>.env</code>: <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code>.</div>}
       {error&&<div style={{color:P.red,fontSize:isMobile?10:9,maxWidth:520}}>{error}</div>}
 
@@ -2174,9 +2312,34 @@ export default function CafeChaos(){
   const[onlineSession,setOnlineSession]=useState(null);
   const[gameKey,setGameKey]=useState(0);
   const appShell=useShellActions();
+  const[audioPrefs,setAudioPrefs]=useState(()=>loadAudioPrefs());
   const autoMobile = useIsMobile();
   const[forceMode,setForceMode]=useState(null); // null=auto, "mobile", "pc"
   const isMobile = forceMode === "mobile" ? true : forceMode === "pc" ? false : autoMobile;
+
+  useEffect(()=>{
+    sfx.setPrefs(audioPrefs);
+    try{window.localStorage.setItem(AUDIO_PREFS_KEY,JSON.stringify(audioPrefs));}catch(e){}
+  },[audioPrefs]);
+
+  useEffect(()=>{
+    const unlock=()=>sfx.init();
+    window.addEventListener("pointerdown",unlock,{once:true});
+    window.addEventListener("keydown",unlock,{once:true});
+    return ()=>{
+      window.removeEventListener("pointerdown",unlock);
+      window.removeEventListener("keydown",unlock);
+    };
+  },[]);
+
+  const audioUi={
+    prefs:audioPrefs,
+    hasMusic:sfx.hasMusic(),
+    hasMultipleTracks:sfx.musicCount()>1,
+    toggleMusic:()=>{sfx.init();setAudioPrefs((p)=>({...p,music:!p.music}));},
+    toggleSfx:()=>{sfx.init();setAudioPrefs((p)=>({...p,sfx:!p.sfx}));},
+    nextTrack:()=>{sfx.init();sfx.nextTrack();},
+  };
 
   const returnToTitle=useCallback(()=>{
     if(onlineSession){onlineSession.destroy().catch(()=>{});}
@@ -2213,9 +2376,9 @@ export default function CafeChaos(){
         html,body,#root{width:100%;height:100%;margin:0;padding:0;background:#1a0f08;overflow:hidden;}
         body{overscroll-behavior:none;}
       `}</style>
-      {screen==="title"&&<TitleScreen appShell={appShell} isMobile={isMobile} forceMode={forceMode} setForceMode={setForceMode} onStart={startLocalGame} onOpenOnline={()=>setScreen("online")}/>}
-      {screen==="online"&&<OnlineRoomScreen appShell={appShell} isMobile={isMobile} initialRoomCode={initialRoomCode} onBack={returnToTitle} onLaunch={startOnlineGame}/>}
-      {screen==="game"&&<Game key={gameKey} appShell={appShell} playerCount={pCount} diff={diff} isMobile={isMobile} onlineSession={onlineSession} onEnd={s=>{setFs(s);setScreen("over");}}/>}
+      {screen==="title"&&<TitleScreen audioUi={audioUi} appShell={appShell} isMobile={isMobile} forceMode={forceMode} setForceMode={setForceMode} onStart={startLocalGame} onOpenOnline={()=>setScreen("online")}/>}
+      {screen==="online"&&<OnlineRoomScreen audioUi={audioUi} appShell={appShell} isMobile={isMobile} initialRoomCode={initialRoomCode} onBack={returnToTitle} onLaunch={startOnlineGame}/>}
+      {screen==="game"&&<Game key={gameKey} audioUi={audioUi} appShell={appShell} playerCount={pCount} diff={diff} isMobile={isMobile} onlineSession={onlineSession} onEnd={s=>{setFs(s);setScreen("over");}}/>}
       {screen==="over"&&<GameOver score={finalScore} diff={diff} isMobile={isMobile} onRestart={returnToTitle}/>}
       <InstallHelpModal appShell={appShell} />
     </div>
