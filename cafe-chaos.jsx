@@ -1285,13 +1285,19 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession,appShell}){
           if(playerCount>=2&&K2[code])handleMoveInput(1,K2[code]);
         }
       }
+    },100); // Keyboard repeat tick
+    return ()=>clearInterval(iv);
+  },[handleMoveInput,playerCount,isMobile,online,localPid]);
+
+  useEffect(()=>{
+    const iv=setInterval(()=>{
       if(!online||isHost){
         const autoPlayers=online?[0,1]:playerCount===2?[0,1]:[0];
         for(const pid of autoPlayers)advanceAutoTask(pid);
       }
-    },100); // Keyboard repeat tick
+    },100);
     return ()=>clearInterval(iv);
-  },[handleMoveInput,playerCount,isMobile,online,localPid,isHost,advanceAutoTask]);
+  },[online,isHost,playerCount,advanceAutoTask]);
 
   // Game loop
   useEffect(()=>{
