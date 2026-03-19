@@ -2195,19 +2195,19 @@ function OrderTicket({o,compact}){
 function FocusOrderCard({order,onToggleQueue,queueCount=0}){
   if(!order){
     return (
-      <button onClick={onToggleQueue} style={{fontFamily:"'Silkscreen',monospace",background:"linear-gradient(180deg,#28160de8 0%,#160c08d8 100%)",border:"1px solid #7d5b3d66",borderRadius:20,padding:"10px 14px",minWidth:190,color:"#d8b48c",display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,boxShadow:"0 14px 28px #0000002e",backdropFilter:"blur(16px) saturate(1.15)",cursor:"pointer"}}>
+      <button onClick={onToggleQueue} style={{fontFamily:"'Silkscreen',monospace",background:"linear-gradient(180deg,#28160dd4 0%,#160c08bf 100%)",border:"1px solid #7d5b3d55",borderRadius:18,padding:"8px 12px",minWidth:168,color:"#d8b48c",display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,boxShadow:"0 10px 20px #00000024",backdropFilter:"blur(16px) saturate(1.15)",cursor:"pointer"}}>
         <div style={{display:"flex",flexDirection:"column",alignItems:"flex-start",gap:4}}>
-          <span style={{fontSize:9,color:"#8a6a4a"}}>ORDERS</span>
-          <span style={{fontSize:11,color:"#f5e6d3"}}>Waiting...</span>
+          <span style={{fontSize:8,color:"#8a6a4a"}}>ORDERS</span>
+          <span style={{fontSize:10,color:"#f5e6d3"}}>Waiting...</span>
         </div>
-        <span style={{fontSize:8,color:"#b58a64"}}>QUEUE</span>
+        <span style={{fontSize:7,color:"#b58a64"}}>QUEUE</span>
       </button>
     );
   }
   const pct=clamp(1-order.elapsed/order.patience,0,1);
   const accent=pct>.5?P.green:pct>.25?P.orange:P.red;
   return (
-    <button onClick={onToggleQueue} style={{fontFamily:"'Silkscreen',monospace",background:"linear-gradient(180deg,#342013c9 0%,#190f0ac2 100%)",border:`1px solid ${accent}88`,borderRadius:20,padding:"10px 14px",minWidth:214,maxWidth:280,color:"#f5e6d3",display:"flex",flexDirection:"column",gap:6,boxShadow:"0 14px 32px #00000030",backdropFilter:"blur(18px) saturate(1.2)",cursor:"pointer",textAlign:"left"}}>
+    <button onClick={onToggleQueue} style={{fontFamily:"'Silkscreen',monospace",background:"linear-gradient(180deg,#342013c1 0%,#190f0ab3 100%)",border:`1px solid ${accent}77`,borderRadius:18,padding:"8px 12px",minWidth:182,maxWidth:236,color:"#f5e6d3",display:"flex",flexDirection:"column",gap:5,boxShadow:"0 10px 22px #00000024",backdropFilter:"blur(18px) saturate(1.2)",cursor:"pointer",textAlign:"left"}}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
         <div style={{display:"flex",alignItems:"center",gap:6,minWidth:0}}>
           <div style={{width:13,height:13,borderRadius:"50%",background:order.cust.skin,border:"1px solid #0004",boxShadow:"inset 0 1px 0 #ffffff22",flexShrink:0}}/>
@@ -2215,15 +2215,15 @@ function FocusOrderCard({order,onToggleQueue,queueCount=0}){
         </div>
         <span style={{fontSize:7,color:"#b58a64",flexShrink:0}}>QUEUE {queueCount+1}</span>
       </div>
-      <div style={{fontSize:11,color:getRecipeUiColor(order.drink),whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",textShadow:"0 1px 0 #120904"}}>{order.drink}</div>
-      <div style={{height:6,borderRadius:999,background:"#0d0705",overflow:"hidden",boxShadow:"inset 0 1px 3px #00000066"}}>
+      <div style={{fontSize:10,color:getRecipeUiColor(order.drink),whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",textShadow:"0 1px 0 #120904"}}>{order.drink}</div>
+      <div style={{height:5,borderRadius:999,background:"#0d0705",overflow:"hidden",boxShadow:"inset 0 1px 3px #00000066"}}>
         <div style={{width:`${pct*100}%`,height:"100%",borderRadius:999,background:accent,boxShadow:`0 0 12px ${accent}55`,transition:"width 1s linear"}}/>
       </div>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
         <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-          {order.recipe.ing.map((ing,i)=><div key={i} style={{width:12,height:12,borderRadius:3,background:ING_C[ing],border:"1px solid #fff2",boxShadow:"inset 0 1px 0 #ffffff22"}}/>)}
+          {order.recipe.ing.map((ing,i)=><div key={i} style={{width:10,height:10,borderRadius:3,background:ING_C[ing],border:"1px solid #fff2",boxShadow:"inset 0 1px 0 #ffffff22"}}/>)}
         </div>
-        <span style={{fontSize:7,color:"#cba27b",flexShrink:0}}>TAP FOR FULL QUEUE</span>
+        <span style={{fontSize:6,color:"#cba27b",flexShrink:0}}>FULL QUEUE</span>
       </div>
     </button>
   );
@@ -2240,7 +2240,7 @@ function OrderQueueChip({order,extraLabel,onClick}){
   const pct=clamp(1-order.elapsed/order.patience,0,1);
   const accent=pct>.5?P.green:pct>.25?P.orange:P.red;
   return (
-    <button onClick={onClick} style={{fontFamily:"'Silkscreen',monospace",background:"#201109bb",border:`1px solid ${accent}66`,borderRadius:999,padding:"7px 10px",minWidth:84,color:"#f5e6d3",display:"flex",flexDirection:"column",gap:4,alignItems:"flex-start",boxShadow:"0 10px 22px #00000024",backdropFilter:"blur(12px) saturate(1.1)",cursor:"pointer"}}>
+    <button onClick={onClick} style={{fontFamily:"'Silkscreen',monospace",background:"#201109aa",border:`1px solid ${accent}66`,borderRadius:999,padding:"6px 9px",minWidth:70,color:"#f5e6d3",display:"flex",flexDirection:"column",gap:4,alignItems:"flex-start",boxShadow:"0 10px 22px #00000024",backdropFilter:"blur(12px) saturate(1.1)",cursor:"pointer"}}>
       <span style={{fontSize:8,color:getRecipeUiColor(order.drink),lineHeight:1.2}}>{shortDrinkLabel(order.drink)}</span>
       <div style={{width:"100%",height:4,borderRadius:999,background:"#0d0705",overflow:"hidden"}}>
         <div style={{width:`${pct*100}%`,height:"100%",borderRadius:999,background:accent,transition:"width 1s linear"}}/>
@@ -3345,43 +3345,33 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
     }
 
     const shortSide=Math.min(screen.w,screen.h);
-    const joySize=singleControlMode?Math.min(112,Math.max(88,Math.round(shortSide*.26))):Math.min(88,Math.max(72,Math.round(shortSide*.2)));
-    const actSize=singleControlMode?Math.min(94,Math.max(76,Math.round(shortSide*.22))):54;
+    const joySize=singleControlMode?Math.min(98,Math.max(80,Math.round(shortSide*.23))):Math.min(84,Math.max(68,Math.round(shortSide*.19)));
+    const actSize=singleControlMode?Math.min(84,Math.max(68,Math.round(shortSide*.19))):52;
     const duoActW=60,duoActH=34;
     const mapTheme=getActiveMapDef().theme||{};
     const glowRgb=mapTheme.glow||"210,169,121";
-    const topHudHeight=52;
-    const orderHudHeight=primaryMobileOrder?90:58;
-    const sideGap=12;
-    const outerFudge=Math.max(44,Math.round(shortSide*.16));
-    const bottomReserve=singleControlMode?14:58;
-    const leftDockW=singleControlMode?(joySize+44):(joySize+36);
-    const rightDockW=singleControlMode?(Math.max(actSize+72,144)):(joySize+36);
-    const playFrameW=Math.max(300,screen.w-leftDockW-rightDockW-outerFudge);
-    const playFrameH=Math.max(180,screen.h-topHudHeight-orderHudHeight-bottomReserve-Math.max(18,Math.round(shortSide*.08)));
-    const playScale=Math.max(.55,Math.min(playFrameW/BW,playFrameH/BH));
+    const topHudHeight=46;
+    const orderHudHeight=primaryMobileOrder?52:40;
+    const playScale=Math.max(.62,Math.min((screen.w-8)/BW,(screen.h-8)/BH,1.92));
     const displayW=Math.round(BW*playScale);
     const displayH=Math.round(BH*playScale);
-    const boardBandTop=topHudHeight+orderHudHeight+10;
-    const boardBandLeft=leftDockW+sideGap;
-    const boardBandW=Math.max(displayW,screen.w-leftDockW-rightDockW-outerFudge);
-    const boardLeft=Math.max(boardBandLeft,Math.round(boardBandLeft+Math.max(0,(boardBandW-displayW)/2)));
-    const boardTop=Math.max(boardBandTop,Math.round(boardBandTop+Math.max(0,(playFrameH-displayH)/2)));
+    const boardLeft=Math.max(0,Math.round((screen.w-displayW)/2));
+    const boardTop=Math.max(4,Math.round((screen.h-displayH)/2));
     const timerColor=hud.time<=30?P.red:hud.time<=60?P.orange:"#d2a979";
     const glass={
-      background:"linear-gradient(180deg,#1d0f0ab3 0%,#13090596 100%)",
-      border:"1px solid #c79c7235",
-      boxShadow:"0 10px 24px #00000020",
-      backdropFilter:"blur(18px) saturate(1.12)",
+      background:"linear-gradient(180deg,#1d0f0a8c 0%,#13090573 100%)",
+      border:"1px solid #c79c7228",
+      boxShadow:"0 8px 20px #00000018",
+      backdropFilter:"blur(16px) saturate(1.1)",
     };
     const dockGlass={
-      background:"linear-gradient(180deg,#180c08a0 0%,#0f07048f 100%)",
-      border:"1px solid #c79c722b",
-      boxShadow:"0 12px 26px #00000024",
-      backdropFilter:"blur(22px) saturate(1.1)",
+      background:"linear-gradient(180deg,#180c085e 0%,#0f070452 100%)",
+      border:"1px solid #c79c7216",
+      boxShadow:"0 6px 16px #00000016",
+      backdropFilter:"blur(10px) saturate(1.05)",
     };
-    const hudPill={...glass,borderRadius:999,padding:"10px 14px",pointerEvents:"auto"};
-    const utilityButtonStyle={...hudPill,display:"flex",alignItems:"center",justifyContent:"center",minWidth:54,cursor:"pointer",color:"#f5e6d3",fontSize:9,fontFamily:"'Silkscreen',monospace"};
+    const hudPill={...glass,borderRadius:999,padding:"8px 12px",pointerEvents:"auto"};
+    const utilityButtonStyle={...hudPill,display:"flex",alignItems:"center",justifyContent:"center",minWidth:48,cursor:"pointer",color:"#f5e6d3",fontSize:8,fontFamily:"'Silkscreen',monospace"};
 
     return (
       <div style={{width:"100vw",height:"100dvh",minHeight:"100vh",background:P.bg,overflow:"hidden",position:"relative",fontFamily:"'Silkscreen','Press Start 2P',monospace",paddingTop:safeTop,paddingBottom:safeBottom,paddingLeft:safeLeft,paddingRight:safeRight}}>
@@ -3397,27 +3387,27 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
         </div>
 
         <div style={{position:"absolute",inset:0,pointerEvents:"none"}}>
-          <div style={{position:"absolute",top:0,left:0,right:0,display:"grid",gridTemplateColumns:"auto 1fr auto",alignItems:"start",gap:10}}>
-            <div style={{...hudPill,display:"flex",alignItems:"center",gap:10,minWidth:112}}>
-              <span style={{fontSize:10,color:"#d2a979"}}>PTS</span>
-              <span style={{color:P.gold,fontSize:18,fontWeight:"bold"}}>{hud.score}</span>
-              {hud.combo>=2&&<span style={{color:"#ff7ab8",fontSize:8,animation:"pulse .5s infinite"}}>x{hud.combo}</span>}
+          <div style={{position:"absolute",top:4,left:4,right:4,display:"grid",gridTemplateColumns:"auto 1fr auto",alignItems:"start",gap:8}}>
+            <div style={{...hudPill,display:"flex",alignItems:"center",gap:8,minWidth:96}}>
+              <span style={{fontSize:9,color:"#d2a979"}}>PTS</span>
+              <span style={{color:P.gold,fontSize:16,fontWeight:"bold"}}>{hud.score}</span>
+              {hud.combo>=2&&<span style={{color:"#ff7ab8",fontSize:7,animation:"pulse .5s infinite"}}>x{hud.combo}</span>}
             </div>
             <div style={{display:"flex",justifyContent:"center"}}>
-              <div style={{...glass,borderRadius:18,padding:"8px 12px",minWidth:180,maxWidth:260,width:"min(42vw,260px)",pointerEvents:"auto"}}>
+              <div style={{...glass,borderRadius:16,padding:"7px 10px",minWidth:150,maxWidth:220,width:"min(38vw,220px)",pointerEvents:"auto"}}>
                 <PowerMeter hud={hud} compact />
               </div>
             </div>
             <div style={{display:"flex",justifyContent:"flex-end",alignItems:"center",gap:8}}>
-              <div style={{...hudPill,display:"flex",alignItems:"center",justifyContent:"center",minWidth:82}}>
-                <span style={{color:timerColor,fontSize:16,fontWeight:"bold",...(hud.time<=10?{animation:"pulse .3s infinite"}:{})}}>{~~(hud.time/60)}:{String(hud.time%60).padStart(2,"0")}</span>
+              <div style={{...hudPill,display:"flex",alignItems:"center",justifyContent:"center",minWidth:74}}>
+                <span style={{color:timerColor,fontSize:14,fontWeight:"bold",...(hud.time<=10?{animation:"pulse .3s infinite"}:{})}}>{~~(hud.time/60)}:{String(hud.time%60).padStart(2,"0")}</span>
               </div>
               <button onClick={()=>{setMobileUtilityOpen((open)=>!open);setMobileQueueOpen(false);}} style={utilityButtonStyle}>MENU</button>
             </div>
           </div>
 
-          <div style={{position:"absolute",top:topHudHeight,left:boardLeft,width:displayW,display:"flex",justifyContent:"center",pointerEvents:"auto"}}>
-            <div style={{display:"flex",alignItems:"flex-start",justifyContent:"center",gap:8,maxWidth:displayW}}>
+          <div style={{position:"absolute",top:Math.max(44,boardTop+10),left:boardLeft,width:displayW,display:"flex",justifyContent:"center",pointerEvents:"auto"}}>
+            <div style={{display:"flex",alignItems:"flex-start",justifyContent:"center",gap:6,maxWidth:displayW}}>
               <FocusOrderCard order={primaryMobileOrder} queueCount={mobileOrders.length?mobileOrders.length-1:0} onToggleQueue={()=>{setMobileQueueOpen((open)=>!open);setMobileUtilityOpen(false);}} />
               {!!mobileOrders.length&&(
                 <div style={{display:"flex",flexDirection:"column",gap:6}}>
@@ -3432,8 +3422,8 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
 
           {mobileQueueOpen&&(
             <div onPointerDown={()=>setMobileQueueOpen(false)} onTouchStart={()=>setMobileQueueOpen(false)} style={{position:"absolute",inset:0,pointerEvents:"auto"}}>
-              <div onPointerDown={(e)=>e.stopPropagation()} onTouchStart={(e)=>e.stopPropagation()} style={{position:"absolute",top:topHudHeight+orderHudHeight-8,left:boardLeft,width:displayW,display:"flex",justifyContent:"center"}}>
-                <div style={{...glass,borderRadius:22,padding:"12px 12px 10px",width:Math.min(displayW,420),maxHeight:156,display:"flex",flexDirection:"column",gap:8}}>
+              <div onPointerDown={(e)=>e.stopPropagation()} onTouchStart={(e)=>e.stopPropagation()} style={{position:"absolute",top:Math.max(90,boardTop+58),left:boardLeft,width:displayW,display:"flex",justifyContent:"center"}}>
+                <div style={{...glass,borderRadius:22,padding:"10px 10px 8px",width:Math.min(displayW,420),maxHeight:156,display:"flex",flexDirection:"column",gap:8}}>
                   <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10}}>
                     <span style={{fontSize:9,color:P.gold}}>ORDER QUEUE</span>
                     <button onClick={()=>setMobileQueueOpen(false)} style={{fontFamily:"'Silkscreen',monospace",fontSize:8,padding:"6px 10px",borderRadius:999,border:"1px solid #6b3a1f66",background:"#160c08b8",color:"#d8b48c",cursor:"pointer"}}>CLOSE</button>
@@ -3451,30 +3441,30 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
 
           {singleControlMode ? (
             <>
-              <div style={{position:"absolute",left:0,bottom:0,pointerEvents:"auto"}}>
-                <div style={{...dockGlass,borderRadius:30,padding:"10px 10px 8px",display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
+              <div style={{position:"absolute",left:6,bottom:6,pointerEvents:"auto"}}>
+                <div style={{...dockGlass,borderRadius:20,padding:"4px",display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
                   <Joystick onMove={d => mobileMove(localPid,d)} color={localColor} label={online ? `P${localPid+1}` : "MOVE"} side="left" size={joySize} />
                 </div>
               </div>
-              <div style={{position:"absolute",right:0,bottom:0,display:"flex",flexDirection:"column",alignItems:"center",gap:8,pointerEvents:"auto"}}>
-                <div style={{...dockGlass,borderRadius:28,padding:"10px 10px 8px",display:"flex",flexDirection:"column",alignItems:"center",gap:8,minWidth:Math.max(actSize+24,112)}}>
+              <div style={{position:"absolute",right:6,bottom:6,display:"flex",flexDirection:"column",alignItems:"center",gap:6,pointerEvents:"auto"}}>
+                <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6,minWidth:Math.max(actSize+14,96)}}>
                   <ActBtn onAction={() => mobileAct(localPid)} color={localColor} holding={localHolding} sz={actSize} />
-                  <PowerButtons hud={hud} onUsePower={mobilePower} compact stack />
+                  <div style={{...dockGlass,borderRadius:16,padding:"4px 5px"}}><PowerButtons hud={hud} onUsePower={mobilePower} compact stack /></div>
                 </div>
-                <div style={{...glass,borderRadius:14,padding:"7px 10px",fontSize:8,color:"#e7c39c",textAlign:"center",lineHeight:1.55,maxWidth:132}}>Tap stations to auto-walk</div>
+                <div style={{...glass,borderRadius:14,padding:"6px 8px",fontSize:7,color:"#e7c39c",textAlign:"center",lineHeight:1.45,maxWidth:118}}>Tap stations to auto-walk</div>
               </div>
             </>
           ) : (
             <>
-              <div style={{position:"absolute",left:0,bottom:0,display:"flex",flexDirection:"column",alignItems:"center",gap:6,pointerEvents:"auto"}}>
+              <div style={{position:"absolute",left:6,bottom:6,display:"flex",flexDirection:"column",alignItems:"center",gap:6,pointerEvents:"auto"}}>
                 <button onTouchStart={e => {e.preventDefault(); mobileAct(0); haptic("medium");}} style={{width:duoActW,height:duoActH,borderRadius:16,...dockGlass,background:P.p1+"24",border:`1px solid ${P.p1}88`,color:P.p1,fontSize:10,fontFamily:"'Silkscreen',monospace",fontWeight:"bold",touchAction:"manipulation"}}>ACT</button>
-                <div style={{...dockGlass,borderRadius:24,padding:"8px 8px 6px"}}><Joystick onMove={d => mobileMove(0,d)} color={P.p1} label="P1" side="left" size={joySize} /></div>
+                <div style={{...dockGlass,borderRadius:18,padding:"4px"}}><Joystick onMove={d => mobileMove(0,d)} color={P.p1} label="P1" side="left" size={joySize} /></div>
               </div>
-              <div style={{position:"absolute",right:0,bottom:0,display:"flex",flexDirection:"column",alignItems:"center",gap:6,pointerEvents:"auto"}}>
+              <div style={{position:"absolute",right:6,bottom:6,display:"flex",flexDirection:"column",alignItems:"center",gap:6,pointerEvents:"auto"}}>
                 <button onTouchStart={e => {e.preventDefault(); mobileAct(1); haptic("medium");}} style={{width:duoActW,height:duoActH,borderRadius:16,...dockGlass,background:P.p2+"24",border:`1px solid ${P.p2}88`,color:P.p2,fontSize:10,fontFamily:"'Silkscreen',monospace",fontWeight:"bold",touchAction:"manipulation"}}>ACT</button>
-                <div style={{...dockGlass,borderRadius:24,padding:"8px 8px 6px"}}><Joystick onMove={d => mobileMove(1,d)} color={P.p2} label="P2" side="right" size={joySize} /></div>
+                <div style={{...dockGlass,borderRadius:18,padding:"4px"}}><Joystick onMove={d => mobileMove(1,d)} color={P.p2} label="P2" side="right" size={joySize} /></div>
               </div>
-              <div style={{position:"absolute",left:"50%",bottom:0,transform:"translateX(-50%)",pointerEvents:"auto"}}>
+              <div style={{position:"absolute",left:"50%",bottom:6,transform:"translateX(-50%)",pointerEvents:"auto"}}>
                 <div style={{...dockGlass,borderRadius:18,padding:"8px 10px"}}><PowerButtons hud={hud} onUsePower={mobilePower} compact /></div>
               </div>
             </>
