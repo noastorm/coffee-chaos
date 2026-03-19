@@ -728,17 +728,17 @@ function getRecipeUiColor(drink){
 
 function drawCentralPerksWindowScene(ctx,x,y,w,h,f,paneIdx){
   const sky=ctx.createLinearGradient(x,y,x,y+h);
-  sky.addColorStop(0,"#eaf7ff");
-  sky.addColorStop(.48,"#cfe6f8");
-  sky.addColorStop(1,"#afc7dd");
+  sky.addColorStop(0,"#d7e9f7");
+  sky.addColorStop(.48,"#b9d1e4");
+  sky.addColorStop(1,"#8eaac1");
   ctx.fillStyle=sky;
   ctx.fillRect(x,y,w,h);
 
   const sunX=x+w*(.16+paneIdx*.17);
   const sunY=y+h*.18;
-  const sun=ctx.createRadialGradient(sunX,sunY,0,sunX,sunY,w*.22);
-  sun.addColorStop(0,"rgba(255,240,196,0.42)");
-  sun.addColorStop(.65,"rgba(255,240,196,0.12)");
+  const sun=ctx.createRadialGradient(sunX,sunY,0,sunX,sunY,w*.2);
+  sun.addColorStop(0,"rgba(255,236,188,0.24)");
+  sun.addColorStop(.65,"rgba(255,236,188,0.08)");
   sun.addColorStop(1,"rgba(255,240,196,0)");
   ctx.fillStyle=sun;
   ctx.fillRect(x,y,w,h*.5);
@@ -746,21 +746,21 @@ function drawCentralPerksWindowScene(ctx,x,y,w,h,f,paneIdx){
   for(let i=0;i<2;i++){
     const drift=((f*(.28+i*.06))+paneIdx*29+i*41)%(w+26)-26;
     const cy=y+h*(.12+i*.13)+Math.sin((f+i*17+paneIdx*9)*.04)*2;
-    ctx.fillStyle=i===0?"#ffffffaa":"#f7fbff88";
+    ctx.fillStyle=i===0?"#ffffff78":"#f7fbff5e";
     ctx.fillRect(x+drift,cy,w*.18,h*.05);
     ctx.fillRect(x+drift+w*.03,cy-h*.02,w*.1,h*.04);
     ctx.fillRect(x+drift+w*.08,cy+h*.02,w*.08,h*.03);
   }
 
   const skylineBase=y+h*.66;
-  ctx.fillStyle="#dfeaf4";
+  ctx.fillStyle="#c5d3df";
   ctx.fillRect(x,skylineBase,w,h*.08);
 
   for(let i=0;i<6;i++){
     const bx=x+4+i*(w/6.1);
     const bw=Math.max(4,w*(.08+.01*((i+paneIdx)%2)));
     const bh=h*(.16+.07*((i+paneIdx)%4));
-    ctx.fillStyle=["#b0bfd0","#a0b2c7","#95aac0","#c0cfdd"][(i+paneIdx)%4];
+    ctx.fillStyle=["#8ea2b6","#8295ab","#768ba1","#a2b5c8"][(i+paneIdx)%4];
     ctx.fillRect(bx,skylineBase-bh,bw,bh+2);
     ctx.fillStyle="#edf7ff";
     ctx.fillRect(bx+1,skylineBase-bh+2,1,1);
@@ -772,7 +772,7 @@ function drawCentralPerksWindowScene(ctx,x,y,w,h,f,paneIdx){
     const bx=x+8+i*(w/4.8);
     const bw=Math.max(5,w*(.11+.015*((i+paneIdx)%3)));
     const bh=h*(.24+.08*((i+paneIdx*2)%3));
-    ctx.fillStyle=["#7b8ea6","#6e829a","#8da2ba","#61758c"][(i+paneIdx)%4];
+    ctx.fillStyle=["#5f7389","#54687d","#72879f","#495c71"][(i+paneIdx)%4];
     ctx.fillRect(bx,skylineBase-bh,bw,bh+2);
     ctx.fillStyle="#f7fbff";
     for(let wy=4;wy<bh-4;wy+=4){
@@ -812,7 +812,7 @@ function drawCentralPerksWindowScene(ctx,x,y,w,h,f,paneIdx){
   ctx.fillRect(birdX+1,birdY-1,1,1);
   ctx.fillRect(birdX+5,birdY-1,1,1);
 
-  ctx.fillStyle="#ffffff22";
+  ctx.fillStyle="#ffffff14";
   ctx.fillRect(x+3,y+3,w*.22,2);
   ctx.fillRect(x+w*.68,y+5,w*.12,2);
 }
@@ -849,6 +849,91 @@ function drawCentralPerksBlackboard(ctx,x,y,w,h,title="HOUSE MENU"){
     ctx.fillRect(lineX,y+12+idx*5,Math.max(12,lineW),1);
     ctx.fillRect(lineX+Math.max(14,lineW)+4,y+12+idx*5,Math.max(4,w*.06),1);
   });
+}
+
+function drawCentralPerksLoungeProps(ctx,T,BW,BH,f){
+  const areaY=BH-T*.78;
+  const couchY=areaY+T*.14;
+  const couchW=T*3.15;
+  const couchH=T*.42;
+  const couchX=BW/2-couchW/2;
+  const cushionShift=Math.sin(f*.04)*1.5;
+
+  ctx.fillStyle="#5c362d";
+  ctx.fillRect(couchX+T*.12,couchY+couchH+T*.09,couchW-T*.24,T*.08);
+  ctx.fillStyle="#c96e46";
+  ctx.fillRect(couchX,couchY+T*.08,couchW,couchH);
+  ctx.fillRect(couchX-T*.14,couchY+T*.12,T*.22,couchH+T*.08);
+  ctx.fillRect(couchX+couchW-T*.08,couchY+T*.12,T*.22,couchH+T*.08);
+  ctx.fillStyle="#d88658";
+  ctx.fillRect(couchX+T*.08,couchY+T*.14,couchW-T*.16,T*.12);
+  ctx.fillRect(couchX+T*.08,couchY+T*.34,couchW-T*.16,T*.1);
+  ctx.fillStyle="#b45b39";
+  ctx.fillRect(couchX+T*.2,couchY+T*.25,T*.55,T*.18);
+  ctx.fillRect(couchX+T*.95,couchY+T*.24+cushionShift*.02,T*.62,T*.19);
+  ctx.fillRect(couchX+T*1.75,couchY+T*.25-cushionShift*.02,T*.62,T*.18);
+  ctx.fillStyle="#f2dec6";
+  ctx.fillRect(couchX+T*2.44,couchY+T*.24,T*.28,T*.14);
+  ctx.fillStyle="#c09ea7";
+  ctx.fillRect(couchX+T*.5,couchY+T*.18,T*.22,T*.06);
+  ctx.fillRect(couchX+T*1.95,couchY+T*.18,T*.22,T*.06);
+
+  const tableX=BW/2-T*.62;
+  const tableY=areaY+T*.42;
+  ctx.fillStyle="#314544";
+  ctx.fillRect(tableX,tableY,T*1.24,T*.16);
+  ctx.fillStyle="#253434";
+  ctx.fillRect(tableX+T*.12,tableY+T*.16,T*1.0,T*.06);
+  ctx.fillStyle="#5f4034";
+  ctx.fillRect(tableX+T*.12,tableY+T*.22,T*.08,T*.18);
+  ctx.fillRect(tableX+T*1.04,tableY+T*.22,T*.08,T*.18);
+  ctx.fillStyle="#fff4e2";
+  ctx.fillRect(tableX+T*.22,tableY-T*.04,T*.12,T*.12);
+  ctx.fillRect(tableX+T*.75,tableY-T*.04,T*.12,T*.12);
+  ctx.fillStyle="#c9784f";
+  ctx.fillRect(tableX+T*.25,tableY-T*.01,T*.06,T*.05);
+  ctx.fillRect(tableX+T*.78,tableY-T*.01,T*.06,T*.05);
+
+  const leftChairX=T*.42;
+  const chairY=areaY+T*.18;
+  ctx.fillStyle="#7c2030";
+  ctx.fillRect(leftChairX,chairY,T*.7,T*.34);
+  ctx.fillRect(leftChairX+T*.08,chairY+T*.34,T*.54,T*.12);
+  ctx.fillStyle="#5c362d";
+  ctx.fillRect(leftChairX+T*.12,chairY+T*.46,T*.08,T*.2);
+  ctx.fillRect(leftChairX+T*.5,chairY+T*.46,T*.08,T*.2);
+  ctx.fillStyle="#f0d6b8";
+  ctx.fillRect(leftChairX+T*.18,chairY+T*.12,T*.12,T*.08);
+  ctx.fillRect(leftChairX+T*.38,chairY+T*.1,T*.1,T*.06);
+
+  const standX=BW-T*1.35;
+  const standY=areaY+T*.12;
+  ctx.fillStyle="#214844";
+  ctx.fillRect(standX,standY,T*.42,T*.5);
+  ctx.fillStyle="#2d655d";
+  ctx.fillRect(standX-T*.06,standY+T*.1,T*.54,T*.06);
+  ctx.fillRect(standX-T*.06,standY+T*.24,T*.54,T*.06);
+  ctx.fillRect(standX-T*.06,standY+T*.38,T*.54,T*.06);
+  ctx.fillStyle="#f5e7d0";
+  ctx.fillRect(standX+T*.04,standY+T*.04,T*.18,T*.1);
+  ctx.fillRect(standX+T*.2,standY+T*.18,T*.16,T*.08);
+  ctx.fillRect(standX+T*.1,standY+T*.32,T*.2,T*.08);
+  ctx.fillStyle="#d9784f";
+  ctx.fillRect(standX+T*.07,standY+T*.08,T*.12,2);
+  ctx.fillRect(standX+T*.22,standY+T*.22,T*.1,2);
+  ctx.fillRect(standX+T*.13,standY+T*.36,T*.14,2);
+
+  const guitarX=T*.2;
+  const guitarY=areaY+T*.2;
+  ctx.fillStyle="#9e652e";
+  ctx.fillRect(guitarX+T*.24,guitarY,T*.06,T*.26);
+  ctx.fillRect(guitarX+T*.22,guitarY-T*.08,T*.1,T*.08);
+  ctx.fillStyle="#cf8a41";
+  ctx.fillRect(guitarX+T*.14,guitarY+T*.22,T*.22,T*.24);
+  ctx.fillStyle="#f3d799";
+  ctx.fillRect(guitarX+T*.22,guitarY+T*.3,T*.06,T*.06);
+  ctx.fillStyle="#5f4034";
+  ctx.fillRect(guitarX+T*.19,guitarY+T*.12,2,T*.18);
 }
 
 function drawCafeDecor(ctx,T,BW,BH,f){
@@ -1602,27 +1687,20 @@ function drawCustomerArea(ctx,T,BW,BH,orders,f){
   ctx.save();
   if(mapTheme.deco==="centralperks"){
     const areaY=BH-T*.78;
-    ctx.fillStyle="#2f4f4b";
+    ctx.fillStyle="#233b39";
     ctx.fillRect(0,areaY+T*.44,BW,T*.34);
-    ctx.fillStyle="#d9ccb8";
+    ctx.fillStyle="#d2c3ae";
     ctx.fillRect(0,areaY+T*.4,BW,2);
-    ctx.fillStyle="#20403c";
+    ctx.fillStyle="#18302d";
     ctx.fillRect(0,areaY+T*.68,BW,T*.1);
-
-    const couchY=areaY+T*.28;
-    ctx.fillStyle="#c87046";
-    ctx.fillRect(T*.35,couchY,T*2.2,T*.26);
-    ctx.fillRect(BW-T*2.55,couchY,T*2.2,T*.26);
-    ctx.fillStyle="#2d655d";
-    ctx.fillRect(T*.6,couchY+T*.22,T*1.7,T*.12);
-    ctx.fillRect(BW-T*2.3,couchY+T*.22,T*1.7,T*.12);
+    drawCentralPerksLoungeProps(ctx,T,BW,BH,f);
 
     ctx.save();
     ctx.beginPath();
     ctx.rect(0,areaY,BW,T*.78);
     ctx.clip();
-    drawCustomer(ctx,T*.44,areaY+T*.08,T*.82,AMBIENT_CUSTOMERS[0],f+12,{alpha:.86,showCup:true});
-    drawCustomer(ctx,BW-T*1.5,areaY+T*.06,T*.86,AMBIENT_CUSTOMERS[1],f+25,{alpha:.88,showCup:true});
+    drawCustomer(ctx,T*.86,areaY+T*.08,T*.82,AMBIENT_CUSTOMERS[0],f+12,{alpha:.82,showCup:true});
+    drawCustomer(ctx,BW-T*1.96,areaY+T*.06,T*.86,AMBIENT_CUSTOMERS[1],f+25,{alpha:.84,showCup:true});
     orders.slice(0,QUEUE_COLS.length).forEach((order,idx)=>{
       const qx=QUEUE_COLS[idx]*T-T*.42;
       const qy=BH-T*.66+(idx%2)*2;
@@ -1766,8 +1844,8 @@ function drawLighting(ctx,T,BW,BH,f,gameState){
 
   if(mapTheme.deco==="centralperks"){
     const skyWash=ctx.createLinearGradient(0,0,0,BH*.62);
-    skyWash.addColorStop(0,"rgba(210,234,255,0.22)");
-    skyWash.addColorStop(.34,"rgba(255,247,228,0.08)");
+    skyWash.addColorStop(0,"rgba(176,206,230,0.12)");
+    skyWash.addColorStop(.34,"rgba(244,230,198,0.04)");
     skyWash.addColorStop(1,"rgba(255,255,255,0)");
     ctx.fillStyle=skyWash;
     ctx.fillRect(0,0,BW,BH*.62);
@@ -1835,8 +1913,8 @@ function drawLighting(ctx,T,BW,BH,f,gameState){
   });
 
   const counterGlow=ctx.createLinearGradient(0,T*.82,0,T*1.95);
-  counterGlow.addColorStop(0,`rgba(${mapTheme.glow||"255,212,120"},0.08)`);
-  counterGlow.addColorStop(.65,`rgba(${mapTheme.glow||"255,190,90"},0.03)`);
+  counterGlow.addColorStop(0,`rgba(${mapTheme.glow||"255,212,120"},${mapTheme.deco==="centralperks"?0.05:0.08})`);
+  counterGlow.addColorStop(.65,`rgba(${mapTheme.glow||"255,190,90"},${mapTheme.deco==="centralperks"?0.02:0.03})`);
   counterGlow.addColorStop(1,`rgba(${mapTheme.glow||"255,160,80"},0)`);
   ctx.fillStyle=counterGlow;
   ctx.fillRect(0,T*.82,BW,T*1.3);
