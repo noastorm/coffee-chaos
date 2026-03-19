@@ -112,7 +112,8 @@ const AMBIENT_CUSTOMERS=[
 ];
 
 function useIsMobile(){const[m,s]=useState(false);useEffect(()=>{const c=()=>s(window.innerWidth<768||"ontouchstart"in window);c();window.addEventListener("resize",c);return ()=>window.removeEventListener("resize",c);},[]);return m;}
-function useScreen(){const[s,set]=useState({w:window.innerWidth,h:window.innerHeight});useEffect(()=>{const r=()=>set({w:window.innerWidth,h:window.innerHeight});window.addEventListener("resize",r);return ()=>window.removeEventListener("resize",r);},[]);return s;}
+function readViewport(){const vv=window.visualViewport;return{w:Math.round(vv?.width||window.innerWidth),h:Math.round(vv?.height||window.innerHeight)};}
+function useScreen(){const[s,set]=useState(()=>readViewport());useEffect(()=>{const r=()=>set(readViewport());const vv=window.visualViewport;r();window.addEventListener("resize",r);window.addEventListener("orientationchange",r);vv?.addEventListener("resize",r);vv?.addEventListener("scroll",r);return ()=>{window.removeEventListener("resize",r);window.removeEventListener("orientationchange",r);vv?.removeEventListener("resize",r);vv?.removeEventListener("scroll",r);};},[]);return s;}
 
 const haptic=(t="light")=>{try{navigator?.vibrate?.({light:10,medium:25,heavy:50}[t]||10);}catch(e){}};
 
@@ -891,7 +892,11 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession}){
 
   const computeT = useCallback(() => {
     if (isMobile) {
-      return Math.floor(screen.w / COLS);
+      const landscape = screen.w >= screen.h;
+      const reservedH = landscape ? 132 : 180;
+      const byWidth = Math.floor((screen.w - 20) / COLS);
+      const byHeight = Math.floor((screen.h - reservedH) / ROWS);
+      return Math.max(20, Math.min(byWidth, byHeight, landscape ? 44 : 56));
     }
     return Math.min(Math.floor((screen.w - 40) / COLS), Math.floor((screen.h - 200) / ROWS), 56);
   }, [isMobile, screen]);
@@ -1574,54 +1579,94 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession}){
   const pcHelp = online
     ? (localPid === 0 ? "You are P1: WASD + E/Space" : "You are P2: Arrows + /")
     : "P1: WASD + E/Space | P2: Arrows + /";
+  const isPortraitMobile = isMobile && screen.h > screen.w;
+  const safeTop = "max(env(safe-area-inset-top), 10px)";
+  const safeBottom = "max(env(safe-area-inset-bottom), 10px)";
+  const safeLeft = "max(env(safe-area-inset-left), 8px)";
+  const safeRight = "max(env(safe-area-inset-right), 8px)";
 
   if (isMobile) {
-    const hudH = 32;
-    const ordH = 58;
-    const controlH = Math.max(140, screen.h - BH - hudH - ordH - 10);
-    const joySize = Math.min(130, controlH - 20);
-    const actSize = Math.min(80, controlH - 30);
+    if (isPortraitMobile) {
+      return (
+        <div style={{width:"100vw",height:"100dvh",minHeight:"100vh",background:"radial-gradient(circle at top,#3a2215 0%,#1a0f08 58%,#120904 100%)",paddingTop:safeTop,paddingBottom:safeBottom,paddingLeft:safeLeft,paddingRight:safeRight,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Silkscreen','Press Start 2P',monospace"}}>
+          <div style={{maxWidth:420,background:"#1a0f08ee",border:`2px solid ${P.gold}66`,borderRadius:24,padding:"22px 20px",boxShadow:"0 20px 40px #00000055,inset 0 1px 0 #ffffff10",display:"flex",flexDirection:"column",alignItems:"center",gap:16,textAlign:"center"}}>
+            <div style={{display:"flex",gap:12,alignItems:"center",justifyContent:"center"}}>
+              <div style={{width:36,height:58,borderRadius:10,border:"2px solid #8a6a4a",background:"#120904",position:"relative",boxShadow:"inset 0 0 0 2px #ffffff08"}}>
+                <div style={{position:"absolute",top:8,left:10,right:10,height:4,borderRadius:3,background:"#3a2215"}}/>
+                <div style={{position:"absolute",left:14,right:14,bottom:10,height:24,borderRadius:10,background:"#3a2215"}}/>
+              </div>
+              <div style={{color:P.gold,fontSize:18}}>→</div>
+              <div style={{width:58,height:36,borderRadius:10,border:`2px solid ${P.gold}88`,background:"#120904",position:"relative",boxShadow:`0 0 18px ${P.gold}22,inset 0 0 0 2px #ffffff08`}}>
+                <div style={{position:"absolute",top:8,left:8,right:8,height:4,borderRadius:3,background:"#6b3a1f"}}/>
+                <div style={{position:"absolute",left:10,bottom:8,width:16,height:16,borderRadius:"50%",background:"#4fc3f7aa"}}/>
+                <div style={{position:"absolute",right:10,bottom:8,width:16,height:16,borderRadius:"50%",background:"#f48fb1aa"}}/>
+              </div>
+            </div>
+            <div style={{fontSize:22,color:P.gold,letterSpacing:2,textShadow:`0 0 16px ${P.gold}33`}}>ROTATE TO PLAY</div>
+            <div style={{fontSize:10,lineHeight:1.8,color:"#f5e6d3",maxWidth:320}}>
+              Matches use landscape so the whole cafe, order rail, and both baristas stay readable on phones.
+            </div>
+            <div style={{fontSize:8,lineHeight:1.8,color:"#8a6a4a",maxWidth:320}}>
+              Menus and room setup work in portrait. Gameplay is landscape-first for a cleaner cross-platform feel.
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const hudH = 40;
+    const ordH = 72;
+    const joySize = singleControlMode ? Math.min(110, Math.max(88, Math.round(screen.h * 0.24))) : Math.min(86, Math.max(72, Math.round(screen.h * 0.19)));
+    const actSize = singleControlMode ? Math.min(88, Math.max(72, Math.round(screen.h * 0.18))) : 50;
+    const boardScale = Math.min((screen.w - 26) / BW, (screen.h - 132) / BH, 1.18);
+    const displayW = Math.max(240, Math.round(BW * boardScale));
+    const displayH = Math.max(170, Math.round(BH * boardScale));
 
     return (
-      <div style={{width:"100vw",height:"100vh",background:P.bg,overflow:"hidden",display:"flex",flexDirection:"column",fontFamily:"'Silkscreen','Press Start 2P',monospace"}}>
-        {/* HUD - compact */}
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"0 10px",height:hudH,flexShrink:0,background:"#0006"}}>
-          <div style={{display:"flex",alignItems:"center",gap:5}}>
+      <div style={{width:"100vw",height:"100dvh",minHeight:"100vh",background:P.bg,overflow:"hidden",display:"flex",flexDirection:"column",fontFamily:"'Silkscreen','Press Start 2P',monospace",paddingTop:safeTop,paddingBottom:safeBottom,paddingLeft:safeLeft,paddingRight:safeRight}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"0 10px",height:hudH,flexShrink:0,background:"linear-gradient(180deg,#00000088 0%,#00000035 100%)",borderBottom:"1px solid #6b3a1f55",borderTopLeftRadius:18,borderTopRightRadius:18}}>
+          <div style={{display:"flex",alignItems:"center",gap:6}}>
             <span style={{fontSize:13}}>☕</span>
             <span style={{color:P.gold,fontSize:16,fontWeight:"bold"}}>{hud.score}</span>
           </div>
-          {hud.combo >= 2 && <div style={{color:"#ff4081",fontSize:10,animation:"pulse .5s infinite"}}>x{hud.combo}</div>}
-          <div style={{color:hud.time<=30?P.red:hud.time<=60?P.orange:"#c4956a",fontSize:13,fontWeight:"bold",...(hud.time<=10?{animation:"pulse .3s infinite"}:{})}}>{~~(hud.time/60)}:{String(hud.time%60).padStart(2,"0")}</div>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            {hud.combo >= 2 && <div style={{color:"#ff7ab8",fontSize:10,animation:"pulse .5s infinite"}}>x{hud.combo}</div>}
+            <div style={{color:hud.time<=30?P.red:hud.time<=60?P.orange:"#d2a979",fontSize:13,fontWeight:"bold",...(hud.time<=10?{animation:"pulse .3s infinite"}:{})}}>{~~(hud.time/60)}:{String(hud.time%60).padStart(2,"0")}</div>
+          </div>
         </div>
 
-        {/* Orders - slim */}
-        <div style={{display:"flex",gap:3,padding:"2px 4px",overflowX:"auto",flexShrink:0,height:ordH,alignItems:"center",WebkitOverflowScrolling:"touch"}}>
+        <div style={{display:"flex",gap:4,padding:"6px 4px 8px",overflowX:"auto",flexShrink:0,height:ordH,alignItems:"center",WebkitOverflowScrolling:"touch",touchAction:"pan-x"}}>
           {hud.orders.map(o => <OrderTicket key={o.id} o={o} compact />)}
-          {!hud.orders.length && <span style={{color:"#6b3a1f",fontSize:8}}>Waiting...</span>}
+          {!hud.orders.length && <span style={{color:"#8a6a4a",fontSize:8,padding:"0 8px"}}>Waiting for customers...</span>}
         </div>
 
-        {/* Canvas - FULL WIDTH */}
-        <canvas ref={canvasRef} width={BW} height={BH} onPointerDown={handleCanvasTarget} style={{
-          width:"100vw", height:BH*(screen.w/BW),
-          imageRendering:"pixelated", flexShrink:0,
-          display:"block", cursor:"pointer",
-        }} />
+        <div style={{position:"relative",flex:1,minHeight:0,borderTop:"1px solid #6b3a1f55",borderBottom:"1px solid #6b3a1f55",borderRadius:24,background:"radial-gradient(circle at top,#3a2215 0%,#1a0f08 65%,#120904 100%)",boxShadow:"inset 0 1px 0 #ffffff08, inset 0 -18px 40px #00000044"}}>
+          <div style={{position:"absolute",inset:0,pointerEvents:"none",background:"radial-gradient(circle at center,#ffffff09 0%,transparent 58%),linear-gradient(180deg,#ffffff05 0%,transparent 26%,#00000028 100%)"}}/>
+          <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",padding:"8px 0 12px"}}>
+            <canvas ref={canvasRef} width={BW} height={BH} onPointerDown={handleCanvasTarget} style={{width:displayW,height:displayH,imageRendering:"pixelated",display:"block",cursor:"pointer",borderTop:`2px solid ${P.wallLine}`,borderBottom:`2px solid ${P.wallLine}`,boxShadow:"0 16px 30px #00000055",borderRadius:14}} />
+          </div>
 
-        {/* Controls - fills remaining space */}
-        <div style={{flex:1,display:"flex",justifyContent:"space-between",alignItems:"center",padding:"0 8px",minHeight:controlH}}>
           {singleControlMode ? <>
-            <Joystick onMove={d => mobileMove(localPid,d)} color={localColor} label={online ? `P${localPid+1}` : "MOVE"} side="left" size={joySize} />
-            <ActBtn onAction={() => mobileAct(localPid)} color={localColor} holding={localHolding} sz={actSize} />
-          </> : <>
-            <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3}}>
-              <Joystick onMove={d => mobileMove(0,d)} color={P.p1} label="P1" side="left" size={joySize * 0.85} />
-              <button onTouchStart={e => {e.preventDefault(); mobileAct(0); haptic("medium");}} style={{width:56,height:32,borderRadius:16,background:P.p1+"33",border:`2px solid ${P.p1}88`,color:P.p1,fontSize:9,fontFamily:"'Silkscreen',monospace",fontWeight:"bold",touchAction:"manipulation"}}>ACT</button>
+            <div style={{position:"absolute",left:8,bottom:10,zIndex:2}}>
+              <Joystick onMove={d => mobileMove(localPid,d)} color={localColor} label={online ? `P${localPid+1}` : "MOVE"} side="left" size={joySize} />
             </div>
-            <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3}}>
-              <Joystick onMove={d => mobileMove(1,d)} color={P.p2} label="P2" side="right" size={joySize * 0.85} />
-              <button onTouchStart={e => {e.preventDefault(); mobileAct(1); haptic("medium");}} style={{width:56,height:32,borderRadius:16,background:P.p2+"33",border:`2px solid ${P.p2}88`,color:P.p2,fontSize:9,fontFamily:"'Silkscreen',monospace",fontWeight:"bold",touchAction:"manipulation"}}>ACT</button>
+            <div style={{position:"absolute",right:10,bottom:14,zIndex:2}}>
+              <ActBtn onAction={() => mobileAct(localPid)} color={localColor} holding={localHolding} sz={actSize} />
+            </div>
+          </> : <>
+            <div style={{position:"absolute",left:8,bottom:8,zIndex:2,display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
+              <Joystick onMove={d => mobileMove(0,d)} color={P.p1} label="P1" side="left" size={joySize} />
+              <button onTouchStart={e => {e.preventDefault(); mobileAct(0); haptic("medium");}} style={{width:54,height:30,borderRadius:15,background:P.p1+"33",border:`2px solid ${P.p1}88`,color:P.p1,fontSize:9,fontFamily:"'Silkscreen',monospace",fontWeight:"bold",touchAction:"manipulation"}}>ACT</button>
+            </div>
+            <div style={{position:"absolute",right:8,bottom:8,zIndex:2,display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
+              <Joystick onMove={d => mobileMove(1,d)} color={P.p2} label="P2" side="right" size={joySize} />
+              <button onTouchStart={e => {e.preventDefault(); mobileAct(1); haptic("medium");}} style={{width:54,height:30,borderRadius:15,background:P.p2+"33",border:`2px solid ${P.p2}88`,color:P.p2,fontSize:9,fontFamily:"'Silkscreen',monospace",fontWeight:"bold",touchAction:"manipulation"}}>ACT</button>
             </div>
           </>}
+
+          <div style={{position:"absolute",left:"50%",bottom:12,transform:"translateX(-50%)",zIndex:2,background:"#120904dd",border:"1px solid #6b3a1f66",borderRadius:999,padding:"5px 10px",fontSize:7,color:"#d2a979",letterSpacing:1,boxShadow:"0 4px 12px #00000033"}}>
+            TAP STATIONS TO AUTO-WALK
+          </div>
         </div>
       </div>);
   }
@@ -1683,6 +1728,7 @@ function TitleScreen({onStart,onOpenOnline,isMobile,forceMode,setForceMode}){
       <div style={{position:"relative",zIndex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:isMobile?14:10,padding:20}}>
         <div style={{fontSize:isMobile?"clamp(28px,10vw,48px)":"clamp(24px,7vw,48px)",fontWeight:"bold",color:P.gold,textShadow:`0 0 20px ${P.gold}44, 0 4px 0 #8b6914, 0 6px 0 #6b5010`,letterSpacing:4}}>CAFÉ CHAOS</div>
         <div style={{fontSize:isMobile?12:10,color:"#c4956a",letterSpacing:2}}>☕ A Barista Frenzy ☕</div>
+        {isMobile&&<div style={{fontSize:8,color:"#8a6a4a",letterSpacing:1,textAlign:"center",maxWidth:280}}>Portrait for menus and room setup. Rotate to landscape when the shift starts.</div>}
 
         {/* Mode toggle */}
         <div style={{display:"flex",gap:4,alignItems:"center"}}>
@@ -1859,7 +1905,7 @@ function OnlineRoomScreen({isMobile,onBack,onLaunch,initialRoomCode}){
   return (
     <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"100%",background:"radial-gradient(circle at top,#3a2215 0%,#1a0f08 55%,#120904 100%)",fontFamily:"'Silkscreen',monospace",color:"#f5e6d3",padding:isMobile?20:28,textAlign:"center",gap:isMobile?14:10}}>
       <div style={{fontSize:isMobile?28:24,color:P.gold,textShadow:`0 0 20px ${P.gold}44`}}>ONLINE SHIFT</div>
-      <div style={{fontSize:isMobile?10:9,color:"#c4956a",maxWidth:520}}>Host the game on Vercel or GitHub Pages, then use a Supabase room link or code so a friend can join your shift.</div>
+      <div style={{fontSize:isMobile?10:9,color:"#c4956a",maxWidth:520}}>Host the game on Vercel or GitHub Pages, then use a Supabase room link or code so a friend can join your shift. On phones, gameplay is tuned for landscape.</div>
       {!hasOnlineConfig()&&<div style={{maxWidth:560,background:"#2d1b0e",border:"2px solid #6b3a1f",borderRadius:14,padding:isMobile?16:14,fontSize:isMobile?10:9,lineHeight:1.8,color:"#e8a87c"}}>Online mode needs public realtime keys in <code>.env</code>: <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code>.</div>}
       {error&&<div style={{color:P.red,fontSize:isMobile?10:9,maxWidth:520}}>{error}</div>}
 
@@ -1972,14 +2018,15 @@ export default function CafeChaos(){
   },[]);
 
   return (
-    <div style={{width:"100vw",height:"100vh",overflow:"hidden",background:P.bg,position:"fixed",inset:0,touchAction:"none"}}>
+    <div style={{width:"100vw",height:"100dvh",minHeight:"100vh",overflow:"hidden",background:P.bg,position:"fixed",inset:0,touchAction:screen==="game"?"none":"manipulation"}}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap');
         @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
         @keyframes scoreReveal{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
         @keyframes starBounce{0%{transform:scale(0)}50%{transform:scale(1.3)}100%{transform:scale(1)}}
         *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;}
-        body{overscroll-behavior:none;overflow:hidden;margin:0;padding:0;}html{overflow:hidden;}
+        html,body,#root{width:100%;height:100%;margin:0;padding:0;background:#1a0f08;overflow:hidden;}
+        body{overscroll-behavior:none;}
       `}</style>
       {screen==="title"&&<TitleScreen isMobile={isMobile} forceMode={forceMode} setForceMode={setForceMode} onStart={startLocalGame} onOpenOnline={()=>setScreen("online")}/>}
       {screen==="online"&&<OnlineRoomScreen isMobile={isMobile} initialRoomCode={initialRoomCode} onBack={returnToTitle} onLaunch={startOnlineGame}/>}
