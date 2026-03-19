@@ -17,9 +17,9 @@ const COLS = 18, ROWS = 8;
 const DIRS = { up:[-1,0], down:[1,0], left:[0,-1], right:[0,1] };
 
 const DIFF = {
-  chill:  { label:"â˜• Chill",  time:240, patMul:2.2, spawnBase:16, spawnMin:9,  tierDelay:[60,150], desc:"Relaxed pace, patient customers", clr:"#8fce7e" },
-  normal: { label:"ðŸ”¥ Normal", time:180, patMul:1.0, spawnBase:12, spawnMin:5,  tierDelay:[30,90],  desc:"The real cafÃ© experience",       clr:"#ff9800" },
-  hectic: { label:"ðŸ’€ Hectic", time:150, patMul:0.7, spawnBase:8,  spawnMin:3,  tierDelay:[15,45],  desc:"Pure chaos. Good luck.",          clr:"#ff4444" },
+  chill:  { label:"CHILL",  time:240, patMul:2.2, spawnBase:16, spawnMin:9,  tierDelay:[60,150], desc:"Relaxed pace, patient customers", clr:"#8fce7e" },
+  normal: { label:"NORMAL", time:180, patMul:1.0, spawnBase:12, spawnMin:5,  tierDelay:[30,90],  desc:"The real cafe experience",       clr:"#ff9800" },
+  hectic: { label:"HECTIC", time:150, patMul:0.7, spawnBase:8,  spawnMin:3,  tierDelay:[15,45],  desc:"Pure chaos. Good luck.",          clr:"#ff4444" },
 };
 
 const POWER_RULES = {
@@ -59,7 +59,7 @@ const P = {
 
 const RECIPES = {
   "Espresso":           {ing:["espresso"],                           pts:10,tier:1,clr:P.esp},
-  "CafÃ© Latte":         {ing:["espresso","steamed_milk"],            pts:20,tier:1,clr:"#c4a882"},
+  "Cafe Latte":         {ing:["espresso","steamed_milk"],            pts:20,tier:1,clr:"#c4a882"},
   "Macchiato":          {ing:["espresso","foam"],                    pts:20,tier:1,clr:"#8b6914"},
   "Iced Latte":         {ing:["espresso","milk","ice"],              pts:25,tier:2,clr:"#d4c5a9"},
   "Iced Caramel Latte": {ing:["espresso","milk","ice","caramel"],    pts:35,tier:2,clr:P.car},
@@ -1632,7 +1632,7 @@ function drawServe(ctx,x,y,T,f){
 }
 
 function shortDrinkLabel(name){
-  const cleaned=(name||"").replace("CafÃ© ","").replace("Iced ","I. ").replace("Double ","D. ");
+  const cleaned=(name||"").replace("Cafe ","").replace("Iced ","I. ").replace("Double ","D. ");
   const words=cleaned.split(" ").filter(Boolean);
   if(words.length===1)return words[0].slice(0,4).toUpperCase();
   return words.map((word)=>word[0]).join("").slice(0,4).toUpperCase();
@@ -2131,7 +2131,7 @@ function Joystick({onMove,color,label,side,size=130}){
       <div ref={joyRef} onTouchStart={onTS} onTouchMove={onTM} onTouchEnd={onTE}
         style={{width:size,height:size,borderRadius:"50%",background:`radial-gradient(circle,${color}18 0%,${color}08 60%,transparent 100%)`,border:`3px solid ${color}35`,display:"flex",alignItems:"center",justifyContent:"center",position:"relative",touchAction:"none"}}>
         <div className="jstick" style={{width:stickSz,height:stickSz,borderRadius:"50%",background:`radial-gradient(circle at 40% 35%,${color}cc,${color}88)`,boxShadow:`0 2px 10px ${color}44,inset 0 2px 4px ${color}ff`,transition:"transform 0.04s linear",position:"absolute"}}/>
-        {["â–²","â–¼","â—€","â–¶"].map((a,i)=><span key={i} style={{position:"absolute",color:color+"44",fontSize:Math.max(9,size*0.08),fontWeight:"bold",...[{top:6},{bottom:6},{left:6},{right:6}][i]}}>{a}</span>)}
+        {["U","D","L","R"].map((a,i)=><span key={i} style={{position:"absolute",color:color+"44",fontSize:Math.max(9,size*0.08),fontWeight:"bold",...[{top:6},{bottom:6},{left:6},{right:6}][i]}}>{a}</span>)}
       </div>
       <span style={{fontSize:8,color:color+"99",fontFamily:"'Silkscreen',monospace",letterSpacing:1}}>{label}</span>
     </div>
@@ -2152,11 +2152,10 @@ function ActBtn({onAction,color,holding,sz=80}){
           display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
           cursor:"pointer",touchAction:"manipulation",userSelect:"none",WebkitUserSelect:"none",
           transform:p?"scale(0.88)":"scale(1)",transition:"transform .08s,box-shadow .08s",gap:2}}>
-        <span style={{fontSize:sz*.28}}>ðŸ‘†</span>
-        <span style={{fontSize:sz*.11}}>ACT</span>
+        <span style={{fontSize:sz*.18,letterSpacing:1}}>ACT</span>
       </button>
       {holding&&<div style={{background:"#000a",borderRadius:8,padding:"3px 8px",display:"flex",gap:2,alignItems:"center"}}>
-        {holding.ingredients?.length===0?<span style={{fontSize:14}}>ðŸ¥¤</span>:
+        {holding.ingredients?.length===0?<span style={{fontSize:10,fontFamily:"'Silkscreen',monospace",color:"#f5e6d3"}}>CUP</span>:
           holding.ingredients?.map((ing,i)=><div key={i} style={{width:10,height:10,borderRadius:2,background:ING_C[ing],border:"1px solid #fff3"}}/>)}
       </div>}
     </div>
@@ -2169,9 +2168,9 @@ function DPad({pid,onInput,label,color}){
   return (<div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
     <span style={{fontSize:8,color,fontFamily:"'Silkscreen',monospace"}}>{label}</span>
     <div style={{display:"grid",gridTemplateColumns:`repeat(3,${sz}px)`,gridTemplateRows:`repeat(3,${sz}px)`,gap:2}}>
-      <div/><div style={bs()} onPointerDown={fire("up")}>â–²</div><div/>
-      <div style={bs()} onPointerDown={fire("left")}>â—€</div><div style={bs(true)} onPointerDown={fire("action")}>ACT</div><div style={bs()} onPointerDown={fire("right")}>â–¶</div>
-      <div/><div style={bs()} onPointerDown={fire("down")}>â–¼</div><div/>
+      <div/><div style={bs()} onPointerDown={fire("up")}>U</div><div/>
+      <div style={bs()} onPointerDown={fire("left")}>L</div><div style={bs(true)} onPointerDown={fire("action")}>ACT</div><div style={bs()} onPointerDown={fire("right")}>R</div>
+      <div/><div style={bs()} onPointerDown={fire("down")}>D</div><div/>
     </div>
   </div>);
 }
@@ -2180,7 +2179,7 @@ function OrderTicket({o,compact}){
   const pct=1-o.elapsed/o.patience;const urg=pct<.25;
   return (<div style={{background:urg?"linear-gradient(180deg,#3a0a0a 0%,#241008 100%)":"linear-gradient(180deg,#322014 0%,#211309 100%)",border:`2px solid ${pct>.5?"#8b5e34":pct>.25?P.orange:P.red}`,borderRadius:10,padding:compact?"6px 10px":"8px 12px",minWidth:compact?134:152,flexShrink:0,animation:urg?"pulse .6s infinite":undefined,boxShadow:"0 4px 10px #00000033"}}>
     <div style={{display:"flex",alignItems:"center",gap:4}}>
-      <div style={{width:compact?12:16,height:compact?12:16,borderRadius:"50%",background:o.cust.skin,border:"1px solid #0003",fontSize:compact?5:6,display:"flex",alignItems:"center",justifyContent:"center"}}>â˜º</div>
+      <div style={{width:compact?12:16,height:compact?12:16,borderRadius:"50%",background:o.cust.skin,border:"1px solid #0003",boxShadow:"inset 0 1px 0 #ffffff33"}}/>
       <span style={{color:"#d8b48c",fontSize:compact?7:8,fontFamily:"'Silkscreen',monospace"}}>{o.cust.name}</span>
     </div>
     <div style={{color:getRecipeUiColor(o.drink),fontSize:compact?10:10,marginTop:4,fontWeight:"bold",fontFamily:"'Silkscreen',monospace",whiteSpace:"nowrap",textShadow:"0 1px 0 #120904"}}>{o.drink}</div>
@@ -2264,7 +2263,7 @@ function PowerMeter({hud,compact=false,align="center"}){
       <div style={{width:"100%",height:compact?8:10,borderRadius:999,background:"#0f0704",border:"1px solid #6b3a1f88",overflow:"hidden",boxShadow:"inset 0 1px 3px #00000066"}}>
         <div style={{width:`${pct*100}%`,height:"100%",background:"linear-gradient(90deg,#ff8a50 0%,#ffd54f 52%,#8be9ff 100%)",boxShadow:"0 0 14px #ffd54f66"}}/>
       </div>
-      {!!active.length&&<div style={{fontSize:compact?7:8,color:"#9de7ff",textAlign:align,lineHeight:1.5}}>{active.join(" â€¢ ")}</div>}
+      {!!active.length&&<div style={{fontSize:compact?7:8,color:"#9de7ff",textAlign:align,lineHeight:1.5}}>{active.join(" / ")}</div>}
     </div>
   );
 }
@@ -3221,7 +3220,7 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
                 <div style={{position:"absolute",top:8,left:10,right:10,height:4,borderRadius:3,background:"#3a2215"}}/>
                 <div style={{position:"absolute",left:14,right:14,bottom:10,height:24,borderRadius:10,background:"#3a2215"}}/>
               </div>
-              <div style={{color:P.gold,fontSize:18}}>â†’</div>
+              <div style={{color:P.gold,fontSize:12,letterSpacing:1}}>TO</div>
               <div style={{width:58,height:36,borderRadius:10,border:`2px solid ${P.gold}88`,background:"#120904",position:"relative",boxShadow:`0 0 18px ${P.gold}22,inset 0 0 0 2px #ffffff08`}}>
                 <div style={{position:"absolute",top:8,left:8,right:8,height:4,borderRadius:3,background:"#6b3a1f"}}/>
                 <div style={{position:"absolute",left:10,bottom:8,width:16,height:16,borderRadius:"50%",background:"#4fc3f7aa"}}/>
@@ -3259,7 +3258,7 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
       <div style={{width:"100vw",height:"100dvh",minHeight:"100vh",background:P.bg,overflow:"hidden",display:"flex",flexDirection:"column",fontFamily:"'Silkscreen','Press Start 2P',monospace",paddingTop:safeTop,paddingBottom:safeBottom,paddingLeft:safeLeft,paddingRight:safeRight,gap:4}}>
         <div style={{display:"grid",gridTemplateColumns:"auto 1fr auto",alignItems:"center",padding:"0 10px",height:hudH,flexShrink:0,background:"linear-gradient(180deg,#00000088 0%,#00000035 100%)",border:"1px solid #6b3a1f55",borderRadius:18,columnGap:8}}>
           <div style={{display:"flex",alignItems:"center",gap:6}}>
-            <span style={{fontSize:14}}>â˜•</span>
+            <span style={{fontSize:11,color:"#d2a979"}}>PTS</span>
             <span style={{color:P.gold,fontSize:17,fontWeight:"bold"}}>{hud.score}</span>
           </div>
           <div style={{justifySelf:"center",display:"flex",flexDirection:"column",gap:4,alignItems:"center"}}>
@@ -3320,8 +3319,8 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
   return (
     <div style={{display:"flex",flexDirection:"column",alignItems:"center",height:"100%",background:P.bg,fontFamily:"'Silkscreen','Press Start 2P',monospace",overflow:"hidden"}}>
       <div style={{display:"flex",width:"100%",maxWidth:BW+12,justifyContent:"space-between",padding:"10px 14px 8px",color:"#f5e6d3",fontSize:14,alignItems:"center",flexShrink:0}}>
-        <div style={{display:"flex",alignItems:"center",gap:8}}><span style={{color:P.gold,fontSize:18}}>â˜•</span><span style={{color:P.gold,fontSize:20,fontWeight:"bold"}}>{hud.score}</span></div>
-        {hud.combo>=2&&<div style={{color:"#ff4081",fontSize:12,animation:"pulse .5s infinite"}}>Ã—{hud.combo} COMBO!</div>}
+        <div style={{display:"flex",alignItems:"center",gap:8}}><span style={{color:"#d2a979",fontSize:11}}>PTS</span><span style={{color:P.gold,fontSize:20,fontWeight:"bold"}}>{hud.score}</span></div>
+        {hud.combo>=2&&<div style={{color:"#ff4081",fontSize:12,animation:"pulse .5s infinite"}}>x{hud.combo} COMBO!</div>}
         <div style={{color:hud.time<=30?P.red:hud.time<=60?P.orange:"#d2a979",fontSize:16,fontWeight:"bold",...(hud.time<=10?{animation:"pulse .3s infinite"}:{})}}>{~~(hud.time/60)}:{String(hud.time%60).padStart(2,"0")}</div>
       </div>
       <div style={{display:"flex",gap:8,maxWidth:BW+12,padding:"0 10px 8px",justifyContent:"center",flexWrap:"wrap",flexShrink:0}}>
@@ -3653,10 +3652,10 @@ function OnlineRoomScreen({isMobile,onBack,onLaunch,initialRoomCode,appShell,aud
 }
 function GameOver({score,diff,onRestart,isMobile}){
   const thresholds=diff==="chill"?[300,150,50]:diff==="hectic"?[500,250,100]:[400,200,80];
-  const r=score>=thresholds[0]?{s:"â­â­â­",t:"MASTER BARISTA!",c:P.gold}
-    :score>=thresholds[1]?{s:"â­â­",t:"Great shift!",c:P.orange}
-    :score>=thresholds[2]?{s:"â­",t:"Not bad, rookie!",c:"#c4956a"}
-    :{s:"ðŸ’¤",t:"Rough day...",c:"#8a6a4a"};
+  const r=score>=thresholds[0]?{s:"S",t:"MASTER BARISTA!",c:P.gold}
+    :score>=thresholds[1]?{s:"A",t:"Great shift!",c:P.orange}
+    :score>=thresholds[2]?{s:"B",t:"Not bad, rookie!",c:"#c4956a"}
+    :{s:"C",t:"Rough day...",c:"#8a6a4a"};
   return (
     <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"100%",background:"linear-gradient(180deg,#1a0f08 0%,#2d1b0e 50%,#1a0f08 100%)",fontFamily:"'Silkscreen',monospace",color:"#f5e6d3",gap:isMobile?16:12,padding:20,textAlign:"center"}}>
       <div style={{fontSize:isMobile?28:24,color:P.gold,textShadow:`0 0 20px ${P.gold}44`}}>SHIFT OVER!</div>
@@ -3665,7 +3664,7 @@ function GameOver({score,diff,onRestart,isMobile}){
       <div style={{fontSize:isMobile?36:28,animation:"starBounce .6s ease-out .3s both"}}>{r.s}</div>
       <div style={{fontSize:isMobile?16:14,color:r.c,fontWeight:"bold"}}>{r.t}</div>
       <div style={{marginTop:20}}>
-        <button onClick={onRestart} style={{fontFamily:"'Silkscreen',monospace",fontWeight:"bold",fontSize:isMobile?16:14,padding:isMobile?"18px 40px":"14px 32px",background:"#6b3a1f",color:"#f5e6d3",border:`2px solid ${P.gold}88`,borderRadius:10,cursor:"pointer",boxShadow:"0 4px 16px #00000044"}}>ðŸ”„ PLAY AGAIN</button>
+        <button onClick={onRestart} style={{fontFamily:"'Silkscreen',monospace",fontWeight:"bold",fontSize:isMobile?16:14,padding:isMobile?"18px 40px":"14px 32px",background:"#6b3a1f",color:"#f5e6d3",border:`2px solid ${P.gold}88`,borderRadius:10,cursor:"pointer",boxShadow:"0 4px 16px #00000044"}}>PLAY AGAIN</button>
       </div>
     </div>
   );
