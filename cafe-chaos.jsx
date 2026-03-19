@@ -22,6 +22,19 @@ const DIFF = {
   hectic: { label:"💀 Hectic", time:150, patMul:0.7, spawnBase:8,  spawnMin:3,  tierDelay:[15,45],  desc:"Pure chaos. Good luck.",          clr:"#ff4444" },
 };
 
+const POWER_RULES = {
+  maxFlow:100,
+  serveGain:24,
+  comboBonus:7,
+  missPenalty:22,
+  failPenalty:12,
+  rushCost:45,
+  freezeCost:90,
+  rushMs:7000,
+  freezeMs:6000,
+  rushMoveDelay:80,
+};
+
 const P = {
   bg:"#1a0f08", floor1:"#6b4226", floor2:"#5c3a22", floor3:"#7a4e30",
   wall:"#2d1b0e", wallHi:"#3a2215", wallLine:"#4a2c1a",
@@ -117,6 +130,9 @@ const AMBIENT_CUSTOMERS=[
   { name:"Owen", skin:CUSTOMER_SKINS[3], shirt:"#8d6e63", accent:"#bcaaa4", hair:"#21140b", mood:"drink", side:"right", scale:.86 },
   { name:"Ivy", skin:CUSTOMER_SKINS[0], shirt:"#ec407a", accent:"#f48fb1", hair:"#463122", mood:"phone", side:"right", scale:.74 },
 ];
+
+const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
+const flowGainForCombo=(combo)=>clamp(POWER_RULES.serveGain+Math.max(0,combo-1)*POWER_RULES.comboBonus,POWER_RULES.serveGain,42);
 
 function useIsMobile(){const[m,s]=useState(false);useEffect(()=>{const c=()=>s(window.innerWidth<768||"ontouchstart"in window);c();window.addEventListener("resize",c);return ()=>window.removeEventListener("resize",c);},[]);return m;}
 function readViewport(){const vv=window.visualViewport;return{w:Math.round(vv?.width||window.innerWidth),h:Math.round(vv?.height||window.innerHeight)};}
@@ -878,6 +894,9 @@ function createGameState(playerCount, diff){
     score:0,
     combo:0,
     comboT:0,
+    flow:0,
+    rushEnd:0,
+    freezeEnd:0,
     timeLeft:DIFF[diff].time,
     elapsed:0,
     nextOrd:DIFF[diff].spawnBase-2,
@@ -889,10 +908,14 @@ function createGameState(playerCount, diff){
 }
 
 function toHudState(gameState){
+  const now=Date.now();
   return {
     score:gameState.score,
     time:gameState.timeLeft,
     combo:gameState.combo,
+    flow:gameState.flow||0,
+    rushLeft:Math.max(0,Math.ceil(((gameState.rushEnd||0)-now)/1000)),
+    freezeLeft:Math.max(0,Math.ceil(((gameState.freezeEnd||0)-now)/1000)),
     orders:[...gameState.orders],
     holding:gameState.players.map((player)=>player.holding),
   };
@@ -902,6 +925,8 @@ function serializeGameState(gameState){
   const now = Date.now();
   return {
     ...gameState,
+    rushEnd:Math.max(0,(gameState.rushEnd||0)-now),
+    freezeEnd:Math.max(0,(gameState.freezeEnd||0)-now),
     counters:{...gameState.counters},
     orders:gameState.orders.map((order)=>({...order})),
     popups:gameState.popups.map((popup)=>({...popup})),
@@ -923,6 +948,8 @@ function reviveGameState(snapshot){
   const now = Date.now();
   return {
     ...snapshot,
+    rushEnd:now + (snapshot.rushEnd || 0),
+    freezeEnd:now + (snapshot.freezeEnd || 0),
     counters:{...(snapshot.counters || {})},
     orders:(snapshot.orders || []).map((order)=>({...order})),
     popups:(snapshot.popups || []).map((popup)=>({...popup})),
@@ -1128,6 +1155,56 @@ function AudioToggleRow({audioUi,compact=false,align="center"}){
   );
 }
 
+function PowerMeter({hud,compact=false,align="center"}){
+  if(!hud)return null;
+  const pct=clamp((hud.flow||0)/POWER_RULES.maxFlow,0,1);
+  const active=[];
+  if(hud.rushLeft>0)active.push(`RUSH ${hud.rushLeft}s`);
+  if(hud.freezeLeft>0)active.push(`FREEZE ${hud.freezeLeft}s`);
+  return (
+    <div style={{display:"flex",flexDirection:"column",gap:compact?3:4,alignItems:align==="center"?"center":"stretch",minWidth:compact?132:188}}>
+      <div style={{display:"flex",width:"100%",alignItems:"center",justifyContent:"space-between",gap:8,fontFamily:"'Silkscreen',monospace"}}>
+        <span style={{fontSize:compact?8:9,color:"#ffcf7a"}}>FLOW</span>
+        <span style={{fontSize:compact?8:9,color:"#f5e6d3"}}>{Math.round(hud.flow||0)}/{POWER_RULES.maxFlow}</span>
+      </div>
+      <div style={{width:"100%",height:compact?8:10,borderRadius:999,background:"#0f0704",border:"1px solid #6b3a1f88",overflow:"hidden",boxShadow:"inset 0 1px 3px #00000066"}}>
+        <div style={{width:`${pct*100}%`,height:"100%",background:"linear-gradient(90deg,#ff8a50 0%,#ffd54f 52%,#8be9ff 100%)",boxShadow:"0 0 14px #ffd54f66"}}/>
+      </div>
+      {!!active.length&&<div style={{fontSize:compact?7:8,color:"#9de7ff",textAlign:align,lineHeight:1.5}}>{active.join(" • ")}</div>}
+    </div>
+  );
+}
+
+function PowerButtons({hud,onUsePower,compact=false,stack=false}){
+  if(!hud||!onUsePower)return null;
+  const rushDisabled=(hud.flow||0)<POWER_RULES.rushCost||hud.rushLeft>0;
+  const freezeDisabled=(hud.flow||0)<POWER_RULES.freezeCost||hud.freezeLeft>0;
+  const base={
+    fontFamily:"'Silkscreen',monospace",
+    fontWeight:"bold",
+    fontSize:compact?8:9,
+    padding:compact?"7px 10px":"8px 12px",
+    borderRadius:14,
+    cursor:"pointer",
+    minWidth:compact?78:104,
+    touchAction:"manipulation",
+  };
+  const fire=(kind)=>()=>{
+    onUsePower(kind);
+    haptic("medium");
+  };
+  return (
+    <div style={{display:"flex",flexDirection:stack?"column":"row",gap:6,alignItems:"center",justifyContent:"center"}}>
+      <button onClick={fire("rush")} disabled={rushDisabled} style={{...base,border:`1px solid ${rushDisabled?"#7a5234":"#ffb74d88"}`,background:rushDisabled?"#12090488":"linear-gradient(180deg,#4a2814 0%,#2a160b 100%)",color:rushDisabled?"#7a5b45":"#ffd28a",boxShadow:rushDisabled?"none":"0 6px 16px #ff8a5022"}}>
+        {hud.rushLeft>0?`RUSH ${hud.rushLeft}s`:compact?"RUSH":"RUSH 45"}
+      </button>
+      <button onClick={fire("freeze")} disabled={freezeDisabled} style={{...base,border:`1px solid ${freezeDisabled?"#4d6170":"#81d4fa88"}`,background:freezeDisabled?"#12090488":"linear-gradient(180deg,#162a39 0%,#0f1821 100%)",color:freezeDisabled?"#5d7381":"#b8eeff",boxShadow:freezeDisabled?"none":"0 6px 16px #4fc3f722"}}>
+        {hud.freezeLeft>0?`FREEZE ${hud.freezeLeft}s`:compact?"FREEZE":"FREEZE 90"}
+      </button>
+    </div>
+  );
+}
+
 function InstallHelpModal({appShell}){
   if(!appShell?.installHelpOpen)return null;
   const isIos=appShell.isIos;
@@ -1162,11 +1239,12 @@ function InstallHelpModal({appShell}){
 function Game({playerCount,diff,onEnd,isMobile,onlineSession,appShell,audioUi}){
   const canvasRef=useRef(null);const gs=useRef(null);const keys=useRef(new Set());
   const frame=useRef(0);const lastMove=useRef({0:0,1:0});
-  const[hud,setHud]=useState({score:0,time:DIFF[diff].time,combo:0,orders:[],holding:[null,null]});
+  const[hud,setHud]=useState({score:0,time:DIFF[diff].time,combo:0,flow:0,rushLeft:0,freezeLeft:0,orders:[],holding:[null,null]});
   const parts=useRef(new Particles());const screen=useScreen();
   const online = !!onlineSession;
   const isHost = !online || onlineSession.role === "host";
   const localPid = online ? onlineSession.playerId : 0;
+  const hasShellActions = !!(appShell?.showInstallAction || appShell?.showFullscreenAction);
   const remoteInputs=useRef([]);
   const autoTasks=useRef({0:null,1:null});
   const lastSnapshot=useRef(0);
@@ -1178,13 +1256,13 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession,appShell,audioUi}){
   const computeT = useCallback(() => {
     if (isMobile) {
       const landscape = screen.w >= screen.h;
-      const reservedH = landscape ? 112 : 180;
+      const reservedH = landscape ? (hasShellActions ? 154 : 138) : 190;
       const byWidth = Math.floor((screen.w - 20) / COLS);
       const byHeight = Math.floor((screen.h - reservedH) / ROWS);
       return Math.max(20, Math.min(byWidth, byHeight, landscape ? 42 : 56));
     }
     return Math.min(Math.floor((screen.w - 40) / COLS), Math.floor((screen.h - 200) / ROWS), 56);
-  }, [isMobile, screen]);
+  }, [isMobile, screen, hasShellActions]);
   const T = computeT();
   const BW = COLS * T, BH = ROWS * T;
 
@@ -1208,7 +1286,8 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession,appShell,audioUi}){
     const p=g.players.find(pl=>pl.id===pid);if(!p)return;
     p.dir=dir;
     const now=Date.now();
-    if(now-lastMove.current[pid]<140)return false; // 140ms = ~7 tiles/sec, deliberate grid movement
+    const moveDelay=now<(g.rushEnd||0)?POWER_RULES.rushMoveDelay:140;
+    if(now-lastMove.current[pid]<moveDelay)return false; // Rush shaves the step cooldown for a quick power sprint
     const[dr,dc]=DIRS[dir];const nr=p.r+dr,nc=p.c+dc;
     if(isFloor(nr,nc)&&!g.players.some(op=>op.id!==pid&&op.r===nr&&op.c===nc)){
       p.r=nr;p.c=nc;p.af++;lastMove.current[pid]=now;
@@ -1217,6 +1296,7 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession,appShell,audioUi}){
       else{p.squash={sx:1.2,sy:0.8,t:8};}
       // Dust particles
       parts.current.emit(p.vc*T+T/2,p.vr*T+T/2,"dust",3);
+      if(now<(g.rushEnd||0))parts.current.emit(p.vc*T+T/2,p.vr*T+T/2,"serve",1);
       if(p.af%2===0)sfx.play("step");
       return true;
     }
@@ -1262,6 +1342,34 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession,appShell,audioUi}){
     return !!next;
   },[planAutoTask]);
 
+  const usePower=useCallback((kind)=>{
+    const g=gs.current;if(!g||g.over)return false;
+    const now=Date.now();
+    if(kind==="rush"){
+      if(now<(g.rushEnd||0)||(g.flow||0)<POWER_RULES.rushCost)return false;
+      g.flow=Math.max(0,(g.flow||0)-POWER_RULES.rushCost);
+      g.rushEnd=now+POWER_RULES.rushMs;
+      g.shake.mag=Math.max(g.shake.mag,5);
+      sfx.play("combo");haptic("heavy");
+      addPop("RUSH!",BW/2,T*1.2,"combo");
+      for(const player of g.players)parts.current.emit(player.c*T+T/2,player.r*T+T/2,"serve",8);
+      setHud(toHudState(g));
+      return true;
+    }
+    if(kind==="freeze"){
+      if(now<(g.freezeEnd||0)||(g.flow||0)<POWER_RULES.freezeCost)return false;
+      g.flow=Math.max(0,(g.flow||0)-POWER_RULES.freezeCost);
+      g.freezeEnd=now+POWER_RULES.freezeMs;
+      g.shake.mag=Math.max(g.shake.mag,4);
+      sfx.play("done");haptic("heavy");
+      addPop("TIME STOP!",BW/2,T*1.2,"combo");
+      parts.current.emit(BW/2,T*.55,"steam",18);
+      setHud(toHudState(g));
+      return true;
+    }
+    return false;
+  },[addPop,BW,T]);
+
   const doAction=useCallback((pid)=>{
     const g=gs.current;if(!g||g.over)return;
     const p=g.players.find(pl=>pl.id===pid);if(!p)return;
@@ -1278,14 +1386,18 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession,appShell,audioUi}){
     if(cell.station==="serve"){
       if(!p.holding||!p.holding.ingredients?.length)return;
       const dn=matchRecipe(p.holding.ingredients);
-      if(!dn){sfx.play("fail");haptic("heavy");addPop("Wrong!",tc*T+T/2,tr*T,"bad");parts.current.emit(tc*T+T/2,tr*T+T/2,"fail",6);return;}
+      if(!dn){g.combo=0;g.flow=Math.max(0,(g.flow||0)-POWER_RULES.failPenalty);sfx.play("fail");haptic("heavy");addPop("Wrong!",tc*T+T/2,tr*T,"bad");parts.current.emit(tc*T+T/2,tr*T+T/2,"fail",6);setHud(toHudState(g));return;}
       const oi=g.orders.findIndex(o=>o.drink===dn);
-      if(oi===-1){sfx.play("fail");haptic("heavy");addPop("No order!",tc*T+T/2,tr*T,"bad");parts.current.emit(tc*T+T/2,tr*T+T/2,"fail",6);return;}
+      if(oi===-1){g.combo=0;g.flow=Math.max(0,(g.flow||0)-POWER_RULES.failPenalty);sfx.play("fail");haptic("heavy");addPop("No order!",tc*T+T/2,tr*T,"bad");parts.current.emit(tc*T+T/2,tr*T+T/2,"fail",6);setHud(toHudState(g));return;}
       const ord=g.orders[oi];const tb=Math.max(0,~~((1-ord.elapsed/ord.patience)*15));
       const pts=RECIPES[dn].pts+tb;g.combo++;g.comboT=180;
+      const flowGain=flowGainForCombo(g.combo);
+      g.flow=clamp((g.flow||0)+flowGain,0,POWER_RULES.maxFlow);
       g.score+=pts*(g.combo>=3?2:1);g.orders.splice(oi,1);p.holding=null;g.shake.mag=6;
       if(g.combo>=3){sfx.play("combo");haptic("heavy");addPop(`x${g.combo}! +${pts*2}`,tc*T+T/2,tr*T-10,"combo");parts.current.emit(tc*T+T/2,tr*T+T/2,"combo",20);}
       else{sfx.play("serve");haptic("medium");addPop(`+${pts}`,tc*T+T/2,tr*T,"good");parts.current.emit(tc*T+T/2,tr*T+T/2,"serve",12);}
+      addPop(`FLOW +${flowGain}`,tc*T+T/2,tr*T-22,g.combo>=3?"combo":"good");
+      setHud(toHudState(g));
       return;
     }
     const st=STATIONS[cell.station];if(!st)return;
@@ -1367,6 +1479,12 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession,appShell,audioUi}){
     doAction(pid);
   },[online,localPid,isHost,sendOnlineInput,doAction,clearAutoTask]);
 
+  const handlePowerInput=useCallback((kind)=>{
+    sfx.init();
+    if(online&&!isHost){sendOnlineInput({type:"power",power:kind});return;}
+    usePower(kind);
+  },[online,isHost,sendOnlineInput,usePower]);
+
   // Keyboard
   useEffect(()=>{
     if(isMobile)return;
@@ -1374,6 +1492,8 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession,appShell,audioUi}){
     const K2={ArrowUp:"up",ArrowDown:"down",ArrowLeft:"left",ArrowRight:"right"};
     const dn=e=>{
       if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Space","Slash"].includes(e.code))e.preventDefault();
+      if(e.code==="KeyQ"){e.preventDefault();handlePowerInput("rush");return;}
+      if(e.code==="KeyR"){e.preventDefault();handlePowerInput("freeze");return;}
       keys.current.add(e.code);
       if(online){
         const isP1Action=e.code==="KeyE"||e.code==="Space";
@@ -1392,7 +1512,7 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession,appShell,audioUi}){
     const up=e=>keys.current.delete(e.code);
     window.addEventListener("keydown",dn);window.addEventListener("keyup",up);
     return ()=>{window.removeEventListener("keydown",dn);window.removeEventListener("keyup",up);};
-  },[handleActionInput,playerCount,isMobile,online,localPid]);
+  },[handleActionInput,handlePowerInput,playerCount,isMobile,online,localPid]);
 
   // Continuous movement from held keys — faster tick
   useEffect(()=>{
@@ -1441,23 +1561,34 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession,appShell,audioUi}){
             if(input?.type==="move"&&input.dir){clearAutoTask(1);tryMove(1,input.dir);}
             if(input?.type==="action"){clearAutoTask(1);doAction(1);}
             if(input?.type==="target"&&Number.isInteger(input.r)&&Number.isInteger(input.c))setAutoTarget(1,input.r,input.c);
+            if(input?.type==="power"&&input.power)usePower(input.power);
           }
         }
 
-      if(Date.now()-lastSec>=1000){
-        lastSec=Date.now();g.timeLeft--;g.elapsed++;
+      const now=Date.now();
+      if(now-lastSec>=1000){
+        lastSec=now;g.timeLeft--;g.elapsed++;
         g.comboT=Math.max(0,g.comboT-60);if(g.comboT<=0)g.combo=0;
         if(g.timeLeft<=10&&g.timeLeft>0)sfx.play("tick");
-        g.nextOrd--;
-        if(g.nextOrd<=0&&g.orders.length<6){
-          g.orders.push(mkOrder(g.elapsed,diff));
-          g.nextOrd=Math.max(d.spawnMin,d.spawnBase-~~(g.elapsed/30))+~~(Math.random()*4);
-          sfx.play("neworder");
+        const freezeActive=now<(g.freezeEnd||0);
+        if(!freezeActive){
+          g.nextOrd--;
+          if(g.nextOrd<=0&&g.orders.length<6){
+            g.orders.push(mkOrder(g.elapsed,diff));
+            g.nextOrd=Math.max(d.spawnMin,d.spawnBase-~~(g.elapsed/30))+~~(Math.random()*4);
+            sfx.play("neworder");
+          }
+          g.orders=g.orders.map(o=>({...o,elapsed:o.elapsed+1}));
+          const exp=g.orders.filter(o=>o.elapsed>=o.patience);
+          if(exp.length){
+            g.combo=0;
+            g.flow=Math.max(0,(g.flow||0)-POWER_RULES.missPenalty*exp.length);
+            sfx.play("warn");
+            addPop(exp.length>1?"ORDERS LOST":"ORDER LOST",BW/2,T*.95,"bad");
+            setHud(toHudState(g));
+          }
+          g.orders=g.orders.filter(o=>o.elapsed<o.patience);
         }
-        g.orders=g.orders.map(o=>({...o,elapsed:o.elapsed+1}));
-        const exp=g.orders.filter(o=>o.elapsed>=o.patience);
-        if(exp.length){g.combo=0;sfx.play("warn");}
-        g.orders=g.orders.filter(o=>o.elapsed<o.patience);
         if(g.timeLeft<=0){g.over=true;if(onlineSession)onlineSession.sendGameOver({score:g.score,diff}).catch(()=>{});onEnd(g.score);return;}
         setHud(toHudState(g));
       }
@@ -1479,6 +1610,13 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession,appShell,audioUi}){
           p.squash.sx=1+(p.squash.sx-1)*t;
           p.squash.sy=1+(p.squash.sy-1)*t;
         }else{p.squash.sx=1;p.squash.sy=1;}
+      }
+
+      if((g.rushEnd||0)>now&&f%9===0){
+        for(const player of g.players)parts.current.emit(player.c*T+T/2,player.r*T+T/2,"serve",1);
+      }
+      if((g.freezeEnd||0)>now&&f%20===0){
+        parts.current.emit(BW/2,T*.58,"steam",1);
       }
 
       if(g.shake.mag>0){g.shake.x=(Math.random()-.5)*g.shake.mag;g.shake.y=(Math.random()-.5)*g.shake.mag;g.shake.mag*=.85;if(g.shake.mag<.5)g.shake.mag=0;}
@@ -1518,11 +1656,28 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession,appShell,audioUi}){
       }
       drawCustomerArea(ctx,T,BW,g.orders,f);
       drawLighting(ctx,T,BW,BH,f,g);
+      const rushActive=(g.rushEnd||0)>Date.now();
+      const freezeActive=(g.freezeEnd||0)>Date.now();
+      if(freezeActive){
+        ctx.fillStyle="#6fd7ff10";
+        ctx.fillRect(0,0,BW,BH);
+        ctx.fillStyle="#b7ecff12";
+        ctx.fillRect(0,0,BW,T*.82);
+      }
+      if(rushActive){
+        ctx.strokeStyle="#ffb74d55";
+        ctx.lineWidth=4;
+        ctx.strokeRect(2,2,BW-4,BH-4);
+      }
 
       const sp=[...g.players].sort((a,b)=>a.vr-b.vr);
       for(const p of sp){
         const px=p.vc*T+2,py=p.vr*T-6;
         ctx.fillStyle="#00000033";ctx.fillRect(px+4,py+T-4,T-12,6);
+        if(rushActive){
+          ctx.fillStyle="#ffb74d22";
+          ctx.fillRect(px-2,py+4,T,T);
+        }
         if(p.processing){const pct=1-(p.processing.end-Date.now())/p.processing.dur;ctx.fillStyle="#000000aa";ctx.fillRect(px,py+T+2,T-4,5);ctx.fillStyle=P.green;ctx.fillRect(px+1,py+T+3,(T-6)*Math.min(1,pct),3);if(pct>.8){ctx.fillStyle="#4caf5044";ctx.fillRect(px-2,py-2,T,T+8);}}
         drawChar(ctx,px+4,py+8,T-8,p.clr,p.dir,p.af,p.squash);
         ctx.fillStyle=p.clr.main;ctx.font=`bold ${Math.max(8,T*.18)}px monospace`;ctx.textAlign="center";ctx.fillText(`P${p.id+1}`,px+T/2-2,py+T+10);
@@ -1848,10 +2003,11 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession,appShell,audioUi}){
       requestAnimationFrame(loop);
     };
     requestAnimationFrame(loop);return ()=>{run=false;};
-  },[onEnd,T,BW,BH,diff,isHost,online,onlineSession,doAction,tryMove]);
+  },[onEnd,T,BW,BH,diff,isHost,online,onlineSession,doAction,tryMove,clearAutoTask,setAutoTarget,usePower,addPop]);
 
   const mobileMove=(pid,dir)=>{sfx.init();handleMoveInput(pid,dir);};
   const mobileAct=(pid)=>{sfx.init();handleActionInput(pid);};
+  const mobilePower=(kind)=>{handlePowerInput(kind);};
   const handleCanvasTarget=useCallback((e)=>{
     const cv=canvasRef.current;
     if(!cv)return;
@@ -1875,8 +2031,8 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession,appShell,audioUi}){
   const localColor = localPid === 1 ? P.p2 : P.p1;
   const localHolding = hud.holding[localPid];
   const pcHelp = online
-    ? (localPid === 0 ? "You are P1: WASD + E/Space" : "You are P2: Arrows + /")
-    : "P1: WASD + E/Space | P2: Arrows + /";
+    ? (localPid === 0 ? "You are P1: WASD + E/Space | Q Rush | R Freeze" : "You are P2: Arrows + / | Q Rush | R Freeze")
+    : "P1: WASD + E/Space | P2: Arrows + / | Q Rush | R Freeze";
   const isPortraitMobile = isMobile && screen.h > screen.w;
   const safeTop = "max(env(safe-area-inset-top), 10px)";
   const safeBottom = "max(env(safe-area-inset-bottom), 10px)";
@@ -1913,8 +2069,8 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession,appShell,audioUi}){
       );
     }
 
-    const mobileTopRows=(appShell?.showInstallAction || appShell?.showFullscreenAction ? 1 : 0) + 1;
-    const hudH = mobileTopRows>1 ? 62 : 46;
+    const mobileTopRows=(hasShellActions ? 1 : 0) + 2;
+    const hudH = 26 + mobileTopRows * 20;
     const ordH = 72;
     const stageGap = 8;
     const joySize = singleControlMode ? Math.min(104, Math.max(80, Math.round(screen.h * 0.21))) : Math.min(82, Math.max(68, Math.round(screen.h * 0.17)));
@@ -1934,9 +2090,10 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession,appShell,audioUi}){
             <span style={{fontSize:14}}>☕</span>
             <span style={{color:P.gold,fontSize:17,fontWeight:"bold"}}>{hud.score}</span>
           </div>
-          <div style={{justifySelf:"center",display:"flex",flexDirection:"column",gap:4}}>
+          <div style={{justifySelf:"center",display:"flex",flexDirection:"column",gap:4,alignItems:"center"}}>
             <ShellActionRow appShell={appShell} compact />
             <AudioToggleRow audioUi={audioUi} compact />
+            <PowerMeter hud={hud} compact />
           </div>
           <div style={{display:"flex",alignItems:"center",gap:8}}>
             {hud.combo >= 2 && <div style={{color:"#ff7ab8",fontSize:10,animation:"pulse .5s infinite"}}>x{hud.combo}</div>}
@@ -1972,12 +2129,14 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession,appShell,audioUi}){
             {singleControlMode ? (
               <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6}}>
                 <ActBtn onAction={() => mobileAct(localPid)} color={localColor} holding={localHolding} sz={actSize} />
+                <PowerButtons hud={hud} onUsePower={mobilePower} compact stack />
                 <div style={{fontSize:8,color:"#8a6a4a",textAlign:"center",lineHeight:1.6,maxWidth:112}}>Tap stations to auto-walk</div>
               </div>
             ) : (
               <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
                 <Joystick onMove={d => mobileMove(1,d)} color={P.p2} label="P2" side="right" size={joySize} />
                 <button onTouchStart={e => {e.preventDefault(); mobileAct(1); haptic("medium");}} style={{width:54,height:30,borderRadius:15,background:P.p2+"33",border:`2px solid ${P.p2}88`,color:P.p2,fontSize:9,fontFamily:"'Silkscreen',monospace",fontWeight:"bold",touchAction:"manipulation"}}>ACT</button>
+                <PowerButtons hud={hud} onUsePower={mobilePower} compact stack />
               </div>
             )}
           </div>
@@ -1996,6 +2155,10 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession,appShell,audioUi}){
       <div style={{display:"flex",gap:8,maxWidth:BW+12,padding:"0 10px 8px",justifyContent:"center",flexWrap:"wrap",flexShrink:0}}>
         <ShellActionRow appShell={appShell} compact />
         <AudioToggleRow audioUi={audioUi} compact />
+      </div>
+      <div style={{display:"flex",gap:10,maxWidth:BW+12,padding:"0 10px 8px",justifyContent:"center",alignItems:"center",flexWrap:"wrap",flexShrink:0}}>
+        <PowerMeter hud={hud} />
+        <PowerButtons hud={hud} onUsePower={handlePowerInput} />
       </div>
       <div style={{display:"flex",gap:6,maxWidth:BW+18,padding:"0 10px 8px",overflowX:"auto",flexShrink:0,minHeight:72}}>
         {hud.orders.map(o=><OrderTicket key={o.id} o={o}/>)}{!hud.orders.length&&<span style={{color:"#6b3a1f",fontSize:9,padding:12}}>Waiting for customers...</span>}
@@ -2071,10 +2234,11 @@ function TitleScreen({onStart,onOpenOnline,isMobile,forceMode,setForceMode,appSh
         {help?
           <div style={{background:"#1a0f08ee",borderRadius:16,padding:isMobile?20:16,border:`2px solid ${P.gold}44`,maxWidth:440,width:"90%",fontSize:isMobile?11:10,lineHeight:2.2,color:"#c4956a"}}>
             <div style={{color:P.gold,textAlign:"center",marginBottom:8,fontSize:isMobile?14:12}}>📖 HOW TO PLAY</div>
-            {["1. Grab a CUP from the cup station","2. Tap/click a station to auto-walk there, or move manually","3. Some stations brew (watch the progress bar!)","4. Place cups on COUNTERS to free your hands","5. Serve at the BELL counter when recipe matches","6. Chain serves for COMBO MULTIPLIER!"].map((t,i)=><div key={i} style={{color:"#e8a87c"}}>{t}</div>)}
+            {["1. Grab a CUP from the cup station","2. Tap/click a station to auto-walk there, or move manually","3. Some stations brew (watch the progress bar!)","4. Place cups on COUNTERS to free your hands","5. Serve at the BELL counter when recipe matches","6. Chain serves to fill FLOW","7. Spend FLOW on RUSH or FREEZE powers"].map((t,i)=><div key={i} style={{color:"#e8a87c"}}>{t}</div>)}
             {!isMobile&&<div style={{marginTop:8,borderTop:"1px solid #3a2215",paddingTop:8}}>
               <div>P1: <span style={{color:P.p1}}>WASD</span> + <span style={{color:P.p1}}>E/Space</span></div>
               <div>P2: <span style={{color:P.p2}}>Arrows</span> + <span style={{color:P.p2}}>/</span></div>
+              <div>Powers: <span style={{color:P.gold}}>Q = Rush</span> • <span style={{color:"#9de7ff"}}>R = Freeze</span></div>
             </div>}
             {isMobile&&<div style={{marginTop:8,color:"#8a6a4a",textAlign:"center"}}>Tap the map to auto-walk, or use the joystick and ACT button.</div>}
             <div style={{textAlign:"center",marginTop:16}}><Bt onClick={()=>setHelp(false)}>← BACK</Bt></div>
