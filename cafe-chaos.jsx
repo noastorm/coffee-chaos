@@ -893,10 +893,10 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession}){
   const computeT = useCallback(() => {
     if (isMobile) {
       const landscape = screen.w >= screen.h;
-      const reservedH = landscape ? 132 : 180;
+      const reservedH = landscape ? 112 : 180;
       const byWidth = Math.floor((screen.w - 20) / COLS);
       const byHeight = Math.floor((screen.h - reservedH) / ROWS);
-      return Math.max(20, Math.min(byWidth, byHeight, landscape ? 44 : 56));
+      return Math.max(20, Math.min(byWidth, byHeight, landscape ? 42 : 56));
     }
     return Math.min(Math.floor((screen.w - 40) / COLS), Math.floor((screen.h - 200) / ROWS), 56);
   }, [isMobile, screen]);
@@ -1614,17 +1614,22 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession}){
       );
     }
 
-    const hudH = 40;
-    const ordH = 72;
-    const joySize = singleControlMode ? Math.min(110, Math.max(88, Math.round(screen.h * 0.24))) : Math.min(86, Math.max(72, Math.round(screen.h * 0.19)));
-    const actSize = singleControlMode ? Math.min(88, Math.max(72, Math.round(screen.h * 0.18))) : 50;
-    const boardScale = Math.min((screen.w - 26) / BW, (screen.h - 132) / BH, 1.18);
-    const displayW = Math.max(240, Math.round(BW * boardScale));
-    const displayH = Math.max(170, Math.round(BH * boardScale));
+    const hudH = 38;
+    const ordH = 58;
+    const stageGap = 10;
+    const joySize = singleControlMode ? Math.min(108, Math.max(82, Math.round(screen.h * 0.22))) : Math.min(82, Math.max(68, Math.round(screen.h * 0.17)));
+    const actSize = singleControlMode ? Math.min(84, Math.max(68, Math.round(screen.h * 0.16))) : 48;
+    const leftDockW = singleControlMode ? joySize + 22 : joySize + 28;
+    const rightDockW = singleControlMode ? Math.max(96, actSize + 24) : joySize + 28;
+    const boardAreaW = Math.max(220, screen.w - leftDockW - rightDockW - stageGap * 2 - 12);
+    const boardAreaH = Math.max(190, screen.h - hudH - ordH - 18);
+    const boardScale = Math.min((boardAreaW - 6) / BW, (boardAreaH - 6) / BH, 1.55);
+    const displayW = Math.min(boardAreaW, Math.round(BW * boardScale));
+    const displayH = Math.min(boardAreaH, Math.round(BH * boardScale));
 
     return (
-      <div style={{width:"100vw",height:"100dvh",minHeight:"100vh",background:P.bg,overflow:"hidden",display:"flex",flexDirection:"column",fontFamily:"'Silkscreen','Press Start 2P',monospace",paddingTop:safeTop,paddingBottom:safeBottom,paddingLeft:safeLeft,paddingRight:safeRight}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"0 10px",height:hudH,flexShrink:0,background:"linear-gradient(180deg,#00000088 0%,#00000035 100%)",borderBottom:"1px solid #6b3a1f55",borderTopLeftRadius:18,borderTopRightRadius:18}}>
+      <div style={{width:"100vw",height:"100dvh",minHeight:"100vh",background:P.bg,overflow:"hidden",display:"flex",flexDirection:"column",fontFamily:"'Silkscreen','Press Start 2P',monospace",paddingTop:safeTop,paddingBottom:safeBottom,paddingLeft:safeLeft,paddingRight:safeRight,gap:4}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"0 10px",height:hudH,flexShrink:0,background:"linear-gradient(180deg,#00000088 0%,#00000035 100%)",border:"1px solid #6b3a1f55",borderRadius:18}}>
           <div style={{display:"flex",alignItems:"center",gap:6}}>
             <span style={{fontSize:13}}>☕</span>
             <span style={{color:P.gold,fontSize:16,fontWeight:"bold"}}>{hud.score}</span>
@@ -1635,37 +1640,42 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession}){
           </div>
         </div>
 
-        <div style={{display:"flex",gap:4,padding:"6px 4px 8px",overflowX:"auto",flexShrink:0,height:ordH,alignItems:"center",WebkitOverflowScrolling:"touch",touchAction:"pan-x"}}>
+        <div style={{display:"flex",gap:4,padding:"2px 2px 4px",overflowX:"auto",flexShrink:0,height:ordH,alignItems:"center",WebkitOverflowScrolling:"touch",touchAction:"pan-x"}}>
           {hud.orders.map(o => <OrderTicket key={o.id} o={o} compact />)}
           {!hud.orders.length && <span style={{color:"#8a6a4a",fontSize:8,padding:"0 8px"}}>Waiting for customers...</span>}
         </div>
 
-        <div style={{position:"relative",flex:1,minHeight:0,borderTop:"1px solid #6b3a1f55",borderBottom:"1px solid #6b3a1f55",borderRadius:24,background:"radial-gradient(circle at top,#3a2215 0%,#1a0f08 65%,#120904 100%)",boxShadow:"inset 0 1px 0 #ffffff08, inset 0 -18px 40px #00000044"}}>
-          <div style={{position:"absolute",inset:0,pointerEvents:"none",background:"radial-gradient(circle at center,#ffffff09 0%,transparent 58%),linear-gradient(180deg,#ffffff05 0%,transparent 26%,#00000028 100%)"}}/>
-          <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",padding:"8px 0 12px"}}>
-            <canvas ref={canvasRef} width={BW} height={BH} onPointerDown={handleCanvasTarget} style={{width:displayW,height:displayH,imageRendering:"pixelated",display:"block",cursor:"pointer",borderTop:`2px solid ${P.wallLine}`,borderBottom:`2px solid ${P.wallLine}`,boxShadow:"0 16px 30px #00000055",borderRadius:14}} />
+        <div style={{flex:1,minHeight:0,display:"flex",alignItems:"center",gap:stageGap,padding:"0 2px 2px"}}>
+          <div style={{width:leftDockW,minWidth:leftDockW,display:"flex",alignItems:"flex-end",justifyContent:"center",paddingBottom:6}}>
+            {singleControlMode ? (
+              <Joystick onMove={d => mobileMove(localPid,d)} color={localColor} label={online ? `P${localPid+1}` : "MOVE"} side="left" size={joySize} />
+            ) : (
+              <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
+                <Joystick onMove={d => mobileMove(0,d)} color={P.p1} label="P1" side="left" size={joySize} />
+                <button onTouchStart={e => {e.preventDefault(); mobileAct(0); haptic("medium");}} style={{width:54,height:30,borderRadius:15,background:P.p1+"33",border:`2px solid ${P.p1}88`,color:P.p1,fontSize:9,fontFamily:"'Silkscreen',monospace",fontWeight:"bold",touchAction:"manipulation"}}>ACT</button>
+              </div>
+            )}
           </div>
 
-          {singleControlMode ? <>
-            <div style={{position:"absolute",left:8,bottom:10,zIndex:2}}>
-              <Joystick onMove={d => mobileMove(localPid,d)} color={localColor} label={online ? `P${localPid+1}` : "MOVE"} side="left" size={joySize} />
+          <div style={{flex:1,minWidth:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
+            <div style={{position:"relative",width:displayW + 14,height:displayH + 14,borderRadius:24,padding:7,background:"radial-gradient(circle at top,#3a2215 0%,#1a0f08 68%,#120904 100%)",boxShadow:"inset 0 1px 0 #ffffff08,0 20px 40px #00000044"}}>
+              <div style={{position:"absolute",inset:0,pointerEvents:"none",borderRadius:24,background:"radial-gradient(circle at center,#ffffff08 0%,transparent 58%),linear-gradient(180deg,#ffffff05 0%,transparent 26%,#00000022 100%)"}}/>
+              <canvas ref={canvasRef} width={BW} height={BH} onPointerDown={handleCanvasTarget} style={{width:displayW,height:displayH,imageRendering:"pixelated",display:"block",cursor:"pointer",borderTop:`2px solid ${P.wallLine}`,borderBottom:`2px solid ${P.wallLine}`,boxShadow:"0 16px 30px #00000055",borderRadius:16,position:"relative",zIndex:1}} />
             </div>
-            <div style={{position:"absolute",right:10,bottom:14,zIndex:2}}>
-              <ActBtn onAction={() => mobileAct(localPid)} color={localColor} holding={localHolding} sz={actSize} />
-            </div>
-          </> : <>
-            <div style={{position:"absolute",left:8,bottom:8,zIndex:2,display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
-              <Joystick onMove={d => mobileMove(0,d)} color={P.p1} label="P1" side="left" size={joySize} />
-              <button onTouchStart={e => {e.preventDefault(); mobileAct(0); haptic("medium");}} style={{width:54,height:30,borderRadius:15,background:P.p1+"33",border:`2px solid ${P.p1}88`,color:P.p1,fontSize:9,fontFamily:"'Silkscreen',monospace",fontWeight:"bold",touchAction:"manipulation"}}>ACT</button>
-            </div>
-            <div style={{position:"absolute",right:8,bottom:8,zIndex:2,display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
-              <Joystick onMove={d => mobileMove(1,d)} color={P.p2} label="P2" side="right" size={joySize} />
-              <button onTouchStart={e => {e.preventDefault(); mobileAct(1); haptic("medium");}} style={{width:54,height:30,borderRadius:15,background:P.p2+"33",border:`2px solid ${P.p2}88`,color:P.p2,fontSize:9,fontFamily:"'Silkscreen',monospace",fontWeight:"bold",touchAction:"manipulation"}}>ACT</button>
-            </div>
-          </>}
+          </div>
 
-          <div style={{position:"absolute",left:"50%",bottom:12,transform:"translateX(-50%)",zIndex:2,background:"#120904dd",border:"1px solid #6b3a1f66",borderRadius:999,padding:"5px 10px",fontSize:7,color:"#d2a979",letterSpacing:1,boxShadow:"0 4px 12px #00000033"}}>
-            TAP STATIONS TO AUTO-WALK
+          <div style={{width:rightDockW,minWidth:rightDockW,display:"flex",alignItems:"flex-end",justifyContent:"center",paddingBottom:6}}>
+            {singleControlMode ? (
+              <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6}}>
+                <ActBtn onAction={() => mobileAct(localPid)} color={localColor} holding={localHolding} sz={actSize} />
+                <div style={{fontSize:7,color:"#8a6a4a",textAlign:"center",lineHeight:1.6,maxWidth:100}}>Tap stations to auto-walk</div>
+              </div>
+            ) : (
+              <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
+                <Joystick onMove={d => mobileMove(1,d)} color={P.p2} label="P2" side="right" size={joySize} />
+                <button onTouchStart={e => {e.preventDefault(); mobileAct(1); haptic("medium");}} style={{width:54,height:30,borderRadius:15,background:P.p2+"33",border:`2px solid ${P.p2}88`,color:P.p2,fontSize:9,fontFamily:"'Silkscreen',monospace",fontWeight:"bold",touchAction:"manipulation"}}>ACT</button>
+              </div>
+            )}
           </div>
         </div>
       </div>);
