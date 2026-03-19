@@ -128,8 +128,8 @@ const MAPS = {
   },
   speedway:{
     id:"speedway",
-    name:"Night Owl",
-    desc:"Late-night study cafe with navy walls, laptops, and amber lamps.",
+    name:"Catpuccino",
+    desc:"Cozy cat cafe with window perches, chalkboard menus, and sleepy regulars.",
     raw:[
       "WSSSSSSSSSSSSSSSW",
       "W................W",
@@ -141,18 +141,18 @@ const MAPS = {
       "WWWWWWWWWWWWWWWWWW",
     ],
     theme:{
-      deco:"nightowl",
-      top:"#1d2338",
-      panel:"#293149",
-      trim:"#e0bf77",
-      text:"#f6ecd5",
-      accent:"#79a8d1",
-      wood:"#624430",
-      shelf:"#31415d",
-      lamp:"#e5b76a",
-      logo:"NIGHT OWL",
-      subtitle:"ESPRESSO + ESSAYS",
-      glow:"120,168,209",
+      deco:"catcafe",
+      top:"#5a3a34",
+      panel:"#48633f",
+      trim:"#f4d39c",
+      text:"#fff1dd",
+      accent:"#f2b36f",
+      wood:"#8a5d45",
+      shelf:"#6d4b3d",
+      lamp:"#f6d8aa",
+      logo:"CATPUCCINO",
+      subtitle:"LATTES + LAP CATS",
+      glow:"246,214,159",
     },
     spawns:[[4,6],[4,11]],
   },
@@ -792,17 +792,41 @@ function drawCafeDecor(ctx,T,BW,BH,f){
       ctx.fillStyle=["#d8b48c","#8ec7a0","#f1d17a","#9bc2ff","#d7a0ff"][i%5];
       ctx.fillRect(BW-T*(1.8+i*.12),T*.06+i*2,T*.09,T*.22);
     }
-  }else if(mapTheme.deco==="nightowl"){
-    ctx.fillStyle="#c9b18a";
-    ctx.fillRect(T*.62,T*.14,T*.76,T*.04);
-    ctx.fillStyle="#21293b";
-    ctx.fillRect(T*.62,T*.18,T*.76,T*.1);
-    ctx.fillStyle="#f0ddb7";
-    ctx.fillText("NIGHT READS",T*1.02,T*.28);
-    ctx.fillStyle="#79a8d1";
-    ctx.fillRect(BW-T*1.65,T*.1,T*.78,T*.08);
-    ctx.fillStyle="#f6ecd5";
-    for(let i=0;i<3;i++)ctx.fillRect(BW-T*(1.58-i*.18),T*.11,T*.08,T*.06);
+  }else if(mapTheme.deco==="catcafe"){
+    ctx.fillStyle="#2f241e";
+    ctx.fillRect(T*.56,T*.08,T*1.32,T*.28);
+    ctx.strokeStyle="#f4d39c";
+    ctx.lineWidth=2;
+    ctx.strokeRect(T*.56+.5,T*.08+.5,T*1.32-1,T*.28-1);
+    ctx.fillStyle="#fff3df";
+    for(let i=0;i<4;i++){
+      ctx.fillRect(T*.7,T*.13+i*T*.045,T*.86-(i%2)*T*.12,2);
+    }
+    ctx.fillStyle="#f4d39c";
+    ctx.beginPath();ctx.arc(T*1.06,T*.22,T*.12,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#5a3a34";
+    ctx.fillRect(T*.99,T*.19,T*.03,T*.04);
+    ctx.fillRect(T*1.1,T*.19,T*.03,T*.04);
+    ctx.fillRect(T*1.04,T*.24,T*.05,T*.02);
+    ctx.fillStyle="#7aa9d8";
+    ctx.fillRect(BW-T*1.85,T*.08,T*1.05,T*.28);
+    ctx.fillStyle="#dff4ff";
+    ctx.fillRect(BW-T*1.8,T*.1,T*.95,T*.24);
+    ctx.fillStyle="#a7d5ea";
+    ctx.fillRect(BW-T*1.68,T*.13,T*.71,T*.09);
+    ctx.fillStyle="#6b8f6b";
+    ctx.fillRect(BW-T*1.63,T*.24,T*.18,T*.06);
+    ctx.fillRect(BW-T*1.34,T*.22,T*.12,T*.08);
+    ctx.fillStyle="#5b3d32";
+    ctx.fillRect(BW-T*1.58,T*.06,T*.03,T*.32);
+    ctx.fillRect(BW-T*1.17,T*.06,T*.03,T*.32);
+    ctx.fillRect(BW-T*1.79,T*.2,T*.98,T*.03);
+    ctx.fillStyle="#f7d7ab";
+    for(let i=0;i<4;i++){
+      const lx=T*.55+i*T*.34;
+      ctx.fillRect(lx,T*.03,T*.06,T*.06);
+      ctx.fillRect(lx+T*.02,T*.1,T*.02,T*.02);
+    }
   }else if(mapTheme.deco==="pixelperk"){
     ctx.fillStyle="#211229";
     ctx.fillRect(T*.52,T*.1,T*.96,T*.24);
@@ -822,8 +846,15 @@ function drawCafeDecor(ctx,T,BW,BH,f){
 
 function drawSt(ctx,x,y,T,key,f){
   const st=STATIONS[key];if(!st)return;const s=T/16;
+  const mapTheme=getActiveMapDef().theme||{};
   const px=(a,b,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(x+a*s,y+b*s,w*s,h*s);};
-  px(0,0,16,16,P.wallHi);px(1,1,14,14,"#2a1608");
+  const shell=mapTheme.deco==="catcafe"?"#6b473c":P.wallHi;
+  const panel=mapTheme.deco==="catcafe"?"#2d1913":"#2a1608";
+  px(0,0,16,16,shell);px(1,1,14,14,panel);
+  if(mapTheme.deco==="catcafe"){
+    px(2,2,12,1,"#f2dfc5");
+    px(2,13,12,1,"#7d5845");
+  }
   switch(st.id){
     case"espresso":case"espresso2":{
       const pulse=.5+.5*Math.sin(f*.04);
@@ -872,9 +903,9 @@ function drawSt(ctx,x,y,T,key,f){
     case"trash":px(4,3,8,10,"#666");px(5,4,6,8,"#555");px(3,2,10,1,"#777");px(6,1,4,1,"#888");break;
   }
   const label=T<42?(st.short||st.label):st.label;
-  ctx.fillStyle="#120904cc";
+  ctx.fillStyle=mapTheme.deco==="catcafe"?"#2a1712dd":"#120904cc";
   ctx.fillRect(x+1,y+T-Math.max(11,T*.24),T-2,Math.max(10,T*.22));
-  ctx.fillStyle="#e7c49d";
+  ctx.fillStyle=mapTheme.deco==="catcafe"?"#ffe7cb":"#e7c49d";
   ctx.font=`bold ${Math.max(8,T*.18)}px monospace`;
   ctx.textAlign="center";
   ctx.fillText(label,x+T/2,y+T-2);
@@ -976,6 +1007,154 @@ function drawSunbooksServe(ctx,x,y,T,f){
   }
 }
 
+function drawCafeCat(ctx,x,y,sz,f,{body="#2f2622",chest="#f5e7d0",eye="#1f120d",accent="#f6b08b",pose="sit",alpha=1}={}){
+  const s=sz/16;
+  const bob=Math.sin(f*.05+x*.01)*.7;
+  const px=(a,b,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(x+a*s,y+(b+bob)*s,w*s,h*s);};
+  ctx.save();
+  ctx.globalAlpha=alpha;
+  if(pose==="sleep"){
+    px(3,9,10,4,body);
+    px(4,8,5,3,body);
+    px(8,8,3,2,chest);
+    px(2,10,2,2,body);
+    px(12,9,2,1,body);
+    px(13,8,1,1,body);
+    px(5,8,1,1,accent);
+    px(10,8,1,1,accent);
+  }else if(pose==="stretch"){
+    px(2,9,10,3,body);
+    px(10,7,4,4,body);
+    px(11,6,1,1,accent);
+    px(13,6,1,1,accent);
+    px(3,8,2,1,chest);
+    px(1,8,2,1,body);
+    px(0,7,1,1,body);
+    px(11,8,1,1,eye);
+  }else{
+    px(4,8,8,5,body);
+    px(5,5,6,4,body);
+    px(5,4,2,2,accent);
+    px(9,4,2,2,accent);
+    px(6,6,1,1,eye);
+    px(9,6,1,1,eye);
+    px(7,7,2,1,chest);
+    px(4,12,2,2,body);
+    px(9,12,2,2,body);
+    px(2,8,2,1,body);
+    px(1,7,1,2,body);
+  }
+  ctx.restore();
+}
+
+function drawCatCafeFloor(ctx,x,y,T,r,c){
+  const base=(r+c)%2===0?"#8a6048":"#7b523d";
+  ctx.fillStyle=base;
+  ctx.fillRect(x,y,T,T);
+  for(let i=0;i<3;i++){
+    ctx.fillStyle=i%2===0?"#ffffff08":"#00000010";
+    ctx.fillRect(x,y+2+i*(T/3),T,1);
+  }
+  if(r>=2&&r<=5&&c>=5&&c<=12){
+    ctx.fillStyle="#7b6b5f";
+    ctx.fillRect(x+1,y+1,T-2,T-2);
+    ctx.fillStyle="#d7c3ae";
+    ctx.fillRect(x+1,y+1,T-2,2);
+    ctx.fillRect(x+1,y+T-3,T-2,2);
+    if((r+c)%2===0){
+      ctx.fillStyle="#f2ddc4";
+      ctx.fillRect(x+T*.38,y+T*.3,3,3);
+      ctx.fillRect(x+T*.26,y+T*.42,2,2);
+      ctx.fillRect(x+T*.5,y+T*.42,2,2);
+      ctx.fillRect(x+T*.34,y+T*.52,2,2);
+      ctx.fillRect(x+T*.46,y+T*.52,2,2);
+    }
+  }else{
+    ctx.fillStyle="#a97b61";
+    ctx.fillRect(x,y,1,T);
+    ctx.fillRect(x+T-1,y,1,T);
+  }
+}
+
+function drawCatCafeWall(ctx,x,y,T,r,c){
+  ctx.fillStyle="#6b473c";
+  ctx.fillRect(x,y,T,T);
+  for(let i=0;i<4;i++){
+    ctx.fillStyle=i%2===0?"#7b5648":"#5d3d32";
+    ctx.fillRect(x+i*(T/4),y,T/8,T);
+  }
+  ctx.fillStyle="#8a5d45";
+  ctx.fillRect(x,y+T-6,T,6);
+  if(c===0||c===COLS-1){
+    ctx.fillStyle="#4c3228";
+    ctx.fillRect(x+3,y+3,T-6,T-10);
+    ctx.fillStyle="#a97b61";
+    ctx.fillRect(x+5,y+6,T-10,2);
+    ctx.fillRect(x+5,y+T/2,T-10,2);
+    for(let i=0;i<3;i++){
+      ctx.fillStyle=["#f3cc7b","#8dd0aa","#9fbef0","#d7a3f0"][(r+c+i)%4];
+      ctx.fillRect(x+6+i*(T/5),y+T/2-4,2,5+((r+i)%3));
+    }
+  }else if(r===ROWS-1){
+    ctx.fillStyle="#3f2a22";
+    ctx.fillRect(x+4,y+4,T-8,T-12);
+    ctx.fillStyle="#f0d8ba";
+    ctx.fillRect(x+6,y+6,T-12,2);
+    ctx.fillRect(x+6,y+T/2,T-12,2);
+  }
+}
+
+function drawCatCafeCounter(ctx,x,y,T,item,f){
+  drawCatCafeFloor(ctx,x,y,T,Math.round(y/T),Math.round(x/T));
+  ctx.fillStyle="#3a251e";
+  ctx.fillRect(x+5,y+T-6,T-10,3);
+  ctx.fillStyle="#f3dfc7";
+  ctx.fillRect(x+4,y+5,T-8,6);
+  ctx.fillStyle="#dfc29e";
+  ctx.fillRect(x+6,y+6,T-12,2);
+  ctx.fillStyle="#8a5d45";
+  ctx.fillRect(x+T/2-2,y+11,4,T-16);
+  ctx.fillStyle="#604135";
+  ctx.fillRect(x+T/2-5,y+T-6,10,2);
+  if(item){
+    drawCup(ctx,x+T/2-8,y+T/2-8,16,item.ingredients||[]);
+  }else if((Math.round(x/T)+Math.round(y/T))%2===0){
+    ctx.fillStyle="#cf8f7a";
+    ctx.fillRect(x+7,y+8,6,3);
+    ctx.fillStyle="#f8e5cd";
+    ctx.fillRect(x+8,y+9,4,1);
+  }else{
+    drawCafeCat(ctx,x+T*.24,y+T*.12,T*.48,f+Math.round(x+y),{body:"#d9c7b5",chest:"#fff2e2",pose:"sleep",alpha:.92});
+  }
+}
+
+function drawCatCafeServe(ctx,x,y,T,f){
+  const s=T/16;
+  ctx.fillStyle="#5c3a31";
+  ctx.fillRect(x,y,T,T);
+  ctx.fillStyle="#f2dfc5";
+  ctx.fillRect(x,y,T,4*s);
+  ctx.fillStyle="#7d5845";
+  ctx.fillRect(x,y+T-3*s,T,3*s);
+  ctx.fillStyle="#48633f";
+  ctx.fillRect(x+3*s,y+5*s,10*s,5*s);
+  ctx.fillStyle="#f4d39c";
+  ctx.fillRect(x+6*s,y+4*s,4*s,1*s);
+  ctx.fillStyle="#fff5e3";
+  ctx.fillRect(x+6*s,y+6*s,4*s,2*s);
+  ctx.fillRect(x+7*s,y+8*s,2*s,1*s);
+  ctx.fillStyle="#5c3a31";
+  ctx.fillRect(x+5*s,y+5*s,1*s,1*s);
+  ctx.fillRect(x+10*s,y+5*s,1*s,1*s);
+  ctx.fillRect(x+7*s,y+9*s,2*s,1*s);
+  ctx.fillStyle="#f0b56f";
+  ctx.fillRect(x+11*s,y+10*s,2*s,2*s);
+  if(f%60<12){
+    ctx.fillStyle="#ffdca466";
+    ctx.fillRect(x+11*s,y+4*s,2*s,2*s);
+  }
+}
+
 function drawServe(ctx,x,y,T,f){
   const s=T/16;ctx.fillStyle=P.counter;ctx.fillRect(x,y,T,T);
   ctx.fillStyle=P.counterTop;ctx.fillRect(x,y,T,4*s);
@@ -1040,7 +1219,7 @@ function drawOrderBubble(ctx,x,y,T,order){
 function drawCustomerArea(ctx,T,BW,orders,f){
   const mapTheme=getActiveMapDef().theme||{};
   ctx.save();
-  ctx.fillStyle=mapTheme.deco==="sunbooks"?"#18392dcc":"#120904aa";
+  ctx.fillStyle=mapTheme.deco==="sunbooks"?"#18392dcc":mapTheme.deco==="catcafe"?"#4b312bcc":"#120904aa";
   ctx.fillRect(0,0,BW,T*.18);
   if(mapTheme.deco==="sunbooks"){
     const paneW=BW/6;
@@ -1065,6 +1244,28 @@ function drawCustomerArea(ctx,T,BW,orders,f){
       ctx.fillRect(stoolX+T*.05,T*.84,T*.04,T*.14);
       ctx.fillRect(stoolX+T*.13,T*.84,T*.04,T*.14);
     }
+  }else if(mapTheme.deco==="catcafe"){
+    const paneW=BW/5.5;
+    for(let i=0;i<5;i++){
+      const px=i*paneW+T*.45;
+      ctx.fillStyle="#b8d6ef";
+      ctx.fillRect(px,2,paneW-T*.2,T*.5);
+      ctx.fillStyle="#edf7ff";
+      ctx.fillRect(px+2,2,paneW-T*.2-4,T*.48);
+      ctx.fillStyle="#7d5845";
+      ctx.fillRect(px+paneW*.28,2,3,T*.5);
+      ctx.fillRect(px+paneW*.62,2,3,T*.5);
+      ctx.fillRect(px, T*.24, paneW-T*.2, 2);
+    }
+    for(let i=0;i<4;i++){
+      const stoolX=T*(2.1+i*2.9);
+      ctx.fillStyle="#8a5d45";
+      ctx.fillRect(stoolX,T*.66,T*.28,T*.18);
+      ctx.fillRect(stoolX+T*.06,T*.84,T*.04,T*.14);
+      ctx.fillRect(stoolX+T*.18,T*.84,T*.04,T*.14);
+    }
+    drawCafeCat(ctx,T*.68,T*.22,T*.52,f+7,{body:"#1f1816",chest:"#f2e4d7",pose:"sit"});
+    drawCafeCat(ctx,BW-T*1.55,T*.24,T*.56,f+19,{body:"#d6b188",chest:"#fff3e5",pose:"sleep"});
   }
   for(let i=0;i<8;i++){
     const lx=(i+.5)*(BW/8);
@@ -1119,6 +1320,14 @@ function drawCustomerArea(ctx,T,BW,orders,f){
     ctx.font=`bold ${Math.max(7,T*.13)}px monospace`;
     ctx.textAlign="left";
     ctx.fillText("BOOK PICKUP",T*.42,T*.37);
+  }else if(mapTheme.deco==="catcafe"){
+    ctx.fillStyle="#7d5845";
+    ctx.fillRect(T*.34,T*.58,T*2.3,3);
+    ctx.fillStyle="#f4d39c";
+    ctx.font=`bold ${Math.max(7,T*.13)}px monospace`;
+    ctx.textAlign="left";
+    ctx.fillText("CAT LOUNGE",T*.42,T*.37);
+    drawCafeCat(ctx,T*.42,T*.36,T*.38,f+31,{body:"#2a211d",chest:"#f1dfca",pose:"stretch",alpha:.9});
   }
   ctx.restore();
 }
@@ -2056,19 +2265,23 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
         const cell=MAP[r][c],x=c*T,y=r*T;
         if(cell.type==="floor"){
           if(mapTheme.deco==="sunbooks")drawSunbooksFloor(ctx,x,y,T,r,c);
+          else if(mapTheme.deco==="catcafe")drawCatCafeFloor(ctx,x,y,T,r,c);
           else{ctx.fillStyle=(r+c)%2===0?P.floor1:P.floor2;ctx.fillRect(x,y,T,T);ctx.fillStyle=P.floor3+"18";ctx.fillRect(x,y,T,1);ctx.fillRect(x,y,1,T);}
         }
         else if(cell.type==="wall"){
           if(mapTheme.deco==="sunbooks")drawSunbooksWall(ctx,x,y,T,r,c);
+          else if(mapTheme.deco==="catcafe")drawCatCafeWall(ctx,x,y,T,r,c);
           else{ctx.fillStyle=P.wall;ctx.fillRect(x,y,T,T);const bh=T/4;for(let by=0;by<4;by++){const off=by%2===0?0:T/2;ctx.fillStyle=P.wallLine+"30";ctx.fillRect(x,y+by*bh,T,1);ctx.fillRect(x+off,y+by*bh,1,bh);ctx.fillRect(x+off+T/2,y+by*bh,1,bh);}}
         }
         else if(cell.type==="counter"){
           const it=g.counters[`${r},${c}`];
           if(mapTheme.deco==="sunbooks")drawSunbooksCounter(ctx,x,y,T,it,f);
+          else if(mapTheme.deco==="catcafe")drawCatCafeCounter(ctx,x,y,T,it,f);
           else{ctx.fillStyle=(r+c)%2===0?P.floor1:P.floor2;ctx.fillRect(x,y,T,T);ctx.fillStyle=P.counter;ctx.fillRect(x+3,y+3,T-6,T-6);ctx.fillStyle=P.counterTop;ctx.fillRect(x+3,y+3,T-6,5);ctx.fillStyle=P.counterEdge;ctx.fillRect(x+3,y+T-8,T-6,4);if(it)drawCup(ctx,x+T/2-8,y+T/2-10,16,it.ingredients||[]);}
         }
         else if(cell.type==="station"){
           if(cell.station==="serve"&&mapTheme.deco==="sunbooks")drawSunbooksServe(ctx,x,y,T,f);
+          else if(cell.station==="serve"&&mapTheme.deco==="catcafe")drawCatCafeServe(ctx,x,y,T,f);
           else if(cell.station==="serve")drawServe(ctx,x,y,T,f);
           else drawSt(ctx,x,y,T,cell.station,f);
         }
