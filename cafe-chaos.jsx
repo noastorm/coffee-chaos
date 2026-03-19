@@ -101,13 +101,13 @@ const MAPS = {
     name:"SunBooks",
     desc:"Green-logo bookstore cafe with warm shelves and window bar seating.",
     raw:[
-      "WSSSSSSSSSSSSSSSW",
+      "WSSSSSSSSSSSSSSSSW",
       "W................W",
       "E..CC....CC....A.W",
-      "e................B",
+      "e..............B.W",
       "M..CC....CC....T.W",
-      "m.............H.Q.",
-      "F..U.I..R..X..C..W",
+      "m..............HQW",
+      "F..U.I..R..X...C.W",
       "WWWWWWWWWWWWWWWWWW",
     ],
     theme:{
