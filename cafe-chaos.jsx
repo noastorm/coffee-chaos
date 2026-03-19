@@ -35,6 +35,14 @@ const POWER_RULES = {
   rushMoveDelay:80,
 };
 
+const TIMER_RULES = {
+  serveBase:{chill:5,normal:6,hectic:7},
+  quickBonusMax:2,
+  comboBonus:{3:1,5:2},
+  missPenalty:{chill:7,normal:9,hectic:11},
+  failPenalty:3,
+};
+
 const P = {
   bg:"#1a0f08", floor1:"#6b4226", floor2:"#5c3a22", floor3:"#7a4e30",
   wall:"#2d1b0e", wallHi:"#3a2215", wallLine:"#4a2c1a",
@@ -133,6 +141,13 @@ const AMBIENT_CUSTOMERS=[
 
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
 const flowGainForCombo=(combo)=>clamp(POWER_RULES.serveGain+Math.max(0,combo-1)*POWER_RULES.comboBonus,POWER_RULES.serveGain,42);
+const timeGainForServe=(order,combo,diff)=>{
+  const patiencePct=clamp(1-order.elapsed/order.patience,0,1);
+  const base=TIMER_RULES.serveBase[diff]??6;
+  const quickBonus=Math.min(TIMER_RULES.quickBonusMax,Math.floor(patiencePct*(TIMER_RULES.quickBonusMax+1)));
+  const comboBonus=combo>=5?TIMER_RULES.comboBonus[5]:combo>=3?TIMER_RULES.comboBonus[3]:0;
+  return base+quickBonus+comboBonus;
+};
 
 function useIsMobile(){const[m,s]=useState(false);useEffect(()=>{const c=()=>s(window.innerWidth<768||"ontouchstart"in window);c();window.addEventListener("resize",c);return ()=>window.removeEventListener("resize",c);},[]);return m;}
 function readViewport(){const vv=window.visualViewport;return{w:Math.round(vv?.width||window.innerWidth),h:Math.round(vv?.height||window.innerHeight)};}
@@ -1386,17 +1401,19 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession,appShell,audioUi}){
     if(cell.station==="serve"){
       if(!p.holding||!p.holding.ingredients?.length)return;
       const dn=matchRecipe(p.holding.ingredients);
-      if(!dn){g.combo=0;g.flow=Math.max(0,(g.flow||0)-POWER_RULES.failPenalty);sfx.play("fail");haptic("heavy");addPop("Wrong!",tc*T+T/2,tr*T,"bad");parts.current.emit(tc*T+T/2,tr*T+T/2,"fail",6);setHud(toHudState(g));return;}
+      if(!dn){g.combo=0;g.flow=Math.max(0,(g.flow||0)-POWER_RULES.failPenalty);g.timeLeft=Math.max(0,g.timeLeft-TIMER_RULES.failPenalty);sfx.play("fail");haptic("heavy");addPop(`Wrong! -${TIMER_RULES.failPenalty}s`,tc*T+T/2,tr*T,"bad");parts.current.emit(tc*T+T/2,tr*T+T/2,"fail",6);setHud(toHudState(g));return;}
       const oi=g.orders.findIndex(o=>o.drink===dn);
-      if(oi===-1){g.combo=0;g.flow=Math.max(0,(g.flow||0)-POWER_RULES.failPenalty);sfx.play("fail");haptic("heavy");addPop("No order!",tc*T+T/2,tr*T,"bad");parts.current.emit(tc*T+T/2,tr*T+T/2,"fail",6);setHud(toHudState(g));return;}
+      if(oi===-1){g.combo=0;g.flow=Math.max(0,(g.flow||0)-POWER_RULES.failPenalty);g.timeLeft=Math.max(0,g.timeLeft-TIMER_RULES.failPenalty);sfx.play("fail");haptic("heavy");addPop(`No order! -${TIMER_RULES.failPenalty}s`,tc*T+T/2,tr*T,"bad");parts.current.emit(tc*T+T/2,tr*T+T/2,"fail",6);setHud(toHudState(g));return;}
       const ord=g.orders[oi];const tb=Math.max(0,~~((1-ord.elapsed/ord.patience)*15));
       const pts=RECIPES[dn].pts+tb;g.combo++;g.comboT=180;
       const flowGain=flowGainForCombo(g.combo);
+      const timeGain=timeGainForServe(ord,g.combo,diff);
       g.flow=clamp((g.flow||0)+flowGain,0,POWER_RULES.maxFlow);
+      g.timeLeft+=timeGain;
       g.score+=pts*(g.combo>=3?2:1);g.orders.splice(oi,1);p.holding=null;g.shake.mag=6;
       if(g.combo>=3){sfx.play("combo");haptic("heavy");addPop(`x${g.combo}! +${pts*2}`,tc*T+T/2,tr*T-10,"combo");parts.current.emit(tc*T+T/2,tr*T+T/2,"combo",20);}
       else{sfx.play("serve");haptic("medium");addPop(`+${pts}`,tc*T+T/2,tr*T,"good");parts.current.emit(tc*T+T/2,tr*T+T/2,"serve",12);}
-      addPop(`FLOW +${flowGain}`,tc*T+T/2,tr*T-22,g.combo>=3?"combo":"good");
+      addPop(`+${timeGain}s`,tc*T+T/2,tr*T-22,g.combo>=3?"combo":"good");
       setHud(toHudState(g));
       return;
     }
@@ -1581,10 +1598,12 @@ function Game({playerCount,diff,onEnd,isMobile,onlineSession,appShell,audioUi}){
           g.orders=g.orders.map(o=>({...o,elapsed:o.elapsed+1}));
           const exp=g.orders.filter(o=>o.elapsed>=o.patience);
           if(exp.length){
+            const timeLoss=(TIMER_RULES.missPenalty[diff]??9)*exp.length;
             g.combo=0;
             g.flow=Math.max(0,(g.flow||0)-POWER_RULES.missPenalty*exp.length);
+            g.timeLeft=Math.max(0,g.timeLeft-timeLoss);
             sfx.play("warn");
-            addPop(exp.length>1?"ORDERS LOST":"ORDER LOST",BW/2,T*.95,"bad");
+            addPop(`${exp.length>1?"ORDERS LOST":"ORDER LOST"} -${timeLoss}s`,BW/2,T*.95,"bad");
             setHud(toHudState(g));
           }
           g.orders=g.orders.filter(o=>o.elapsed<o.patience);
@@ -2234,7 +2253,7 @@ function TitleScreen({onStart,onOpenOnline,isMobile,forceMode,setForceMode,appSh
         {help?
           <div style={{background:"#1a0f08ee",borderRadius:16,padding:isMobile?20:16,border:`2px solid ${P.gold}44`,maxWidth:440,width:"90%",fontSize:isMobile?11:10,lineHeight:2.2,color:"#c4956a"}}>
             <div style={{color:P.gold,textAlign:"center",marginBottom:8,fontSize:isMobile?14:12}}>📖 HOW TO PLAY</div>
-            {["1. Grab a CUP from the cup station","2. Tap/click a station to auto-walk there, or move manually","3. Some stations brew (watch the progress bar!)","4. Place cups on COUNTERS to free your hands","5. Serve at the BELL counter when recipe matches","6. Chain serves to fill FLOW","7. Spend FLOW on RUSH or FREEZE powers"].map((t,i)=><div key={i} style={{color:"#e8a87c"}}>{t}</div>)}
+            {["1. Grab a CUP from the cup station","2. Tap/click a station to auto-walk there, or move manually","3. Some stations brew (watch the progress bar!)","4. Place cups on COUNTERS to free your hands","5. Serve at the BELL counter when recipe matches","6. Great serves add time back to the clock","7. Missed or bad orders burn clock time","8. Chain serves to fill FLOW for powers"].map((t,i)=><div key={i} style={{color:"#e8a87c"}}>{t}</div>)}
             {!isMobile&&<div style={{marginTop:8,borderTop:"1px solid #3a2215",paddingTop:8}}>
               <div>P1: <span style={{color:P.p1}}>WASD</span> + <span style={{color:P.p1}}>E/Space</span></div>
               <div>P2: <span style={{color:P.p2}}>Arrows</span> + <span style={{color:P.p2}}>/</span></div>
