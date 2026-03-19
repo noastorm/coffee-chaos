@@ -2177,7 +2177,7 @@ function DPad({pid,onInput,label,color}){
 
 function OrderTicket({o,compact}){
   const pct=1-o.elapsed/o.patience;const urg=pct<.25;
-  return (<div style={{background:urg?"linear-gradient(180deg,#3a0a0a 0%,#241008 100%)":"linear-gradient(180deg,#322014 0%,#211309 100%)",border:`2px solid ${pct>.5?"#8b5e34":pct>.25?P.orange:P.red}`,borderRadius:10,padding:compact?"6px 10px":"8px 12px",minWidth:compact?134:152,flexShrink:0,animation:urg?"pulse .6s infinite":undefined,boxShadow:"0 4px 10px #00000033"}}>
+  return (<div style={{background:compact?(urg?"linear-gradient(180deg,#3a0a0ad8 0%,#241008cc 100%)":"linear-gradient(180deg,#322014d8 0%,#211309cc 100%)"):(urg?"linear-gradient(180deg,#3a0a0a 0%,#241008 100%)":"linear-gradient(180deg,#322014 0%,#211309 100%)"),border:`2px solid ${pct>.5?"#8b5e34":pct>.25?P.orange:P.red}`,borderRadius:10,padding:compact?"6px 9px":"8px 12px",minWidth:compact?122:152,flexShrink:0,animation:urg?"pulse .6s infinite":undefined,boxShadow:"0 4px 10px #00000033",backdropFilter:compact?"blur(6px)":undefined}}>
     <div style={{display:"flex",alignItems:"center",gap:4}}>
       <div style={{width:compact?12:16,height:compact?12:16,borderRadius:"50%",background:o.cust.skin,border:"1px solid #0003",boxShadow:"inset 0 1px 0 #ffffff33"}}/>
       <span style={{color:"#d8b48c",fontSize:compact?7:8,fontFamily:"'Silkscreen',monospace"}}>{o.cust.name}</span>
@@ -3240,77 +3240,85 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
       );
     }
 
-    const mobileTopRows=(hasShellActions ? 1 : 0) + 2;
-    const hudH = 26 + mobileTopRows * 20;
-    const ordH = 72;
-    const stageGap = 8;
-    const joySize = singleControlMode ? Math.min(104, Math.max(80, Math.round(screen.h * 0.21))) : Math.min(82, Math.max(68, Math.round(screen.h * 0.17)));
-    const actSize = singleControlMode ? Math.min(82, Math.max(68, Math.round(screen.h * 0.15))) : 48;
-    const leftDockW = singleControlMode ? joySize + 22 : joySize + 28;
-    const rightDockW = singleControlMode ? Math.max(96, actSize + 24) : joySize + 28;
-    const boardAreaW = Math.max(220, screen.w - leftDockW - rightDockW - stageGap * 2 - 12);
-    const boardAreaH = Math.max(190, screen.h - hudH - ordH - 18);
-    const boardScale = Math.min((boardAreaW - 6) / BW, (boardAreaH - 6) / BH, 1.55);
-    const displayW = Math.min(boardAreaW, Math.round(BW * boardScale));
-    const displayH = Math.min(boardAreaH, Math.round(BH * boardScale));
+    const shortSide=Math.min(screen.w,screen.h);
+    const joySize=singleControlMode?Math.min(112,Math.max(88,Math.round(shortSide*.26))):Math.min(90,Math.max(72,Math.round(shortSide*.2)));
+    const actSize=singleControlMode?Math.min(92,Math.max(74,Math.round(shortSide*.2))):54;
+    const duoActW=60,duoActH=34;
+    const boardScale=Math.min((screen.w-10)/BW,(screen.h-10)/BH,1.75);
+    const displayW=Math.round(BW*boardScale);
+    const displayH=Math.round(BH*boardScale);
+    const glass={
+      background:"#120904b8",
+      border:"1px solid #6b3a1f88",
+      boxShadow:"0 10px 26px #0000004d",
+      backdropFilter:"blur(6px)",
+    };
+    const topBarStyle={...glass,borderRadius:18,padding:"8px 12px",pointerEvents:"auto"};
+    const scorePanelStyle={...topBarStyle,display:"flex",alignItems:"center",gap:8,minWidth:singleControlMode?88:102};
 
     return (
-      <div style={{width:"100vw",height:"100dvh",minHeight:"100vh",background:P.bg,overflow:"hidden",display:"flex",flexDirection:"column",fontFamily:"'Silkscreen','Press Start 2P',monospace",paddingTop:safeTop,paddingBottom:safeBottom,paddingLeft:safeLeft,paddingRight:safeRight,gap:4}}>
-        <div style={{display:"grid",gridTemplateColumns:"auto 1fr auto",alignItems:"center",padding:"0 10px",height:hudH,flexShrink:0,background:"linear-gradient(180deg,#00000088 0%,#00000035 100%)",border:"1px solid #6b3a1f55",borderRadius:18,columnGap:8}}>
-          <div style={{display:"flex",alignItems:"center",gap:6}}>
-            <span style={{fontSize:11,color:"#d2a979"}}>PTS</span>
-            <span style={{color:P.gold,fontSize:17,fontWeight:"bold"}}>{hud.score}</span>
-          </div>
-          <div style={{justifySelf:"center",display:"flex",flexDirection:"column",gap:4,alignItems:"center"}}>
-            <ShellActionRow appShell={appShell} compact />
-            <AudioToggleRow audioUi={audioUi} compact />
-            <PowerMeter hud={hud} compact />
-          </div>
-          <div style={{display:"flex",alignItems:"center",gap:8}}>
-            {hud.combo >= 2 && <div style={{color:"#ff7ab8",fontSize:10,animation:"pulse .5s infinite"}}>x{hud.combo}</div>}
-            <div style={{color:hud.time<=30?P.red:hud.time<=60?P.orange:"#d2a979",fontSize:14,fontWeight:"bold",...(hud.time<=10?{animation:"pulse .3s infinite"}:{})}}>{~~(hud.time/60)}:{String(hud.time%60).padStart(2,"0")}</div>
+      <div style={{width:"100vw",height:"100dvh",minHeight:"100vh",background:P.bg,overflow:"hidden",position:"relative",fontFamily:"'Silkscreen','Press Start 2P',monospace",paddingTop:safeTop,paddingBottom:safeBottom,paddingLeft:safeLeft,paddingRight:safeRight}}>
+        <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none",padding:"2px"}}>
+          <div style={{position:"relative",width:displayW,height:displayH}}>
+            <canvas ref={canvasRef} width={BW} height={BH} onPointerDown={handleCanvasPointerDown} onTouchStart={handleCanvasTarget} style={{width:displayW,height:displayH,imageRendering:"pixelated",display:"block",cursor:"pointer",borderRadius:24,boxShadow:"0 18px 36px #00000055",touchAction:"manipulation",pointerEvents:"auto"}} />
+            <div style={{position:"absolute",inset:0,pointerEvents:"none",borderRadius:24,background:"radial-gradient(circle at center,transparent 54%,#00000016 100%),linear-gradient(180deg,#ffffff07 0%,transparent 22%,#00000024 100%)"}}/>
           </div>
         </div>
 
-        <div style={{display:"flex",gap:6,padding:"4px 2px 6px",overflowX:"auto",flexShrink:0,height:ordH,alignItems:"center",WebkitOverflowScrolling:"touch",touchAction:"pan-x"}}>
-          {hud.orders.map(o => <OrderTicket key={o.id} o={o} compact />)}
-          {!hud.orders.length && <span style={{color:"#8a6a4a",fontSize:9,padding:"0 8px"}}>Waiting for customers...</span>}
-        </div>
-
-        <div style={{flex:1,minHeight:0,display:"flex",alignItems:"center",gap:stageGap,padding:"0 2px 2px"}}>
-          <div style={{width:leftDockW,minWidth:leftDockW,display:"flex",alignItems:"flex-end",justifyContent:"center",paddingBottom:6}}>
-            {singleControlMode ? (
-              <Joystick onMove={d => mobileMove(localPid,d)} color={localColor} label={online ? `P${localPid+1}` : "MOVE"} side="left" size={joySize} />
-            ) : (
-              <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
-                <Joystick onMove={d => mobileMove(0,d)} color={P.p1} label="P1" side="left" size={joySize} />
-                <button onTouchStart={e => {e.preventDefault(); mobileAct(0); haptic("medium");}} style={{width:54,height:30,borderRadius:15,background:P.p1+"33",border:`2px solid ${P.p1}88`,color:P.p1,fontSize:9,fontFamily:"'Silkscreen',monospace",fontWeight:"bold",touchAction:"manipulation"}}>ACT</button>
-              </div>
-            )}
-          </div>
-
-          <div style={{flex:1,minWidth:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
-            <div style={{position:"relative",width:displayW + 14,height:displayH + 14,borderRadius:24,padding:7,background:"radial-gradient(circle at top,#3a2215 0%,#1a0f08 68%,#120904 100%)",boxShadow:"inset 0 1px 0 #ffffff08,0 20px 40px #00000044"}}>
-              <div style={{position:"absolute",inset:0,pointerEvents:"none",borderRadius:24,background:"radial-gradient(circle at center,#ffffff08 0%,transparent 58%),linear-gradient(180deg,#ffffff05 0%,transparent 26%,#00000022 100%)"}}/>
-              <canvas ref={canvasRef} width={BW} height={BH} onPointerDown={handleCanvasPointerDown} onTouchStart={handleCanvasTarget} style={{width:displayW,height:displayH,imageRendering:"pixelated",display:"block",cursor:"pointer",borderTop:`2px solid ${P.wallLine}`,borderBottom:`2px solid ${P.wallLine}`,boxShadow:"0 16px 30px #00000055",borderRadius:16,position:"relative",zIndex:1,touchAction:"manipulation"}} />
+        <div style={{position:"absolute",inset:0,pointerEvents:"none"}}>
+          <div style={{position:"absolute",top:"max(env(safe-area-inset-top), 10px)",left:"max(env(safe-area-inset-left), 8px)",right:"max(env(safe-area-inset-right), 8px)",display:"grid",gridTemplateColumns:"auto 1fr auto",alignItems:"start",gap:8}}>
+            <div style={scorePanelStyle}>
+              <span style={{fontSize:10,color:"#d2a979"}}>PTS</span>
+              <span style={{color:P.gold,fontSize:18,fontWeight:"bold"}}>{hud.score}</span>
+              {hud.combo>=2&&<span style={{color:"#ff7ab8",fontSize:9,animation:"pulse .5s infinite"}}>x{hud.combo}</span>}
+            </div>
+            <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6,pointerEvents:"auto"}}>
+              {hasShellActions&&<div style={{...glass,borderRadius:16,padding:"6px 8px"}}><ShellActionRow appShell={appShell} compact /></div>}
+              <div style={{...glass,borderRadius:16,padding:"6px 8px"}}><AudioToggleRow audioUi={audioUi} compact /></div>
+              <div style={{...glass,borderRadius:16,padding:"7px 10px"}}><PowerMeter hud={hud} compact /></div>
+            </div>
+            <div style={{...scorePanelStyle,justifyContent:"flex-end",minWidth:74}}>
+              <span style={{color:hud.time<=30?P.red:hud.time<=60?P.orange:"#d2a979",fontSize:16,fontWeight:"bold",...(hud.time<=10?{animation:"pulse .3s infinite"}:{})}}>{~~(hud.time/60)}:{String(hud.time%60).padStart(2,"0")}</span>
             </div>
           </div>
 
-          <div style={{width:rightDockW,minWidth:rightDockW,display:"flex",alignItems:"flex-end",justifyContent:"center",paddingBottom:6}}>
-            {singleControlMode ? (
-              <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6}}>
-                <ActBtn onAction={() => mobileAct(localPid)} color={localColor} holding={localHolding} sz={actSize} />
-                <PowerButtons hud={hud} onUsePower={mobilePower} compact stack />
-                <div style={{fontSize:8,color:"#8a6a4a",textAlign:"center",lineHeight:1.6,maxWidth:112}}>Tap stations to auto-walk</div>
-              </div>
-            ) : (
-              <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
-                <Joystick onMove={d => mobileMove(1,d)} color={P.p2} label="P2" side="right" size={joySize} />
-                <button onTouchStart={e => {e.preventDefault(); mobileAct(1); haptic("medium");}} style={{width:54,height:30,borderRadius:15,background:P.p2+"33",border:`2px solid ${P.p2}88`,color:P.p2,fontSize:9,fontFamily:"'Silkscreen',monospace",fontWeight:"bold",touchAction:"manipulation"}}>ACT</button>
-                <PowerButtons hud={hud} onUsePower={mobilePower} compact stack />
-              </div>
-            )}
+          <div style={{position:"absolute",top:"max(calc(env(safe-area-inset-top) + 82px), 88px)",left:"max(env(safe-area-inset-left), 8px)",right:"max(env(safe-area-inset-right), 8px)",display:"flex",justifyContent:"center",pointerEvents:"auto"}}>
+            <div style={{...glass,borderRadius:18,padding:"6px 8px",display:"flex",gap:6,overflowX:"auto",maxWidth:"100%",WebkitOverflowScrolling:"touch",touchAction:"pan-x"}}>
+              {hud.orders.map(o => <OrderTicket key={o.id} o={o} compact />)}
+              {!hud.orders.length && <span style={{color:"#b58a64",fontSize:9,padding:"8px 10px",whiteSpace:"nowrap"}}>Waiting for customers...</span>}
+            </div>
           </div>
+
+          {singleControlMode ? (
+            <>
+              <div style={{position:"absolute",left:"max(env(safe-area-inset-left), 8px)",bottom:"max(env(safe-area-inset-bottom), 10px)",pointerEvents:"auto"}}>
+                <div style={{...glass,borderRadius:24,padding:"10px 10px 8px"}}>
+                  <Joystick onMove={d => mobileMove(localPid,d)} color={localColor} label={online ? `P${localPid+1}` : "MOVE"} side="left" size={joySize} />
+                </div>
+              </div>
+              <div style={{position:"absolute",right:"max(env(safe-area-inset-right), 8px)",bottom:"max(env(safe-area-inset-bottom), 10px)",display:"flex",flexDirection:"column",alignItems:"center",gap:8,pointerEvents:"auto"}}>
+                <div style={{...glass,borderRadius:24,padding:"10px"}}>
+                  <ActBtn onAction={() => mobileAct(localPid)} color={localColor} holding={localHolding} sz={actSize} />
+                </div>
+                <div style={{...glass,borderRadius:18,padding:"8px"}}><PowerButtons hud={hud} onUsePower={mobilePower} compact stack /></div>
+                <div style={{...glass,borderRadius:14,padding:"6px 10px",fontSize:8,color:"#d2a979",textAlign:"center",lineHeight:1.6,maxWidth:120}}>Tap stations to auto-walk</div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div style={{position:"absolute",left:"max(env(safe-area-inset-left), 8px)",bottom:"max(env(safe-area-inset-bottom), 10px)",display:"flex",flexDirection:"column",alignItems:"center",gap:6,pointerEvents:"auto"}}>
+                <button onTouchStart={e => {e.preventDefault(); mobileAct(0); haptic("medium");}} style={{width:duoActW,height:duoActH,borderRadius:16,...glass,background:P.p1+"33",border:`2px solid ${P.p1}88`,color:P.p1,fontSize:10,fontFamily:"'Silkscreen',monospace",fontWeight:"bold",touchAction:"manipulation"}}>ACT</button>
+                <div style={{...glass,borderRadius:24,padding:"9px 9px 7px"}}><Joystick onMove={d => mobileMove(0,d)} color={P.p1} label="P1" side="left" size={joySize} /></div>
+              </div>
+              <div style={{position:"absolute",right:"max(env(safe-area-inset-right), 8px)",bottom:"max(env(safe-area-inset-bottom), 10px)",display:"flex",flexDirection:"column",alignItems:"center",gap:6,pointerEvents:"auto"}}>
+                <button onTouchStart={e => {e.preventDefault(); mobileAct(1); haptic("medium");}} style={{width:duoActW,height:duoActH,borderRadius:16,...glass,background:P.p2+"33",border:`2px solid ${P.p2}88`,color:P.p2,fontSize:10,fontFamily:"'Silkscreen',monospace",fontWeight:"bold",touchAction:"manipulation"}}>ACT</button>
+                <div style={{...glass,borderRadius:24,padding:"9px 9px 7px"}}><Joystick onMove={d => mobileMove(1,d)} color={P.p2} label="P2" side="right" size={joySize} /></div>
+              </div>
+              <div style={{position:"absolute",left:"50%",bottom:"max(env(safe-area-inset-bottom), 10px)",transform:"translateX(-50%)",pointerEvents:"auto"}}>
+                <div style={{...glass,borderRadius:18,padding:"8px 10px"}}><PowerButtons hud={hud} onUsePower={mobilePower} compact /></div>
+              </div>
+            </>
+          )}
         </div>
       </div>);
   }
