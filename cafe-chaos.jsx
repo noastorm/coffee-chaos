@@ -5457,6 +5457,22 @@ function OnlineRoomScreen({isMobile,onBack,onLaunch,initialRoomCode,appShell,aud
   const menuPadBottom=isMobile?(mobileLandscape?44:56):28;
   const panelWidth=isMobile?(mobileLandscape?"min(100%, 780px)":"min(100%, 430px)"):"min(100%, 620px)";
   const utilityCompact=isMobile&&mobileLandscape;
+  const buildRoomHandlers=useCallback((session)=>({
+    onPresence:(next)=>setMembers(next),
+    onStatus:(next)=>setStatus(next),
+    onStart:(payload)=>{
+      launched.current=true;
+      onLaunch({
+        session,
+        diff:payload?.diff||"normal",
+        mapKey:payload?.mapKey||"classic",
+        charIds:payload?.charIds||["bean","mocha"],
+      });
+    },
+    onClosed:()=>{
+      setStatus("CLOSED");
+    },
+  }),[onLaunch]);
 
   const leaveRoom=useCallback(async ()=>{
     if(roomSession){await roomSession.destroy();}
@@ -5474,6 +5490,7 @@ function OnlineRoomScreen({isMobile,onBack,onLaunch,initialRoomCode,appShell,aud
     setBusy(true);
     setError("");
     const next=createRoomSession({roomCode:initialRoomCode,role:"guest"});
+    next.setHandlers(buildRoomHandlers(next));
     next.connect()
       .then(()=>{
         setRoomSession(next);
@@ -5484,20 +5501,13 @@ function OnlineRoomScreen({isMobile,onBack,onLaunch,initialRoomCode,appShell,aud
         setError(err.message||"Could not join room.");
       })
       .finally(()=>setBusy(false));
-  },[initialRoomCode,roomSession,busy]);
+  },[initialRoomCode,roomSession,busy,buildRoomHandlers]);
 
   useEffect(()=>{
     if(!roomSession)return;
-    roomSession.setHandlers({
-      onPresence:(next)=>setMembers(next),
-      onStatus:(next)=>setStatus(next),
-      onStart:(payload)=>{
-        launched.current=true;
-        onLaunch({session:roomSession,diff:payload?.diff||"normal",mapKey:payload?.mapKey||"classic",charIds:payload?.charIds||["bean","mocha"]});
-      },
-    });
+    roomSession.setHandlers(buildRoomHandlers(roomSession));
     return ()=>roomSession.setHandlers({});
-  },[roomSession,onLaunch]);
+  },[roomSession,buildRoomHandlers]);
 
   useEffect(()=>()=>{if(!launched.current&&roomSession){roomSession.destroy();}},[roomSession]);
 
@@ -5515,6 +5525,7 @@ function OnlineRoomScreen({isMobile,onBack,onLaunch,initialRoomCode,appShell,aud
     setError("");
     try{
       const next=createRoomSession({roomCode,role});
+      next.setHandlers(buildRoomHandlers(next));
       await next.connect();
       setRoomSession(next);
       setStage("lobby");
@@ -5524,14 +5535,24 @@ function OnlineRoomScreen({isMobile,onBack,onLaunch,initialRoomCode,appShell,aud
     }finally{
       setBusy(false);
     }
-  },[joinCode]);
+  },[joinCode,buildRoomHandlers]);
 
-  const startOnlineGame=useCallback(()=>{
+  const startOnlineGame=useCallback(async ()=>{
     if(!roomSession||roomSession.role!=="host"||members.length<2)return;
     launched.current=true;
-    roomSession.sendStart({diff,mapKey,charIds:[p1Char,p2Char]}).catch(()=>{});
-    onLaunch({session:roomSession,diff,mapKey,charIds:[p1Char,p2Char]});
-  },[roomSession,members.length,diff,mapKey,onLaunch]);
+    setBusy(true);
+    setError("");
+    const nextCharIds=[p1Char,p2Char];
+    try{
+      await roomSession.sendStart({diff,mapKey,charIds:nextCharIds});
+      onLaunch({session:roomSession,diff,mapKey,charIds:nextCharIds});
+    }catch(err){
+      launched.current=false;
+      setError(err?.message||"Could not start the online shift. Try reconnecting both players.");
+    }finally{
+      setBusy(false);
+    }
+  },[roomSession,members.length,diff,mapKey,onLaunch,p1Char,p2Char]);
 
   const copyInvite=useCallback(async ()=>{
     if(!roomSession)return;
@@ -5600,7 +5621,7 @@ function OnlineRoomScreen({isMobile,onBack,onLaunch,initialRoomCode,appShell,aud
                     <MapChoiceGrid selected={mapKey} onSelect={setMapKey} isMobile={isMobile} compact={isMobile} />
                     <div style={{fontSize:isMobile?(mobileLandscape?12:13):10,color:"#c4956a",marginTop:4}}>Choose your baristas:</div>
                     <CharacterSelectGrid p1Char={p1Char} p2Char={p2Char} onSelectP1={setP1Char} onSelectP2={setP2Char} playerCount={2} isMobile={isMobile} />
-                    <button onClick={startOnlineGame} disabled={!roomReady} style={{fontFamily:"'Silkscreen',monospace",fontWeight:"bold",fontSize:isMobile?(mobileLandscape?16:18):13,padding:isMobile?(mobileLandscape?"16px 20px":"18px 24px"):"14px 22px",background:roomReady?"#6b3a1f":"#3a2215",color:roomReady?"#f5e6d3":"#8a6a4a",border:`2px solid ${roomReady?P.gold+"88":"#5a3a20"}`,borderRadius:14,cursor:roomReady?"pointer":"not-allowed",width:"100%"}}>START ONLINE SHIFT</button>
+                    <button onClick={startOnlineGame} disabled={!roomReady||busy} style={{fontFamily:"'Silkscreen',monospace",fontWeight:"bold",fontSize:isMobile?(mobileLandscape?16:18):13,padding:isMobile?(mobileLandscape?"16px 20px":"18px 24px"):"14px 22px",background:roomReady&&!busy?"#6b3a1f":"#3a2215",color:roomReady&&!busy?"#f5e6d3":"#8a6a4a",border:`2px solid ${roomReady&&!busy?P.gold+"88":"#5a3a20"}`,borderRadius:14,cursor:roomReady&&!busy?"pointer":"not-allowed",width:"100%"}}>{busy?"STARTING...":"START ONLINE SHIFT"}</button>
                     {!roomReady&&<div style={{fontSize:isMobile?(mobileLandscape?10:11):8,color:"#8a6a4a",lineHeight:1.8}}>Share the link or room code and wait for player 2.</div>}
                   </div>
                 ):(
@@ -5757,4 +5778,3 @@ export default function CafeChaos(){
     </div>
   );
 }
-
