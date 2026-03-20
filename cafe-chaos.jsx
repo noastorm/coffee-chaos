@@ -193,6 +193,97 @@ const MAPS = {
     },
     spawns:[[4,6],[4,11]],
   },
+  halloween:{
+    id:"halloween",
+    name:"Spooky Brews",
+    desc:"A haunted cafe under a full moon with cobwebs, bats, and jack-o-lanterns glowing.",
+    raw:[
+      "WSSSSSSSSSSSSSSSSW",
+      "W................W",
+      "WE..CC....CC..A..W",
+      "We............B..W",
+      "WM..CC....CC..T..W",
+      "Wm........H.Q....W",
+      "WF.U.I..R..X...C.W",
+      "WWWWWWWWWWWWWWWWWW",
+    ],
+    theme:{
+      deco:"halloween",
+      top:"#1a0a20",
+      panel:"#2a1030",
+      trim:"#ff8c00",
+      text:"#ffe0b0",
+      accent:"#9b30ff",
+      wood:"#3a2018",
+      shelf:"#4a2828",
+      lamp:"#ff6600",
+      logo:"SPOOKY BREWS",
+      subtitle:"TRICKS + TREATS",
+      glow:"255,120,40",
+    },
+    spawns:[[4,6],[4,11]],
+  },
+  winter:{
+    id:"winter",
+    name:"Frost & Joy",
+    desc:"A cozy winter lodge cafe with snow outside, string lights, and a warm fireplace glow.",
+    raw:[
+      "WSSSSSSSSSSSSSSSSW",
+      "W................W",
+      "WEA.CC....CC..T..W",
+      "We............B..W",
+      "WM..CC....CC..H..W",
+      "Wm...........Q...W",
+      "WF.U.I..R..X.....W",
+      "WWWWWWWWWWWWWWWWWW",
+    ],
+    theme:{
+      deco:"winter",
+      top:"#1a2a40",
+      panel:"#1e3050",
+      trim:"#cc2222",
+      text:"#f0f4ff",
+      accent:"#4fc3f7",
+      wood:"#5a4030",
+      shelf:"#6a5040",
+      lamp:"#ffe4b0",
+      logo:"FROST & JOY",
+      subtitle:"WARM CUPS + COZY NIGHTS",
+      glow:"255,230,180",
+    },
+    spawns:[[4,6],[4,11]],
+  },
+  eid:{
+    id:"eid",
+    name:"Eid Cafe",
+    desc:"A beautifully decorated cafe celebrating Eid with lanterns, geometric patterns, and golden arches.",
+    raw:[
+      "WWWWWWWWWWWWWWWWWW",
+      "WE..CC....CC..A..W",
+      "We............B..W",
+      "WM..CC....CC..T..W",
+      "Wm........H.Q....W",
+      "WF.U.I..R..X.....W",
+      "W................W",
+      "WSSSSSSSSSSSSSSSSW",
+    ],
+    theme:{
+      deco:"eid",
+      top:"#0a1830",
+      panel:"#1a3050",
+      trim:"#d4af37",
+      text:"#fff8e0",
+      accent:"#40bfa0",
+      wood:"#5a3828",
+      shelf:"#6a4838",
+      lamp:"#f0c860",
+      logo:"EID CAFE",
+      subtitle:"EID MUBARAK",
+      glow:"212,175,55",
+      customerSide:"bottom",
+    },
+    spawns:[[4,6],[4,11]],
+  },
 };
 
 const CAT_COACH={
@@ -1323,6 +1414,63 @@ function drawCafeDecor(ctx,T,BW,BH,f){
     ctx.fillStyle="#f3e5d0";
     ctx.fillRect(T*.43,topH-T*.21,T*.08,T*.06);
     ctx.fillRect(BW-T*.51,topH-T*.21,T*.08,T*.06);
+  }else if(mapTheme.deco==="halloween"){
+    // chalkboard menu with spooky items
+    ctx.fillStyle="#1a0a18";
+    ctx.fillRect(T*.56,T*.06,T*1.4,T*.3);
+    ctx.strokeStyle="#ff8c00";ctx.lineWidth=1.5;
+    ctx.strokeRect(T*.56+.5,T*.06+.5,T*1.4-1,T*.3-1);
+    ctx.fillStyle="#ffe0b0";
+    ctx.font=`bold ${Math.max(7,T*.09)}px monospace`;ctx.textAlign="left";
+    const spookyItems=["WITCH BREW","BOO LATTE","PUMPKIN SPICE"];
+    spookyItems.forEach((item,i)=>{ctx.fillText(item,T*.66,T*.14+i*T*.08);});
+    // skull on shelf
+    ctx.fillStyle="#f5e6d3";
+    ctx.fillRect(BW-T*1.65,topH-T*.3,T*.18,T*.14);
+    ctx.fillRect(BW-T*1.61,topH-T*.38,T*.1,T*.1);
+    ctx.fillStyle="#1a0a18";
+    ctx.fillRect(BW-T*1.62,topH-T*.26,T*.04,T*.04);
+    ctx.fillRect(BW-T*1.54,topH-T*.26,T*.04,T*.04);
+    // potion bottle
+    ctx.fillStyle="#9b30ff88";
+    ctx.fillRect(T*.62,topH-T*.36,T*.12,T*.22);
+    ctx.fillStyle="#4a1040";ctx.fillRect(T*.64,topH-T*.4,T*.08,T*.06);
+  }else if(mapTheme.deco==="winter"){
+    // cozy chalkboard menu
+    ctx.fillStyle="#2a1810";
+    ctx.fillRect(T*.56,T*.06,T*1.4,T*.3);
+    ctx.strokeStyle="#cc2222";ctx.lineWidth=1.5;
+    ctx.strokeRect(T*.56+.5,T*.06+.5,T*1.4-1,T*.3-1);
+    ctx.fillStyle="#f0f4ff";
+    ctx.font=`bold ${Math.max(7,T*.09)}px monospace`;ctx.textAlign="left";
+    const winterItems=["HOT COCOA","EGGNOG LATTE","GINGERBREAD"];
+    winterItems.forEach((item,i)=>{ctx.fillText(item,T*.66,T*.14+i*T*.08);});
+    // stocking on shelf
+    ctx.fillStyle="#cc2222";ctx.fillRect(BW-T*1.6,topH-T*.36,T*.12,T*.2);
+    ctx.fillStyle="#fff";ctx.fillRect(BW-T*1.62,topH-T*.36,T*.16,T*.06);
+    // snow globe
+    ctx.fillStyle="#5a4030";ctx.fillRect(T*.64,topH-T*.28,T*.14,T*.04);
+    ctx.fillStyle="#b8d6ef66";
+    ctx.beginPath();ctx.arc(T*.71,topH-T*.36,T*.08,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#fff";ctx.fillRect(T*.69,topH-T*.33,T*.02,T*.02);
+  }else if(mapTheme.deco==="eid"){
+    // ornate golden frame with calligraphy
+    ctx.fillStyle="#0a1830";
+    ctx.fillRect(T*.56,T*.06,T*1.4,T*.3);
+    ctx.strokeStyle="#d4af37";ctx.lineWidth=2;
+    ctx.strokeRect(T*.56+.5,T*.06+.5,T*1.4-1,T*.3-1);
+    ctx.strokeRect(T*.56+3,T*.06+3,T*1.4-6,T*.3-6);
+    ctx.fillStyle="#fff8e0";
+    ctx.font=`bold ${Math.max(7,T*.09)}px monospace`;ctx.textAlign="left";
+    const eidItems=["ARABIC COFFEE","CARDAMOM TEA","DATES SHAKE"];
+    eidItems.forEach((item,i)=>{ctx.fillText(item,T*.66,T*.14+i*T*.08);});
+    // decorative vase on shelf
+    ctx.fillStyle="#40bfa0";ctx.fillRect(BW-T*1.58,topH-T*.34,T*.14,T*.2);
+    ctx.fillStyle="#d4af37";ctx.fillRect(BW-T*1.6,topH-T*.36,T*.18,T*.04);
+    ctx.fillRect(BW-T*1.6,topH-T*.16,T*.18,T*.04);
+    // fanoos lantern on other shelf
+    ctx.fillStyle="#d4af37";ctx.fillRect(T*.64,topH-T*.38,T*.1,T*.22);
+    ctx.fillStyle="#ff880066";ctx.fillRect(T*.65,topH-T*.34,T*.08,T*.14);
   }else if(mapTheme.deco==="pixelperk"){
     ctx.fillStyle="#211229";
     ctx.fillRect(T*.52,T*.1,T*.96,T*.24);
@@ -1346,14 +1494,17 @@ function drawSt(ctx,x,y,T,key,f){
   const px=(a,b,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(x+a*s,y+b*s,w*s,h*s);};
   const isCatCafe=mapTheme.deco==="catcafe";
   const isCentralPerks=mapTheme.deco==="centralperks";
-  const shell=isCatCafe?"#6b473c":isCentralPerks?"#7b5848":P.wallHi;
-  const panel=isCatCafe?"#2d1913":isCentralPerks?"#eadcc7":"#2a1608";
+  const isHalloween=mapTheme.deco==="halloween";
+  const isWinter=mapTheme.deco==="winter";
+  const isEid=mapTheme.deco==="eid";
+  const shell=isCatCafe?"#6b473c":isCentralPerks?"#7b5848":isHalloween?"#4a1838":isWinter?"#5a4a3a":isEid?"#5a3828":P.wallHi;
+  const panel=isCatCafe?"#2d1913":isCentralPerks?"#eadcc7":isHalloween?"#2a1030":isWinter?"#1e3050":isEid?"#1a3050":"#2a1608";
   px(0,0,16,16,shell);px(1,1,14,14,panel);
   // edge highlights
-  px(0,0,16,1,shell);px(1,1,14,1,isCatCafe?"#8a6050":isCentralPerks?"#9a7868":"#3a2010");
-  px(1,14,14,1,isCatCafe?"#4a2820":isCentralPerks?"#c4b4a0":"#1a0a04");
-  px(0,0,1,16,isCatCafe?"#7a5544":isCentralPerks?"#8a6858":"#3a2215");
-  px(15,0,1,16,isCatCafe?"#5a3830":isCentralPerks?"#6a5040":"#1a0c06");
+  px(0,0,16,1,shell);px(1,1,14,1,isCatCafe?"#8a6050":isCentralPerks?"#9a7868":isHalloween?"#6a2848":isWinter?"#6a5a48":isEid?"#6a4838":"#3a2010");
+  px(1,14,14,1,isCatCafe?"#4a2820":isCentralPerks?"#c4b4a0":isHalloween?"#1a0820":isWinter?"#3a302a":isEid?"#4a2818":"#1a0a04");
+  px(0,0,1,16,isCatCafe?"#7a5544":isCentralPerks?"#8a6858":isHalloween?"#5a2040":isWinter?"#5a4a38":isEid?"#5a3828":"#3a2215");
+  px(15,0,1,16,isCatCafe?"#5a3830":isCentralPerks?"#6a5040":isHalloween?"#2a1028":isWinter?"#3a302a":isEid?"#4a2818":"#1a0c06");
   if(isCatCafe){
     px(2,2,12,1,"#f2dfc5");
     px(2,13,12,1,"#7d5845");
@@ -1977,6 +2128,310 @@ function drawCentralPerksServe(ctx,x,y,T,f){
   }
 }
 
+// ─── HALLOWEEN THEME ─────────────────────────────────
+function drawHalloweenFloor(ctx,x,y,T,r,c){
+  ctx.fillStyle=(r+c)%2===0?"#3a2030":"#321828";
+  ctx.fillRect(x,y,T,T);
+  ctx.fillStyle="#ffffff06";ctx.fillRect(x,y,T,1);ctx.fillRect(x,y,1,T);
+  ctx.fillStyle="#00000012";ctx.fillRect(x,y+T-1,T,1);
+  // floor cracks
+  if((r*7+c*13)%11===0){ctx.fillStyle="#1a0a1822";ctx.fillRect(x+T*.3,y+T*.4,T*.4,1);}
+}
+function drawHalloweenWall(ctx,x,y,T,r,c,f){
+  ctx.fillStyle="#1a0a18";ctx.fillRect(x,y,T,T);
+  ctx.fillStyle="#2a1428";ctx.fillRect(x+1,y+1,T-2,T-2);
+  // brick pattern
+  const bh=T/4;
+  for(let by=0;by<4;by++){
+    const off=by%2===0?0:T/2;
+    ctx.fillStyle="#3a1c3020";ctx.fillRect(x,y+by*bh,T,1);
+    ctx.fillRect(x+off,y+by*bh,1,bh);ctx.fillRect(x+off+T/2,y+by*bh,1,bh);
+  }
+  // cobweb in corners
+  if(r===0&&(c===0||c===COLS-1)){
+    const cx=c===0?x:x+T,dir=c===0?1:-1;
+    ctx.strokeStyle="#ffffff18";ctx.lineWidth=.7;
+    for(let i=0;i<4;i++){
+      ctx.beginPath();ctx.moveTo(cx,y);
+      ctx.lineTo(cx+dir*T*(.3+i*.18),y+T*(.3+i*.15));ctx.stroke();
+    }
+  }
+  // jack-o-lantern on bottom walls
+  if(r===ROWS-1&&(c===3||c===14)){
+    const s=T/16;const ox=x,oy=y;
+    ctx.fillStyle="#ff8c00";ctx.fillRect(ox+4*s,oy+4*s,8*s,7*s);
+    ctx.fillStyle="#ff6600";ctx.fillRect(ox+5*s,oy+5*s,6*s,5*s);
+    ctx.fillStyle="#2a1008";ctx.fillRect(ox+3*s,oy+3*s,2*s,1*s);
+    // face
+    ctx.fillStyle="#ffe066";
+    ctx.fillRect(ox+5*s,oy+6*s,2*s,2*s);ctx.fillRect(ox+9*s,oy+6*s,2*s,2*s);
+    ctx.fillRect(ox+6*s,oy+9*s,4*s,1*s);
+    ctx.fillRect(ox+7*s,oy+10*s,2*s,1*s);
+    if(f%80<12){ctx.fillStyle="#ffe06644";ctx.fillRect(ox+3*s,oy+2*s,10*s,2*s);}
+  }
+}
+function drawHalloweenCounter(ctx,x,y,T,it,f){
+  drawHalloweenFloor(ctx,x,y,T,3,5);
+  ctx.fillStyle="#3a1828";ctx.fillRect(x+3,y+3,T-6,T-6);
+  ctx.fillStyle="#4a2838";ctx.fillRect(x+3,y+3,T-6,4);
+  ctx.fillStyle="#2a1020";ctx.fillRect(x+3,y+T-8,T-6,4);
+  if(it)drawCup(ctx,x+T/2-8,y+T/2-10,16,it.ingredients||[]);
+  else{
+    // candle
+    ctx.fillStyle="#f5e6d3";ctx.fillRect(x+T/2-2,y+T/2-4,4,8);
+    ctx.fillStyle="#ff6600";ctx.fillRect(x+T/2-1,y+T/2-6,2,3);
+    if(f%40<8){ctx.fillStyle="#ffe06644";ctx.fillRect(x+T/2-4,y+T/2-8,8,4);}
+  }
+}
+function drawHalloweenServe(ctx,x,y,T,f){
+  const s=T/16;
+  ctx.fillStyle="#2a1030";ctx.fillRect(x,y,T,T);
+  ctx.fillStyle="#4a2040";ctx.fillRect(x,y,T,4*s);
+  ctx.fillStyle="#1a0820";ctx.fillRect(x,y+T-2*s,T,2*s);
+  ctx.fillStyle="#9b30ff";ctx.fillRect(x+3*s,y+5*s,10*s,4*s);
+  ctx.fillStyle="#ff8c00";ctx.fillRect(x+5*s,y+5*s,6*s,4*s);
+  ctx.fillRect(x+7*s,y+3*s,2*s,2*s);ctx.fillRect(x+4*s,y+9*s,8*s,2*s);
+  if(f%60<8){ctx.fillStyle="#ff8c0066";ctx.fillRect(x+3*s,y+2*s,s,s);ctx.fillRect(x+12*s,y+2*s,s,s);}
+}
+function drawHalloweenAmbient(ctx,T,BW,BH,f){
+  // floating bats
+  for(let i=0;i<3;i++){
+    const bx=((f*.4+i*220)%(BW+40))-20;
+    const by=T*.3+Math.sin(f*.03+i*2)*T*.4;
+    const wing=Math.sin(f*.15+i)*4;
+    ctx.fillStyle="#1a0a1888";
+    ctx.fillRect(bx-6-wing,by,6+wing,3);ctx.fillRect(bx+3,by,6+wing,3);
+    ctx.fillRect(bx-1,by-1,5,5);
+    ctx.fillStyle="#ff660044";ctx.fillRect(bx,by,1,1);ctx.fillRect(bx+2,by,1,1);
+  }
+  // floating ghost
+  const gx=BW*.6+Math.sin(f*.015)*T*2;
+  const gy=T*1.2+Math.sin(f*.025)*T*.5;
+  ctx.globalAlpha=.15+Math.sin(f*.02)*.08;
+  ctx.fillStyle="#fff";
+  ctx.beginPath();ctx.arc(gx,gy,T*.35,Math.PI,0);ctx.fill();
+  ctx.fillRect(gx-T*.35,gy,T*.7,T*.4);
+  for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(gx-T*.23+i*T*.23,gy+T*.4,T*.12,0,Math.PI);ctx.fill();}
+  ctx.fillStyle="#333";
+  ctx.fillRect(gx-T*.12,gy-T*.08,T*.06,T*.06);ctx.fillRect(gx+T*.06,gy-T*.08,T*.06,T*.06);
+  ctx.globalAlpha=1;
+}
+
+// ─── WINTER THEME ───────────────────────────────────
+function drawWinterFloor(ctx,x,y,T,r,c){
+  ctx.fillStyle=(r+c)%2===0?"#5a4a3a":"#4e4030";
+  ctx.fillRect(x,y,T,T);
+  ctx.fillStyle="#ffffff08";ctx.fillRect(x,y,T,1);ctx.fillRect(x,y,1,T);
+  // wood grain
+  if(c%3===0){ctx.fillStyle="#00000008";ctx.fillRect(x+T*.4,y,1,T);}
+  // snow flecks near walls
+  if(r<=1||r>=ROWS-2){
+    if((r*11+c*7)%5===0){ctx.fillStyle="#ffffff12";ctx.fillRect(x+T*.3,y+T*.2,2,2);}
+  }
+}
+function drawWinterWall(ctx,x,y,T,r,c,f){
+  ctx.fillStyle="#2a3848";ctx.fillRect(x,y,T,T);
+  ctx.fillStyle="#1e3050";ctx.fillRect(x+1,y+1,T-2,T-2);
+  // log cabin pattern
+  const lh=T/3;
+  for(let ly=0;ly<3;ly++){
+    ctx.fillStyle=ly%2===0?"#5a4a3a":"#4e4030";
+    ctx.fillRect(x+2,y+ly*lh+1,T-4,lh-1);
+    ctx.fillStyle="#3a302422";ctx.fillRect(x+2,y+ly*lh,T-4,1);
+  }
+  // window with snow scene (side walls)
+  if((c===0||c===COLS-1)&&r>=2&&r<=5){
+    ctx.fillStyle="#1a2a40";ctx.fillRect(x+3,y+2,T-6,T-4);
+    ctx.fillStyle="#2a4060";ctx.fillRect(x+4,y+3,T-8,T-6);
+    // snow ground
+    ctx.fillStyle="#d0e4f0";ctx.fillRect(x+4,y+T*.6,T-8,T*.3);
+    // falling snow
+    for(let i=0;i<3;i++){
+      const sx=x+5+((f*.3+i*12+c*7)%Math.max(1,T-10));
+      const sy=y+3+((f*.5+i*18+r*11)%(T-8));
+      ctx.fillStyle="#ffffff44";ctx.fillRect(sx,sy,1.5,1.5);
+    }
+    // window frame
+    ctx.strokeStyle="#5a4a3a";ctx.lineWidth=1.5;
+    ctx.strokeRect(x+3.5,y+2.5,T-7,T-5);
+    ctx.fillStyle="#5a4a3a";ctx.fillRect(x+T/2-1,y+2,2,T-4);ctx.fillRect(x+3,y+T/2-1,T-6,2);
+  }
+  // wreath on bottom walls
+  if(r===ROWS-1&&(c===4||c===13)){
+    const cx=x+T/2,cy=y+T/2;const wr=T*.3;
+    ctx.strokeStyle="#2d8040";ctx.lineWidth=3;
+    ctx.beginPath();ctx.arc(cx,cy,wr,0,Math.PI*2);ctx.stroke();
+    ctx.fillStyle="#cc2222";ctx.beginPath();ctx.arc(cx,cy-wr,3,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#cc2222";ctx.beginPath();ctx.arc(cx-wr*.7,cy+wr*.7,2.5,0,Math.PI*2);ctx.fill();
+  }
+  // string lights along top
+  if(r===0){
+    const bulbColors=["#ff4444","#44ff44","#4488ff","#ffcc00","#ff44ff"];
+    ctx.fillStyle="#22222244";ctx.fillRect(x,y+T-4,T,2);
+    const bc=bulbColors[(c*3)%bulbColors.length];
+    const bright=Math.sin(f*.04+c*.8)>.2;
+    ctx.fillStyle=bright?bc:bc+"44";
+    ctx.beginPath();ctx.arc(x+T/2,y+T-2,2.5,0,Math.PI*2);ctx.fill();
+    if(bright){ctx.fillStyle=bc+"22";ctx.beginPath();ctx.arc(x+T/2,y+T-2,5,0,Math.PI*2);ctx.fill();}
+  }
+}
+function drawWinterCounter(ctx,x,y,T,it,f){
+  drawWinterFloor(ctx,x,y,T,3,5);
+  ctx.fillStyle="#5a4a3a";ctx.fillRect(x+3,y+3,T-6,T-6);
+  ctx.fillStyle="#6a5a48";ctx.fillRect(x+3,y+3,T-6,4);
+  ctx.fillStyle="#4a3a28";ctx.fillRect(x+3,y+T-8,T-6,4);
+  if(it)drawCup(ctx,x+T/2-8,y+T/2-10,16,it.ingredients||[]);
+  else{
+    // gift box
+    ctx.fillStyle="#cc2222";ctx.fillRect(x+T/2-5,y+T/2-3,10,8);
+    ctx.fillStyle="#44aa44";ctx.fillRect(x+T/2-1,y+T/2-3,2,8);
+    ctx.fillRect(x+T/2-5,y+T/2,10,2);
+    ctx.fillStyle="#ffcc00";ctx.fillRect(x+T/2-2,y+T/2-5,4,3);
+  }
+}
+function drawWinterServe(ctx,x,y,T,f){
+  const s=T/16;
+  ctx.fillStyle="#1e3050";ctx.fillRect(x,y,T,T);
+  ctx.fillStyle="#6a5a48";ctx.fillRect(x,y,T,4*s);
+  ctx.fillStyle="#3a302a";ctx.fillRect(x,y+T-2*s,T,2*s);
+  ctx.fillStyle="#cc2222";ctx.fillRect(x+3*s,y+5*s,10*s,4*s);
+  ctx.fillStyle="#ffcc00";ctx.fillRect(x+5*s,y+5*s,6*s,4*s);
+  ctx.fillRect(x+7*s,y+3*s,2*s,2*s);ctx.fillRect(x+4*s,y+9*s,8*s,2*s);
+  if(f%60<8){ctx.fillStyle="#ffcc0044";ctx.fillRect(x+3*s,y+2*s,s,s);ctx.fillRect(x+12*s,y+2*s,s,s);}
+}
+function drawWinterAmbient(ctx,T,BW,BH,f){
+  // falling snow particles
+  ctx.fillStyle="#ffffff";
+  for(let i=0;i<20;i++){
+    const sx=((f*.3+i*97)%(BW+10))-5;
+    const sy=((f*.4+i*71+Math.sin(f*.01+i)*20)%(BH+10))-5;
+    const sz=1+((i*3)%3)*.5;
+    ctx.globalAlpha=.12+((i*7)%5)*.04;
+    ctx.fillRect(sx,sy,sz,sz);
+  }
+  ctx.globalAlpha=1;
+  // Christmas tree on right side
+  const tx=BW-T*1.8,ty=T*.8;
+  const ts=T*.08;
+  // trunk
+  ctx.fillStyle="#5a3a20";ctx.fillRect(tx+4*ts,ty+12*ts,3*ts,4*ts);
+  // tree layers
+  ctx.fillStyle="#1a6030";
+  ctx.beginPath();ctx.moveTo(tx+5.5*ts,ty);ctx.lineTo(tx,ty+6*ts);ctx.lineTo(tx+11*ts,ty+6*ts);ctx.fill();
+  ctx.beginPath();ctx.moveTo(tx+5.5*ts,ty+3*ts);ctx.lineTo(tx-ts,ty+9*ts);ctx.lineTo(tx+12*ts,ty+9*ts);ctx.fill();
+  ctx.beginPath();ctx.moveTo(tx+5.5*ts,ty+6*ts);ctx.lineTo(tx-2*ts,ty+12*ts);ctx.lineTo(tx+13*ts,ty+12*ts);ctx.fill();
+  // star
+  ctx.fillStyle="#ffcc00";ctx.fillRect(tx+4.5*ts,ty-2*ts,2*ts,2*ts);
+  // ornaments
+  const oc=["#ff4444","#4488ff","#ffcc00","#ff44ff"];
+  for(let i=0;i<6;i++){
+    const ox=tx+1*ts+((i*2.5)%10)*ts;
+    const oy=ty+3*ts+((i*3)%8)*ts;
+    ctx.fillStyle=oc[i%oc.length];
+    ctx.beginPath();ctx.arc(ox,oy,ts*.8,0,Math.PI*2);ctx.fill();
+  }
+}
+
+// ─── EID THEME ──────────────────────────────────────
+function drawEidFloor(ctx,x,y,T,r,c){
+  // geometric tile pattern
+  const isLight=(r+c)%2===0;
+  ctx.fillStyle=isLight?"#c4956a":"#b08558";
+  ctx.fillRect(x,y,T,T);
+  // geometric diamond inlay
+  ctx.fillStyle=isLight?"#d4af3720":"#40bfa018";
+  ctx.beginPath();
+  ctx.moveTo(x+T/2,y+2);ctx.lineTo(x+T-2,y+T/2);
+  ctx.lineTo(x+T/2,y+T-2);ctx.lineTo(x+2,y+T/2);
+  ctx.closePath();ctx.fill();
+  ctx.fillStyle="#ffffff08";ctx.fillRect(x,y,T,1);ctx.fillRect(x,y,1,T);
+}
+function drawEidWall(ctx,x,y,T,r,c,f){
+  ctx.fillStyle="#0a1830";ctx.fillRect(x,y,T,T);
+  ctx.fillStyle="#142848";ctx.fillRect(x+1,y+1,T-2,T-2);
+  // geometric Islamic pattern
+  const s=T/8;
+  ctx.fillStyle="#d4af3718";
+  for(let i=0;i<4;i++)for(let j=0;j<4;j++){
+    if((i+j)%2===0){ctx.fillRect(x+i*s*2+1,y+j*s*2+1,s*2-1,s*2-1);}
+  }
+  ctx.strokeStyle="#d4af3722";ctx.lineWidth=.5;
+  ctx.beginPath();
+  ctx.moveTo(x+T/2,y);ctx.lineTo(x+T,y+T/2);ctx.lineTo(x+T/2,y+T);ctx.lineTo(x,y+T/2);ctx.closePath();
+  ctx.stroke();
+  // arch on top wall
+  if(r===0&&c>=3&&c<=14&&c%3===0){
+    ctx.fillStyle="#d4af3730";
+    ctx.beginPath();ctx.arc(x+T/2,y+T,T*.4,Math.PI,0);ctx.fill();
+    ctx.fillStyle="#40bfa020";
+    ctx.beginPath();ctx.arc(x+T/2,y+T,T*.25,Math.PI,0);ctx.fill();
+  }
+  // fanoos lantern on side walls
+  if((c===0||c===COLS-1)&&(r===2||r===4)){
+    const lx=c===0?x+T*.3:x+T*.5,ly=y+T*.15;
+    const ls=T*.06;
+    // chain
+    ctx.fillStyle="#d4af3744";ctx.fillRect(lx+2*ls,ly-2*ls,ls,3*ls);
+    // lantern body
+    ctx.fillStyle="#d4af37";ctx.fillRect(lx,ly+ls,5*ls,7*ls);
+    ctx.fillStyle="#ff880088";ctx.fillRect(lx+ls,ly+2*ls,3*ls,5*ls);
+    // top cap
+    ctx.fillStyle="#d4af37";ctx.fillRect(lx-ls,ly,7*ls,2*ls);
+    ctx.fillRect(lx+ls,ly-ls,3*ls,ls);
+    // bottom
+    ctx.fillRect(lx,ly+8*ls,5*ls,ls);ctx.fillRect(lx+ls,ly+9*ls,3*ls,ls);
+    // glow
+    if(Math.sin(f*.03+r)>.1){
+      ctx.fillStyle="#ff880018";
+      ctx.beginPath();ctx.arc(lx+2.5*ls,ly+5*ls,T*.25,0,Math.PI*2);ctx.fill();
+    }
+  }
+}
+function drawEidCounter(ctx,x,y,T,it,f){
+  drawEidFloor(ctx,x,y,T,3,5);
+  ctx.fillStyle="#5a3828";ctx.fillRect(x+3,y+3,T-6,T-6);
+  ctx.fillStyle="#6a4838";ctx.fillRect(x+3,y+3,T-6,4);
+  ctx.fillStyle="#4a2818";ctx.fillRect(x+3,y+T-8,T-6,4);
+  // gold trim
+  ctx.fillStyle="#d4af3730";ctx.fillRect(x+3,y+3,T-6,1);ctx.fillRect(x+3,y+T-5,T-6,1);
+  if(it)drawCup(ctx,x+T/2-8,y+T/2-10,16,it.ingredients||[]);
+  else{
+    // dates plate
+    ctx.fillStyle="#8a6a4a";ctx.fillRect(x+T/2-6,y+T/2-1,12,5);
+    ctx.fillStyle="#5a3018";ctx.fillRect(x+T/2-4,y+T/2,3,3);
+    ctx.fillStyle="#6a3820";ctx.fillRect(x+T/2+1,y+T/2,3,3);
+  }
+}
+function drawEidServe(ctx,x,y,T,f){
+  const s=T/16;
+  ctx.fillStyle="#1a3050";ctx.fillRect(x,y,T,T);
+  ctx.fillStyle="#6a4838";ctx.fillRect(x,y,T,4*s);
+  ctx.fillStyle="#3a2818";ctx.fillRect(x,y+T-2*s,T,2*s);
+  // gold trim
+  ctx.fillStyle="#d4af3740";ctx.fillRect(x,y+4*s-1,T,1);
+  ctx.fillStyle="#d4af37";ctx.fillRect(x+5*s,y+5*s,6*s,4*s);
+  ctx.fillRect(x+7*s,y+3*s,2*s,2*s);ctx.fillRect(x+4*s,y+9*s,8*s,2*s);
+  if(f%60<10){ctx.fillStyle="#d4af3766";ctx.fillRect(x+3*s,y+2*s,s,s);ctx.fillRect(x+12*s,y+2*s,s,s);}
+}
+function drawEidAmbient(ctx,T,BW,BH,f){
+  // crescent moon and stars in the sky area
+  const mx=BW*.75,my=T*.4;
+  ctx.globalAlpha=.18;
+  ctx.fillStyle="#fff8d0";
+  ctx.beginPath();ctx.arc(mx,my,T*.3,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle="#0a1830";
+  ctx.beginPath();ctx.arc(mx+T*.12,my-T*.05,T*.25,0,Math.PI*2);ctx.fill();
+  // stars
+  ctx.fillStyle="#fff8d0";
+  const starPos=[[BW*.2,T*.25],[BW*.35,T*.35],[BW*.55,T*.2],[BW*.85,T*.3],[BW*.15,T*.45],[BW*.65,T*.4]];
+  for(const[sx,sy]of starPos){
+    const twinkle=Math.sin(f*.05+sx*.1)>.2;
+    ctx.globalAlpha=twinkle?.15:.06;
+    ctx.fillRect(sx-1,sy,3,1);ctx.fillRect(sx,sy-1,1,3);
+  }
+  ctx.globalAlpha=1;
+}
+
 function drawTextOutlined(ctx,text,x,y,fill,outline,font){
   if(font)ctx.font=font;
   ctx.textAlign="center";
@@ -2171,7 +2626,46 @@ function drawCustomerArea(ctx,T,BW,BH,orders,f){
     ctx.restore();
     return;
   }
-  ctx.fillStyle=mapTheme.deco==="sunbooks"?"#18392dcc":mapTheme.deco==="catcafe"?"#4b312bcc":"#120904aa";
+  if(mapTheme.customerSide==="bottom"){
+    // Eid and similar bottom-customer maps
+    const areaY=BH-T*.78;
+    const bgCol=mapTheme.deco==="eid"?"#0a1830cc":"#120904aa";
+    ctx.fillStyle=bgCol;
+    ctx.fillRect(0,areaY+T*.44,BW,T*.34);
+    ctx.fillStyle=mapTheme.deco==="eid"?"#d4af3744":"#d2c3ae";
+    ctx.fillRect(0,areaY+T*.4,BW,2);
+    ctx.fillStyle=mapTheme.deco==="eid"?"#0a1020":"#18302d";
+    ctx.fillRect(0,areaY+T*.68,BW,T*.1);
+
+    ctx.save();
+    ctx.beginPath();ctx.rect(0,areaY,BW,T*.78);ctx.clip();
+    drawCustomer(ctx,T*.86,areaY+T*.08,T*.82,AMBIENT_CUSTOMERS[0],f+12,{alpha:.82,showCup:true});
+    drawCustomer(ctx,BW-T*1.96,areaY+T*.06,T*.86,AMBIENT_CUSTOMERS[1],f+25,{alpha:.84,showCup:true});
+    orders.slice(0,QUEUE_COLS.length).forEach((order,idx)=>{
+      const qx=QUEUE_COLS[idx]*T-T*.42;
+      const qy=BH-T*.66+(idx%2)*2;
+      drawCustomer(ctx,qx,qy,T*.92,order.cust,f+idx*9,{showCup:idx%3===0});
+    });
+    ctx.restore();
+
+    orders.slice(0,QUEUE_COLS.length).forEach((order,idx)=>{
+      const bx=QUEUE_COLS[idx]*T;
+      const by=BH-T*.28+(idx%2)*2;
+      drawOrderBubble(ctx,bx,by,T,order);
+      ctx.fillStyle="#fff1dd";
+      ctx.font=`bold ${Math.max(7,T*.13)}px monospace`;
+      ctx.textAlign="center";
+      ctx.fillText(order.cust.name,bx,BH-6);
+    });
+
+    ctx.fillStyle=mapTheme.deco==="eid"?"#d4af37":"#f0c989";
+    ctx.font=`bold ${Math.max(7,T*.13)}px monospace`;
+    ctx.textAlign="left";
+    ctx.fillText(mapTheme.deco==="eid"?"EID MUBARAK":"WELCOME",T*.46,BH-T*.7);
+    ctx.restore();
+    return;
+  }
+  ctx.fillStyle=mapTheme.deco==="sunbooks"?"#18392dcc":mapTheme.deco==="catcafe"?"#4b312bcc":mapTheme.deco==="halloween"?"#1a0a20cc":mapTheme.deco==="winter"?"#1a2a40cc":"#120904aa";
   ctx.fillRect(0,0,BW,T*.18);
   if(mapTheme.deco==="sunbooks"){
     const paneW=BW/6;
@@ -2218,6 +2712,41 @@ function drawCustomerArea(ctx,T,BW,BH,orders,f){
     }
     drawCafeCat(ctx,T*.68,T*.22,T*.52,f+7,{body:"#1f1816",chest:"#f2e4d7",pose:"sit"});
     drawCafeCat(ctx,BW-T*1.55,T*.24,T*.56,f+19,{body:"#d6b188",chest:"#fff3e5",pose:"sleep"});
+  }else if(mapTheme.deco==="halloween"){
+    // spooky windows with moonlight
+    const paneW=BW/5;
+    for(let i=0;i<5;i++){
+      const px=i*paneW+T*.3;
+      ctx.fillStyle="#0a0818";ctx.fillRect(px,2,paneW-T*.3,T*.5);
+      ctx.fillStyle="#1a1030";ctx.fillRect(px+2,4,paneW-T*.3-4,T*.46);
+      // moon in one window
+      if(i===2){ctx.fillStyle="#ffe06644";ctx.beginPath();ctx.arc(px+paneW*.35,T*.18,T*.1,0,Math.PI*2);ctx.fill();}
+      // bare tree silhouettes
+      ctx.fillStyle="#0a081888";
+      ctx.fillRect(px+paneW*.2,T*.25,2,T*.22);
+      ctx.fillRect(px+paneW*.15,T*.28,T*.15,1);
+      ctx.fillRect(px+paneW*.25,T*.3,T*.1,1);
+    }
+  }else if(mapTheme.deco==="winter"){
+    // frosted windows with snow scene
+    const paneW=BW/5;
+    for(let i=0;i<5;i++){
+      const px=i*paneW+T*.3;
+      ctx.fillStyle="#1a2a40";ctx.fillRect(px,2,paneW-T*.3,T*.5);
+      ctx.fillStyle="#2a4060";ctx.fillRect(px+2,4,paneW-T*.3-4,T*.46);
+      // snow ground
+      ctx.fillStyle="#d0e4f0";ctx.fillRect(px+2,T*.32,paneW-T*.3-4,T*.16);
+      // falling snow in windows
+      for(let j=0;j<3;j++){
+        const sx=px+4+((f*.3+j*11+i*17)%Math.max(1,paneW-T*.4));
+        const sy=4+((f*.5+j*13+i*19)%(T*.44));
+        ctx.fillStyle="#ffffff55";ctx.fillRect(sx,sy,1.5,1.5);
+      }
+      // window frame
+      ctx.strokeStyle="#5a4a3a";ctx.lineWidth=1;
+      ctx.strokeRect(px+.5,2.5,paneW-T*.3-1,T*.5-1);
+      ctx.fillStyle="#5a4a3a";ctx.fillRect(px+(paneW-T*.3)/2,2,1.5,T*.5);
+    }
   }
   for(let i=0;i<8;i++){
     const lx=(i+.5)*(BW/8);
@@ -2280,6 +2809,18 @@ function drawCustomerArea(ctx,T,BW,BH,orders,f){
     ctx.textAlign="left";
     ctx.fillText("CAT LOUNGE",T*.42,T*.37);
     drawCafeCat(ctx,T*.42,T*.36,T*.38,f+31,{body:"#2a211d",chest:"#f1dfca",pose:"stretch",alpha:.9});
+  }else if(mapTheme.deco==="halloween"){
+    ctx.fillStyle="#4a1838";ctx.fillRect(T*.34,T*.58,T*2.3,3);
+    ctx.fillStyle="#ff8c00";
+    ctx.font=`bold ${Math.max(7,T*.13)}px monospace`;
+    ctx.textAlign="left";
+    ctx.fillText("SPOOKY COUNTER",T*.42,T*.37);
+  }else if(mapTheme.deco==="winter"){
+    ctx.fillStyle="#5a4a3a";ctx.fillRect(T*.34,T*.58,T*2.3,3);
+    ctx.fillStyle="#4fc3f7";
+    ctx.font=`bold ${Math.max(7,T*.13)}px monospace`;
+    ctx.textAlign="left";
+    ctx.fillText("COZY CORNER",T*.42,T*.37);
   }
   ctx.restore();
 }
@@ -2295,6 +2836,28 @@ function drawLighting(ctx,T,BW,BH,f,gameState){
     skyWash.addColorStop(1,"rgba(255,255,255,0)");
     ctx.fillStyle=skyWash;
     ctx.fillRect(0,0,BW,BH*.62);
+  }
+  if(mapTheme.deco==="halloween"){
+    const spookyWash=ctx.createLinearGradient(0,0,0,BH);
+    spookyWash.addColorStop(0,"rgba(100,30,80,0.08)");
+    spookyWash.addColorStop(.5,"rgba(60,20,60,0.04)");
+    spookyWash.addColorStop(1,"rgba(40,10,40,0.12)");
+    ctx.fillStyle=spookyWash;
+    ctx.fillRect(0,0,BW,BH);
+  }
+  if(mapTheme.deco==="winter"){
+    const cozyWash=ctx.createLinearGradient(0,0,0,BH*.5);
+    cozyWash.addColorStop(0,"rgba(200,220,255,0.06)");
+    cozyWash.addColorStop(1,"rgba(255,230,180,0.03)");
+    ctx.fillStyle=cozyWash;
+    ctx.fillRect(0,0,BW,BH*.5);
+  }
+  if(mapTheme.deco==="eid"){
+    const goldWash=ctx.createLinearGradient(0,0,0,BH*.4);
+    goldWash.addColorStop(0,"rgba(212,175,55,0.06)");
+    goldWash.addColorStop(1,"rgba(255,255,255,0)");
+    ctx.fillStyle=goldWash;
+    ctx.fillRect(0,0,BW,BH*.4);
   }
 
   const pendants=PENDANT_COLS.map((n)=>n*T);
@@ -2363,16 +2926,20 @@ function drawLighting(ctx,T,BW,BH,f,gameState){
   });
 
   const counterGlow=ctx.createLinearGradient(0,T*.82,0,T*1.95);
-  counterGlow.addColorStop(0,`rgba(${mapTheme.glow||"255,212,120"},${mapTheme.deco==="centralperks"?0.05:0.08})`);
-  counterGlow.addColorStop(.65,`rgba(${mapTheme.glow||"255,190,90"},${mapTheme.deco==="centralperks"?0.02:0.03})`);
+  const cgInt=mapTheme.deco==="centralperks"?0.05:mapTheme.deco==="halloween"?0.12:0.08;
+  const cgInt2=mapTheme.deco==="centralperks"?0.02:mapTheme.deco==="halloween"?0.05:0.03;
+  counterGlow.addColorStop(0,`rgba(${mapTheme.glow||"255,212,120"},${cgInt})`);
+  counterGlow.addColorStop(.65,`rgba(${mapTheme.glow||"255,190,90"},${cgInt2})`);
   counterGlow.addColorStop(1,`rgba(${mapTheme.glow||"255,160,80"},0)`);
   ctx.fillStyle=counterGlow;
   ctx.fillRect(0,T*.82,BW,T*1.3);
 
   const vignette=ctx.createRadialGradient(BW/2,BH*.42,T*2.3,BW/2,BH*.55,BW*.72);
   vignette.addColorStop(0,"rgba(0,0,0,0)");
-  vignette.addColorStop(.72,mapTheme.deco==="centralperks"?"rgba(22,18,14,0.05)":"rgba(12,6,4,0.08)");
-  vignette.addColorStop(1,mapTheme.deco==="centralperks"?"rgba(12,10,8,0.18)":"rgba(8,4,2,0.26)");
+  const vigMid=mapTheme.deco==="centralperks"?"rgba(22,18,14,0.05)":mapTheme.deco==="halloween"?"rgba(20,5,30,0.14)":mapTheme.deco==="eid"?"rgba(10,15,30,0.1)":"rgba(12,6,4,0.08)";
+  const vigEdge=mapTheme.deco==="centralperks"?"rgba(12,10,8,0.18)":mapTheme.deco==="halloween"?"rgba(10,2,20,0.35)":mapTheme.deco==="eid"?"rgba(5,10,25,0.22)":"rgba(8,4,2,0.26)";
+  vignette.addColorStop(.72,vigMid);
+  vignette.addColorStop(1,vigEdge);
   ctx.fillStyle=vignette;
   ctx.fillRect(0,0,BW,BH);
 
@@ -2851,6 +3418,177 @@ function PowerButtons({hud,onUsePower,compact=false,stack=false}){
   );
 }
 
+function MapLogo({deco,size=48}){
+  const s=size/16;
+  if(deco==="sunbooks"){
+    // Starbucks-parody circle logo with cup
+    return (
+      <svg width={size} height={size} viewBox="0 0 16 16" style={{display:"block"}}>
+        <circle cx="8" cy="8" r="7.5" fill="#1a5c3a"/>
+        <circle cx="8" cy="8" r="6" fill="#246b45"/>
+        <circle cx="8" cy="8" r="5" stroke="#f4e8cf" strokeWidth=".6" fill="none"/>
+        {/* coffee cup */}
+        <rect x="6" y="5" width="4" height="5" rx=".5" fill="#f4e8cf"/>
+        <rect x="6.5" y="4.5" width="3" height="1" rx=".3" fill="#f4e8cf"/>
+        <rect x="10" y="6" width="1.5" height="2.5" rx=".8" fill="none" stroke="#f4e8cf" strokeWidth=".5"/>
+        {/* steam */}
+        <path d="M7.2,3.5 Q7.5,2.5 7.8,3 Q8.1,2 8.5,3 Q8.8,2.2 9,3.2" stroke="#f4e8cf" strokeWidth=".4" fill="none" opacity=".7"/>
+        {/* star */}
+        <rect x="7.5" y="6.5" width="1" height="1" fill="#1a5c3a"/>
+      </svg>
+    );
+  }
+  if(deco==="catcafe"){
+    return (
+      <svg width={size} height={size} viewBox="0 0 16 16" style={{display:"block"}}>
+        {/* cat face */}
+        <polygon points="3,7 5,1 7.5,6.5" fill="#f0c070"/>
+        <polygon points="8.5,6.5 11,1 13,7" fill="#f0c070"/>
+        <polygon points="4,6 6,2.5 7,6" fill="#f0a0a0"/>
+        <polygon points="9,6 10,2.5 12,6" fill="#f0a0a0"/>
+        <ellipse cx="8" cy="10" rx="5.5" ry="5" fill="#f0c070"/>
+        {/* eyes */}
+        <ellipse cx="5.8" cy="9" rx="1" ry="1.2" fill="#332014"/>
+        <ellipse cx="10.2" cy="9" rx="1" ry="1.2" fill="#332014"/>
+        <circle cx="6.2" cy="8.5" r=".5" fill="#fff"/>
+        <circle cx="10.6" cy="8.5" r=".5" fill="#fff"/>
+        {/* nose & mouth */}
+        <ellipse cx="8" cy="11" rx=".8" ry=".6" fill="#e08888"/>
+        <line x1="6.5" y1="12" x2="8" y2="12.8" stroke="#a06040" strokeWidth=".5" strokeLinecap="round"/>
+        <line x1="9.5" y1="12" x2="8" y2="12.8" stroke="#a06040" strokeWidth=".5" strokeLinecap="round"/>
+        {/* whiskers */}
+        <line x1="1" y1="9.5" x2="4.5" y2="10.2" stroke="#c4956a" strokeWidth=".3" opacity=".6"/>
+        <line x1="1" y1="11" x2="4.5" y2="10.8" stroke="#c4956a" strokeWidth=".3" opacity=".6"/>
+        <line x1="15" y1="9.5" x2="11.5" y2="10.2" stroke="#c4956a" strokeWidth=".3" opacity=".6"/>
+        <line x1="15" y1="11" x2="11.5" y2="10.8" stroke="#c4956a" strokeWidth=".3" opacity=".6"/>
+        {/* coffee cup on head */}
+        <rect x="6.5" y="4.5" width="3" height="2" rx=".3" fill="#fff"/>
+        <rect x="7" y="5" width="2" height="1" fill="#8b5e3c"/>
+      </svg>
+    );
+  }
+  if(deco==="centralperks"){
+    return (
+      <svg width={size} height={size} viewBox="0 0 16 16" style={{display:"block"}}>
+        {/* night sky */}
+        <rect x="0" y="0" width="16" height="16" rx="2" fill="#1a2a40"/>
+        {/* skyline buildings */}
+        <rect x="1" y="5" width="2.5" height="11" fill="#2a3a4a"/>
+        <rect x="2" y="3" width="1.5" height="2" fill="#2a3a4a"/>
+        <rect x="4" y="4" width="2" height="12" fill="#344858"/>
+        <rect x="6.5" y="2" width="2" height="14" fill="#2a3a4a"/>
+        <rect x="7" y="0.5" width="1" height="1.5" fill="#3a4a5a"/>
+        <rect x="9" y="6" width="2.5" height="10" fill="#344858"/>
+        <rect x="12" y="3.5" width="2.5" height="12.5" fill="#2a3a4a"/>
+        <rect x="13" y="2" width="1" height="1.5" fill="#3a4a5a"/>
+        {/* windows */}
+        {[1.5,2.5,4.5,5,7,7.5,9.5,10.5,12.5,13.5].map((wx,i)=>
+          [6,8,10,12].map((wy,j)=>
+            <rect key={`${i}-${j}`} x={wx} y={wy} width=".7" height=".6" fill={(i+j)%3===0?"#ffe480":"#ffd06088"} opacity={(i*j)%4===0?.3:.7}/>
+          )
+        )}
+        {/* stars */}
+        <rect x="3.5" y="1" width=".5" height=".5" fill="#fff8d0" opacity=".6"/>
+        <rect x="11" y="1.5" width=".5" height=".5" fill="#fff8d0" opacity=".5"/>
+        {/* moon */}
+        <circle cx="14.5" cy="1.5" r="1" fill="#fff8d0" opacity=".7"/>
+      </svg>
+    );
+  }
+  if(deco==="halloween"){
+    return (
+      <svg width={size} height={size} viewBox="0 0 16 16" style={{display:"block"}}>
+        <rect x="0" y="0" width="16" height="16" rx="2" fill="#1a0a20"/>
+        {/* moon */}
+        <circle cx="12" cy="3.5" r="2.5" fill="#ffe066" opacity=".8"/>
+        <circle cx="13" cy="3" r="2" fill="#1a0a20"/>
+        {/* pumpkin */}
+        <ellipse cx="8" cy="11" rx="4.5" ry="3.5" fill="#ff8c00"/>
+        <ellipse cx="8" cy="11" rx="3" ry="3" fill="#ff6600"/>
+        <rect x="7" y="7" width="2" height="2" rx=".5" fill="#2a8020"/>
+        {/* face */}
+        <polygon points="5,10 6,9 7,10.5" fill="#ffe066"/>
+        <polygon points="9,10.5 10,9 11,10" fill="#ffe066"/>
+        <rect x="6" y="12" width="4" height="1" fill="#ffe066"/>
+        <rect x="7" y="13" width="2" height=".8" fill="#ffe066"/>
+        {/* bat */}
+        <rect x="2" y="5" width="1.5" height=".8" fill="#1a0a1888"/>
+        <rect x="4" y="5" width="1.5" height=".8" fill="#1a0a1888"/>
+        <rect x="3.5" y="4.5" width=".8" height="1.5" fill="#1a0a18"/>
+      </svg>
+    );
+  }
+  if(deco==="winter"){
+    return (
+      <svg width={size} height={size} viewBox="0 0 16 16" style={{display:"block"}}>
+        <rect x="0" y="0" width="16" height="16" rx="2" fill="#1a2a40"/>
+        {/* snow ground */}
+        <ellipse cx="8" cy="15" rx="8" ry="3" fill="#d0e4f0"/>
+        {/* Christmas tree */}
+        <polygon points="8,1.5 4,7 12,7" fill="#1a6030"/>
+        <polygon points="8,4 3.5,9.5 12.5,9.5" fill="#1a6030"/>
+        <polygon points="8,6.5 3,12 13,12" fill="#1a6030"/>
+        <rect x="7" y="12" width="2" height="2" fill="#5a3a20"/>
+        {/* star */}
+        <rect x="7.3" y="0.5" width="1.4" height="1.4" fill="#ffcc00" transform="rotate(45 8 1.2)"/>
+        {/* ornaments */}
+        <circle cx="6" cy="5.5" r=".7" fill="#ff4444"/>
+        <circle cx="10" cy="5.5" r=".7" fill="#4488ff"/>
+        <circle cx="5.5" cy="8" r=".7" fill="#ffcc00"/>
+        <circle cx="10.5" cy="8" r=".7" fill="#ff44ff"/>
+        <circle cx="7" cy="10" r=".7" fill="#44ff44"/>
+        <circle cx="9.5" cy="10.5" r=".7" fill="#ff4444"/>
+        {/* snowflakes */}
+        <rect x="2" y="3" width=".8" height=".8" fill="#fff" opacity=".6"/>
+        <rect x="13" y="2" width=".8" height=".8" fill="#fff" opacity=".5"/>
+        <rect x="1" y="8" width=".6" height=".6" fill="#fff" opacity=".4"/>
+        <rect x="14" y="7" width=".6" height=".6" fill="#fff" opacity=".5"/>
+      </svg>
+    );
+  }
+  if(deco==="eid"){
+    return (
+      <svg width={size} height={size} viewBox="0 0 16 16" style={{display:"block"}}>
+        <rect x="0" y="0" width="16" height="16" rx="2" fill="#0a1830"/>
+        {/* crescent moon */}
+        <circle cx="8" cy="5" r="3.5" fill="#d4af37"/>
+        <circle cx="9.5" cy="4.2" r="3" fill="#0a1830"/>
+        {/* star next to crescent */}
+        <rect x="11" y="3.5" width="1" height="1" fill="#d4af37" transform="rotate(45 11.5 4)"/>
+        <rect x="11.3" y="2.5" width=".4" height="3" fill="#d4af37"/>
+        <rect x="10" y="3.8" width="3" height=".4" fill="#d4af37"/>
+        {/* mosque dome */}
+        <path d="M3,14 L3,10 Q5.5,6 8,10 Q10.5,6 13,10 L13,14 Z" fill="#142848"/>
+        <ellipse cx="8" cy="9.5" rx="3" ry="2.5" fill="#1a3858"/>
+        {/* minaret */}
+        <rect x="2" y="8" width="1.5" height="6" fill="#142848"/>
+        <rect x="1.8" y="7.5" width="1.9" height="1" rx=".5" fill="#142848"/>
+        <rect x="12.5" y="8" width="1.5" height="6" fill="#142848"/>
+        <rect x="12.3" y="7.5" width="1.9" height="1" rx=".5" fill="#142848"/>
+        {/* golden details */}
+        <rect x="2.3" y="7" width="1" height=".5" fill="#d4af37"/>
+        <rect x="12.7" y="7" width="1" height=".5" fill="#d4af37"/>
+        <rect x="7.5" y="9" width="1" height=".5" fill="#d4af37"/>
+        {/* lanterns */}
+        <rect x="4.5" y="11" width="1" height="1.5" fill="#d4af37"/>
+        <rect x="4.3" y="10.5" width="1.4" height=".6" fill="#d4af37"/>
+        <rect x="4.7" y="11.3" width=".6" height=".8" fill="#ff880088"/>
+        <rect x="10.5" y="11" width="1" height="1.5" fill="#d4af37"/>
+        <rect x="10.3" y="10.5" width="1.4" height=".6" fill="#d4af37"/>
+        <rect x="10.7" y="11.3" width=".6" height=".8" fill="#ff880088"/>
+      </svg>
+    );
+  }
+  // fallback
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" style={{display:"block"}}>
+      <rect x="0" y="0" width="16" height="16" rx="2" fill="#2d1b0e"/>
+      <rect x="5" y="4" width="6" height="8" rx="1" fill="#f5e6d3"/>
+      <rect x="6" y="5" width="4" height="2" fill="#8b5e3c"/>
+    </svg>
+  );
+}
+
 function MapMini({mapDef,active=false,compact=false}){
   const screen=useScreen();
   const isMobile=screen.w<900;
@@ -2873,15 +3611,17 @@ function MapMini({mapDef,active=false,compact=false}){
 function MapChoiceGrid({selected,onSelect,isMobile,compact=false}){
   const screen=useScreen();
   const mobileLandscape=isMobile&&screen.w>screen.h;
-  const cols=isMobile?(mobileLandscape?2:1):(compact?3:3);
-  const cell=compact?(isMobile?6:5):(isMobile?(mobileLandscape?6:7):6);
-  const cardWidth=isMobile?(mobileLandscape?undefined:"min(100%, 360px)"):(compact?160:180);
+  const mapCount=Object.keys(MAPS).length;
+  const cols=isMobile?(mobileLandscape?3:2):(compact?4:4);
+  const cell=compact?(isMobile?5:4):(isMobile?(mobileLandscape?5:5):5);
+  const cardWidth=isMobile?(mobileLandscape?undefined:undefined):(compact?148:156);
   return (
-    <div style={{display:"grid",gridTemplateColumns:`repeat(${cols}, minmax(0, 1fr))`,gap:isMobile?12:8,justifyContent:"center",width:"100%",maxWidth:isMobile?mobileLandscape?760:380:620}}>
+    <div style={{display:"grid",gridTemplateColumns:`repeat(${cols}, minmax(0, 1fr))`,gap:isMobile?10:8,justifyContent:"center",width:"100%",maxWidth:isMobile?mobileLandscape?800:420:720}}>
       {Object.entries(MAPS).map(([key,mapDef])=>{
         const active=selected===key;
         return (
           <button key={key} onClick={()=>onSelect(key)} style={{fontFamily:"'Silkscreen',monospace",background:active?"#2d1b0e":"#1a0f08dd",border:`2px solid ${active?P.gold+"aa":"#4a2a18"}`,borderRadius:isMobile?18:14,padding:compact?(isMobile?12:10):(isMobile?14:12),width:cardWidth||"100%",minWidth:0,cursor:"pointer",display:"flex",flexDirection:"column",gap:isMobile?10:8,alignItems:"center",justifySelf:"center",boxShadow:active?"0 10px 24px #00000044":"none"}}>
+            <MapLogo deco={mapDef.theme?.deco||key} size={isMobile?(compact?36:44):(compact?32:40)} />
             <div style={{fontSize:isMobile?(compact?12:14):(compact?10:10),color:active?P.gold:"#f5e6d3"}}>{mapDef.name}</div>
             <div style={{transform:isMobile&&!compact?"scale(1.04)":"none",transformOrigin:"center top"}}>
               <MapMini mapDef={mapDef} active={active} compact={compact||mobileLandscape} />
@@ -3470,12 +4210,18 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
           if(mapTheme.deco==="sunbooks")drawSunbooksFloor(ctx,x,y,T,r,c);
           else if(mapTheme.deco==="catcafe")drawCatCafeFloor(ctx,x,y,T,r,c);
           else if(mapTheme.deco==="centralperks")drawCentralPerksFloor(ctx,x,y,T,r,c);
+          else if(mapTheme.deco==="halloween")drawHalloweenFloor(ctx,x,y,T,r,c);
+          else if(mapTheme.deco==="winter")drawWinterFloor(ctx,x,y,T,r,c);
+          else if(mapTheme.deco==="eid")drawEidFloor(ctx,x,y,T,r,c);
           else{ctx.fillStyle=(r+c)%2===0?P.floor1:P.floor2;ctx.fillRect(x,y,T,T);ctx.fillStyle=P.floor3+"18";ctx.fillRect(x,y,T,1);ctx.fillRect(x,y,1,T);}
         }
         else if(cell.type==="wall"){
           if(mapTheme.deco==="sunbooks")drawSunbooksWall(ctx,x,y,T,r,c);
           else if(mapTheme.deco==="catcafe")drawCatCafeWall(ctx,x,y,T,r,c);
           else if(mapTheme.deco==="centralperks")drawCentralPerksWall(ctx,x,y,T,r,c,f);
+          else if(mapTheme.deco==="halloween")drawHalloweenWall(ctx,x,y,T,r,c,f);
+          else if(mapTheme.deco==="winter")drawWinterWall(ctx,x,y,T,r,c,f);
+          else if(mapTheme.deco==="eid")drawEidWall(ctx,x,y,T,r,c,f);
           else{ctx.fillStyle=P.wall;ctx.fillRect(x,y,T,T);const bh=T/4;for(let by=0;by<4;by++){const off=by%2===0?0:T/2;ctx.fillStyle=P.wallLine+"30";ctx.fillRect(x,y+by*bh,T,1);ctx.fillRect(x+off,y+by*bh,1,bh);ctx.fillRect(x+off+T/2,y+by*bh,1,bh);}}
         }
         else if(cell.type==="counter"){
@@ -3483,12 +4229,18 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
           if(mapTheme.deco==="sunbooks")drawSunbooksCounter(ctx,x,y,T,it,f);
           else if(mapTheme.deco==="catcafe")drawCatCafeCounter(ctx,x,y,T,it,f);
           else if(mapTheme.deco==="centralperks")drawCentralPerksCounter(ctx,x,y,T,it,f);
+          else if(mapTheme.deco==="halloween")drawHalloweenCounter(ctx,x,y,T,it,f);
+          else if(mapTheme.deco==="winter")drawWinterCounter(ctx,x,y,T,it,f);
+          else if(mapTheme.deco==="eid")drawEidCounter(ctx,x,y,T,it,f);
           else{ctx.fillStyle=(r+c)%2===0?P.floor1:P.floor2;ctx.fillRect(x,y,T,T);ctx.fillStyle=P.counter;ctx.fillRect(x+3,y+3,T-6,T-6);ctx.fillStyle=P.counterTop;ctx.fillRect(x+3,y+3,T-6,5);ctx.fillStyle=P.counterEdge;ctx.fillRect(x+3,y+T-8,T-6,4);if(it)drawCup(ctx,x+T/2-8,y+T/2-10,16,it.ingredients||[]);}
         }
         else if(cell.type==="station"){
           if(cell.station==="serve"&&mapTheme.deco==="sunbooks")drawSunbooksServe(ctx,x,y,T,f);
           else if(cell.station==="serve"&&mapTheme.deco==="catcafe")drawCatCafeServe(ctx,x,y,T,f);
           else if(cell.station==="serve"&&mapTheme.deco==="centralperks")drawCentralPerksServe(ctx,x,y,T,f);
+          else if(cell.station==="serve"&&mapTheme.deco==="halloween")drawHalloweenServe(ctx,x,y,T,f);
+          else if(cell.station==="serve"&&mapTheme.deco==="winter")drawWinterServe(ctx,x,y,T,f);
+          else if(cell.station==="serve"&&mapTheme.deco==="eid")drawEidServe(ctx,x,y,T,f);
           else if(cell.station==="serve")drawServe(ctx,x,y,T,f);
           else drawSt(ctx,x,y,T,cell.station,f);
         }
@@ -3528,6 +4280,9 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
       }
       drawTapTargetMarker(ctx,T,mobileTapHighlight.current,f);
       if(mapTheme.deco==="catcafe")drawCatCafeAmbient(ctx,T,BW,BH,f);
+      if(mapTheme.deco==="halloween")drawHalloweenAmbient(ctx,T,BW,BH,f);
+      if(mapTheme.deco==="winter")drawWinterAmbient(ctx,T,BW,BH,f);
+      if(mapTheme.deco==="eid")drawEidAmbient(ctx,T,BW,BH,f);
       drawCustomerArea(ctx,T,BW,BH,g.orders,f);
       drawLighting(ctx,T,BW,BH,f,g);
       const rushActive=(g.rushEnd||0)>Date.now();
