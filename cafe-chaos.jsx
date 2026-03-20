@@ -78,6 +78,12 @@ const ING_C = {
   strawberry:P.str, tea:P.tea, hot_water:P.hot, water:P.wat,
 };
 
+const ING_TO_STATION={
+  espresso:"E",espresso2:"e",steamed_milk:"M",milk:"m",
+  foam:"F",ice:"I",caramel:"R",matcha:"A",
+  strawberry:"B",tea:"T",hot_water:"H",water:"Q",
+};
+
 const STATIONS = {
   E:{id:"espresso",  label:"Espresso",adds:"espresso",    time:1800,clr:P.esp,short:"ESP"},
   e:{id:"espresso2", label:"2x Esp",  adds:"espresso2",   time:1800,clr:"#2a1008",short:"2X"},
@@ -402,12 +408,12 @@ function CatCoachBubble({text,type="step",tip,ingredients=[],stepLabel="",trackC
           {type==="step"&&<span style={{fontSize:6,color:"#4a2a1899",fontFamily:"'Silkscreen',monospace"}}>TAP TO CLOSE</span>}
         </div>
         <div style={{
-          fontSize:isMobile?(type==="congrats"?12:9):(type==="congrats"?14:10),
+          fontSize:isMobile?(type==="congrats"?13:10):(type==="congrats"?15:11),
           color:type==="congrats"?P.gold:"#f3e2cb",
-          lineHeight:1.65,fontFamily:"'Silkscreen',monospace",
+          lineHeight:1.7,fontFamily:"'Outfit','Silkscreen',sans-serif",fontWeight:type==="congrats"?700:400,
           ...(type==="congrats"?{textShadow:`0 0 10px ${P.gold}44`}:{}),
         }}>{text}</div>
-        {type==="step"&&tip&&<div style={{fontSize:isMobile?7:8,color:"#9de7ff",lineHeight:1.5,fontFamily:"'Silkscreen',monospace"}}>{tip}</div>}
+        {type==="step"&&tip&&<div style={{fontSize:isMobile?8:9,color:"#9de7ff",lineHeight:1.55,fontFamily:"'Outfit','Silkscreen',sans-serif"}}>{tip}</div>}
         {type==="step"&&ingredients.length>0&&(
           <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
             {ingredients.map((ing,idx)=>(
@@ -1343,6 +1349,11 @@ function drawSt(ctx,x,y,T,key,f){
   const shell=isCatCafe?"#6b473c":isCentralPerks?"#7b5848":P.wallHi;
   const panel=isCatCafe?"#2d1913":isCentralPerks?"#eadcc7":"#2a1608";
   px(0,0,16,16,shell);px(1,1,14,14,panel);
+  // edge highlights
+  px(0,0,16,1,shell);px(1,1,14,1,isCatCafe?"#8a6050":isCentralPerks?"#9a7868":"#3a2010");
+  px(1,14,14,1,isCatCafe?"#4a2820":isCentralPerks?"#c4b4a0":"#1a0a04");
+  px(0,0,1,16,isCatCafe?"#7a5544":isCentralPerks?"#8a6858":"#3a2215");
+  px(15,0,1,16,isCatCafe?"#5a3830":isCentralPerks?"#6a5040":"#1a0c06");
   if(isCatCafe){
     px(2,2,12,1,"#f2dfc5");
     px(2,13,12,1,"#7d5845");
@@ -1354,56 +1365,159 @@ function drawSt(ctx,x,y,T,key,f){
     case"espresso":case"espresso2":{
       const pulse=.5+.5*Math.sin(f*.04);
       const pour=4+Math.max(0,Math.sin(f*.028))*4;
-      px(3,3,10,8,"#4b4b4b");px(4,4,8,6,"#363636");px(5,11,6,2,"#6a6a6a");
-      px(5,5,1,2,"#8d8d8d");px(10,5,1,2,"#8d8d8d");
-      px(6,5,4,1,`rgba(255,214,102,${.35+pulse*.4})`);
+      // machine body - metallic
+      px(3,3,10,1,"#6a6a6a");px(3,4,10,7,"#4b4b4b");px(3,10,10,1,"#383838");
+      px(4,4,8,6,"#3a3a3a");px(4,4,8,1,"#444");
+      px(3,3,1,8,"#5a5a5a");px(12,3,1,8,"#333");
+      // chrome details
+      px(5,5,1,2,"#9a9a9a");px(10,5,1,2,"#9a9a9a");
+      px(5,5,6,1,`rgba(255,214,102,${.3+pulse*.45})`);
+      px(6,6,4,1,`rgba(255,190,80,${.15+pulse*.25})`);
+      // drip spout
+      px(5,11,6,1,"#7a7a7a");px(5,12,6,1,"#5a5a5a");
       px(7,10,2,pour,"#8b4f1d");
-      px(6,11,4,3,P.esp);
-      if(Math.sin(f*.032)>0.45){px(7,1,1,2,"#fff6");px(9,2,1,1,"#fff4");}
+      // coffee tank
+      px(6,11,4,3,P.esp);px(6,11,4,1,"#5a3010");px(7,12,2,1,"#2a1008");
+      // steam
+      if(Math.sin(f*.032)>0.35){px(7,1,1,2,"#fff6");px(9,2,1,1,"#fff4");}
+      if(Math.sin(f*.05)>0.5){px(5,2,1,1,"#fff3");px(11,1,1,1,"#fff2");}
       break;
     }
-    case"steamer":px(4,4,8,8,"#ccc");px(5,5,6,6,"#ddd");px(6,2,1,2,"#fff8");px(8,1,1,3,"#fff6");break;
-    case"milk":px(4,3,8,10,P.milk);px(5,2,6,1,"#e8dcc0");px(5,4,6,2,"#d4c8a8");break;
-    case"foam":px(3,5,10,7,P.cupW);px(4,3,8,3,P.foam);px(5,2,2,2,P.foam);px(9,2,2,2,P.foam);break;
-    case"ice":px(3,4,4,5,P.ice);px(5,3,3,3,P.iceS);px(9,6,4,5,P.ice);px(8,5,3,3,P.iceS);break;
-    case"caramel":px(4,3,8,9,P.car);px(5,2,6,2,"#d4960e");px(6,12,4,2,"#a06808");break;
-    case"matcha":px(4,4,8,8,P.mat);px(5,3,6,2,P.matL);px(7,2,2,1,"#3a8030");px(6,1,4,1,"#4a9040");break;
-    case"strawberry":px(5,3,6,8,P.str);px(6,2,4,1,"#60c040");px(7,1,2,1,"#50a030");px(6,5,1,1,P.gold);px(8,7,1,1,P.gold);break;
+    case"steamer":{
+      px(4,4,8,8,"#d4d4d4");px(5,5,6,6,"#e2e2e2");
+      px(4,4,8,1,"#eee");px(4,11,8,1,"#aaa");
+      px(4,4,1,8,"#ccc");px(11,4,1,8,"#b0b0b0");
+      // gauge
+      px(6,6,4,1,"#888");px(6,6,2,1,"#4caf50");
+      // steam vents
+      const sv=Math.sin(f*.04);
+      if(sv>0){px(6,2,1,2,"#fff8");px(9,1,1,3,"#fff6");}
+      if(sv>0.4){px(7,1,1,2,"#fff4");}
+      break;
+    }
+    case"milk":{
+      px(4,3,8,10,"#f5efe0");px(5,4,6,8,P.milk);
+      px(4,3,8,1,"#faf5ea");px(4,12,8,1,"#d8d0c0");
+      px(4,3,1,10,"#ede5d4");px(11,3,1,10,"#d4c8b2");
+      px(5,2,6,1,"#e8dcc0");px(5,4,6,2,"#d4c8a8");
+      // milk line
+      px(6,5,4,1,"#ffffff44");
+      break;
+    }
+    case"foam":{
+      px(3,5,10,7,P.cupW);px(3,5,10,1,"#fff");px(3,11,10,1,"#d8d0c4");
+      // foam mound
+      px(4,3,8,3,P.foam);px(5,2,6,2,P.foam);px(6,1,4,1,"#fffef8");
+      px(5,2,2,2,P.foam);px(9,2,2,2,P.foam);
+      px(6,3,1,1,"#fff");px(9,2,1,1,"#fff");
+      break;
+    }
+    case"ice":{
+      px(3,4,4,5,P.ice);px(9,6,4,5,P.ice);
+      px(5,3,3,3,P.iceS);px(8,5,3,3,P.iceS);
+      // crystal highlights
+      px(4,4,1,1,"#fff");px(10,6,1,1,"#fff");
+      px(6,5,1,1,"#ffffff88");px(9,8,1,1,"#ffffff88");
+      // extra cube
+      px(6,8,3,3,P.ice);px(7,7,2,2,P.iceS);
+      break;
+    }
+    case"caramel":{
+      px(4,3,8,9,"#d4960e");px(5,4,6,7,P.car);
+      px(4,3,8,1,"#e0a820");px(4,11,8,1,"#905a08");
+      px(5,2,6,2,"#daa010");px(5,2,6,1,"#e8b820");
+      // drizzle
+      px(6,12,4,2,"#a06808");px(7,13,2,1,"#804e00");
+      break;
+    }
+    case"matcha":{
+      px(4,4,8,8,P.mat);px(5,5,6,6,"#4e9842");
+      px(4,4,8,1,"#6ab85e");px(4,11,8,1,"#3a7832");
+      px(5,3,6,2,P.matL);px(7,2,2,1,"#3a8030");px(6,1,4,1,"#4a9040");
+      // powder sparkle
+      px(6,6,1,1,"#8fce7e88");px(9,8,1,1,"#8fce7e88");
+      break;
+    }
+    case"strawberry":{
+      px(5,3,6,8,P.str);px(6,4,4,6,"#d03050");
+      px(5,3,6,1,"#f05070");px(5,10,6,1,"#b02840");
+      // leaf
+      px(6,2,4,1,"#60c040");px(7,1,2,1,"#50a030");px(8,0,1,1,"#409028");
+      // seeds
+      px(6,5,1,1,"#ffe066");px(8,7,1,1,"#ffe066");px(7,9,1,1,"#ffe066");
+      break;
+    }
     case"tea":{
       const steam=Math.sin(f*.03);
       const bob=Math.sin(f*.022)*1.2;
-      px(4,5,8,7,P.tea);px(5,4,6,1,"#a06828");
+      px(4,5,8,7,"#c08040");px(5,6,6,5,P.tea);
+      px(4,5,8,1,"#d09050");px(4,11,8,1,"#8a5828");
+      px(4,5,1,7,"#b87840");px(11,5,1,7,"#9a6430");
+      px(5,4,6,1,"#a06828");
+      // teabag
       px(10.5,2+bob,1.2,5,"#f1e0bc");px(9.2,3.4+bob,1.4,1.2,"#d6b25e");
-      if(steam>0.1){px(7,2,1,2,"#fff5");}
-      if(steam>0.45){px(8,1,1,2,"#fff3");}
+      px(10.2,6+bob,1.6,1,"#c8a040");
+      // steam
+      if(steam>0.05){px(7,2,1,2,"#fff5");}
+      if(steam>0.35){px(8,1,1,2,"#fff3");px(6,1,1,1,"#fff2");}
       break;
     }
     case"hot_water":{
       const heat=.5+.5*Math.sin(f*.035);
-      px(4,5,8,7,P.hot);px(5,4,6,1,"#ff8a50");
-      px(5,12,2,2,heat>.45?"#ff4400":"#ff6a33");px(9,12,2,2,heat>.3?"#ff5522":"#ff7a3a");px(7,13,2,2,"#ff8c42");
-      if(Math.sin(f*.03)>0.25){px(7,2,1,2,"#fff4");}
+      px(4,5,8,7,"#ff8050");px(5,6,6,5,P.hot);
+      px(4,5,8,1,"#ff9060");px(4,11,8,1,"#d05030");
+      px(5,4,6,1,"#ff8a50");
+      // heat glow
+      px(5,12,2,2,heat>.45?"#ff3300":"#ff5a28");px(9,12,2,2,heat>.3?"#ff4410":"#ff6a30");px(7,13,2,2,"#ff7a38");
+      // steam
+      if(Math.sin(f*.03)>0.2){px(7,2,1,2,"#fff5");px(9,1,1,1,"#fff3");}
       break;
     }
     case"water":{
       const wave=Math.sin(f*.025);
       const bubble=2+((f/18)%6);
-      px(4,4,8,9,"#58bedd");px(5,3,6,1,"#9de7ff");
-      px(4,5+wave*.7,8,1,"#8be4ff");
+      px(4,4,8,9,"#4ab0d0");px(5,5,6,7,"#58bedd");
+      px(4,4,8,1,"#70d0f0");px(4,12,8,1,"#3090b0");
+      px(5,3,6,1,"#9de7ff");
+      // wave
+      px(4,5+wave*.7,8,1,"#8be4ff");px(5,6+wave*.5,6,1,"#70d0f088");
+      // bubbles
       px(7,12-bubble,1,1,"#dff7ff");
+      if(bubble>2.5)px(5,11-(bubble-2),1,1,"#c8f0ff");
       if(bubble>3.5)px(9,13-(bubble-3.5),1,1,"#b9f0ff");
       break;
     }
-    case"cups":px(3,4,4,8,P.cupW);px(4,3,2,1,P.cupR);px(8,6,4,7,P.cupW);px(9,5,2,1,P.cupR);px(6,8,5,5,P.cupW);break;
-    case"trash":px(4,3,8,10,"#666");px(5,4,6,8,"#555");px(3,2,10,1,"#777");px(6,1,4,1,"#888");break;
+    case"cups":{
+      // stacked cups with depth
+      px(3,4,4,8,P.cupW);px(3,4,4,1,"#fff");px(3,11,4,1,"#d4c8b8");
+      px(4,3,2,1,P.cupR);
+      px(8,6,4,7,P.cupW);px(8,6,4,1,"#fff");px(8,12,4,1,"#d4c8b8");
+      px(9,5,2,1,P.cupR);
+      px(6,8,5,5,P.cupW);px(6,8,5,1,"#fff");px(6,12,5,1,"#d4c8b8");
+      break;
+    }
+    case"trash":{
+      px(4,3,8,10,"#6a6a6a");px(5,4,6,8,"#585858");
+      px(4,3,8,1,"#7a7a7a");px(4,12,8,1,"#484848");
+      px(3,2,10,1,"#808080");px(3,2,10,1,"#888");
+      px(6,1,4,1,"#999");px(7,0,2,1,"#888");
+      // lid handle detail
+      px(6,2,4,1,"#6a6a6a");
+      // stripes
+      px(5,6,1,4,"#4a4a4a");px(7,6,1,4,"#4a4a4a");px(9,6,1,4,"#4a4a4a");
+      break;
+    }
   }
   const label=T<42?(st.short||st.label):st.label;
-  ctx.fillStyle=isCatCafe?"#2a1712dd":isCentralPerks?"#efe3d1dd":"#120904cc";
-  ctx.fillRect(x+1,y+T-Math.max(11,T*.24),T-2,Math.max(10,T*.22));
-  ctx.fillStyle=isCatCafe?"#ffe7cb":isCentralPerks?"#2d655d":"#e7c49d";
-  ctx.font=`bold ${Math.max(8,T*.18)}px monospace`;
-  ctx.textAlign="center";
-  ctx.fillText(label,x+T/2,y+T-2);
+  const lblH=Math.max(12,T*.26);const lblY=y+T-lblH;
+  ctx.fillStyle=isCatCafe?"#2a1712dd":isCentralPerks?"#efe3d1dd":"#120904dd";
+  ctx.fillRect(x+1,lblY,T-2,lblH);
+  ctx.fillStyle=isCatCafe?"#2a171244":isCentralPerks?"#efe3d144":"#ffffff08";
+  ctx.fillRect(x+1,lblY,T-2,1);
+  const lblFont=`bold ${Math.max(9,T*.2)}px 'Outfit','Silkscreen',sans-serif`;
+  const lblFill=isCatCafe?"#ffe7cb":isCentralPerks?"#2d655d":"#f0d4a8";
+  const lblStroke=isCatCafe?"#1a0d08":isCentralPerks?"#0a2420":"#0a0502";
+  drawTextOutlined(ctx,label,x+T/2,y+T-Math.max(2,lblH*.15),lblFill,lblStroke,lblFont);
 }
 
 function drawSunbooksFloor(ctx,x,y,T,r,c){
@@ -1863,6 +1977,60 @@ function drawCentralPerksServe(ctx,x,y,T,f){
   }
 }
 
+function drawTextOutlined(ctx,text,x,y,fill,outline,font){
+  if(font)ctx.font=font;
+  ctx.textAlign="center";
+  ctx.strokeStyle=outline||"#120904";
+  ctx.lineWidth=3;ctx.lineJoin="round";
+  ctx.strokeText(text,x,y);
+  ctx.fillStyle=fill||"#f5e6d3";
+  ctx.fillText(text,x,y);
+}
+
+function drawTutorialHighlight(ctx,x,y,T,f,color,number){
+  const pulse=(Math.sin(f*.08)+1)/2;
+  const cx=x+T/2;
+  ctx.save();
+  // pulsing glow border
+  ctx.globalAlpha=.22+pulse*.38;
+  ctx.shadowColor=color;ctx.shadowBlur=10+pulse*10;
+  ctx.strokeStyle=color;ctx.lineWidth=2.5;
+  ctx.beginPath();
+  if(ctx.roundRect)ctx.roundRect(x+1,y+1,T-2,T-2,4);
+  else{ctx.rect(x+1,y+1,T-2,T-2);}
+  ctx.stroke();
+  ctx.shadowBlur=0;
+  // corner sparkles
+  ctx.globalAlpha=.4+pulse*.5;
+  ctx.fillStyle="#fff";
+  const sp=3;
+  ctx.fillRect(x+sp,y+sp,2,2);ctx.fillRect(x+T-sp-2,y+sp,2,2);
+  ctx.fillRect(x+sp,y+T-sp-2,2,2);ctx.fillRect(x+T-sp-2,y+T-sp-2,2,2);
+  // bouncing arrow above
+  const arrowY=y-10-Math.sin(f*.12)*5;
+  ctx.globalAlpha=.7+pulse*.3;
+  ctx.fillStyle=color;
+  ctx.beginPath();
+  ctx.moveTo(cx,arrowY+9);
+  ctx.lineTo(cx-6,arrowY+1);
+  ctx.lineTo(cx+6,arrowY+1);
+  ctx.closePath();
+  ctx.fill();
+  // arrow stem
+  ctx.fillRect(cx-1.5,arrowY-4,3,5);
+  // step number badge
+  if(number!==undefined){
+    ctx.globalAlpha=.85;
+    ctx.fillStyle=color;
+    ctx.beginPath();ctx.arc(x+T-3,y+3,7,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#120904";
+    ctx.font="bold 8px 'Silkscreen',monospace";
+    ctx.textAlign="center";ctx.textBaseline="middle";
+    ctx.fillText(String(number),x+T-3,y+3.5);
+  }
+  ctx.restore();
+}
+
 function drawServe(ctx,x,y,T,f){
   const s=T/16;ctx.fillStyle=P.counter;ctx.fillRect(x,y,T,T);
   ctx.fillStyle=P.counterTop;ctx.fillRect(x,y,T,4*s);
@@ -2156,26 +2324,30 @@ function drawLighting(ctx,T,BW,BH,f,gameState){
   });
 
   const glowPalette={
-    E:{color:"255,196,110",size:1.18},
-    e:{color:"255,196,110",size:1.08},
-    M:{color:"255,244,214",size:1.12},
-    A:{color:"104,206,120",size:1.1},
-    B:{color:"240,96,144",size:1.05},
-    T:{color:"225,176,108",size:1.05},
-    H:{color:"255,164,110",size:1.08},
-    Q:{color:"130,220,255",size:1.1},
-    R:{color:"216,170,74",size:1.02},
+    E:{color:"255,196,110",size:1.35,intensity:.2},
+    e:{color:"255,196,110",size:1.25,intensity:.18},
+    M:{color:"255,244,214",size:1.3,intensity:.16},
+    A:{color:"104,206,120",size:1.28,intensity:.18},
+    B:{color:"240,96,144",size:1.22,intensity:.16},
+    T:{color:"225,176,108",size:1.22,intensity:.15},
+    H:{color:"255,164,110",size:1.25,intensity:.18},
+    Q:{color:"130,220,255",size:1.28,intensity:.17},
+    R:{color:"216,170,74",size:1.2,intensity:.15},
+    I:{color:"180,225,255",size:1.15,intensity:.12},
+    F:{color:"255,254,240",size:1.1,intensity:.1},
+    U:{color:"255,230,200",size:1.1,intensity:.1},
   };
   for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
     const cell=MAP[r][c];
     const glow=cell.type==="station"?glowPalette[cell.station]:null;
     if(!glow)continue;
     const x=c*T+T/2,y=r*T+T/2;
-    const g=ctx.createRadialGradient(x,y,0,x,y,T*glow.size);
-    g.addColorStop(0,`rgba(${glow.color},0.14)`);
-    g.addColorStop(.55,`rgba(${glow.color},0.05)`);
-    g.addColorStop(1,`rgba(${glow.color},0)`);
-    ctx.fillStyle=g;
+    const gi=glow.intensity||.14;
+    const gg=ctx.createRadialGradient(x,y,0,x,y,T*glow.size);
+    gg.addColorStop(0,`rgba(${glow.color},${gi})`);
+    gg.addColorStop(.45,`rgba(${glow.color},${gi*.4})`);
+    gg.addColorStop(1,`rgba(${glow.color},0)`);
+    ctx.fillStyle=gg;
     ctx.fillRect(x-T*glow.size,y-T*glow.size,T*glow.size*2,T*glow.size*2);
   }
 
@@ -3321,6 +3493,39 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
           else drawSt(ctx,x,y,T,cell.station,f);
         }
       }
+      // tutorial station highlights
+      if(tutorialMode){
+        const tp=g.players[0];
+        const tStep=tutorialLesson?.steps[tutorialStepRef.current];
+        if(tStep){
+          const tRecipe=RECIPES[tStep.drink];
+          const tHeld=tp.holding;
+          const tHeldIngs=tHeld?.ingredients||[];
+          let tTargets=[];let tColor="#ffe066";
+          if(!tHeld){
+            tTargets=["U"];tColor="#ffe066";
+          }else if(tRecipe){
+            const tNeeded=tRecipe.ing.filter(ing=>!tHeldIngs.includes(ing));
+            if(tNeeded.length===0){
+              tTargets=["_serve"];tColor="#4caf50";
+            }else{
+              tTargets=tNeeded.map(ing=>ING_TO_STATION[ing]).filter(Boolean);
+              tColor="#ffe066";
+            }
+          }
+          let tNum=1;
+          for(let tr=0;tr<ROWS;tr++)for(let tc=0;tc<COLS;tc++){
+            const tCell=MAP[tr][tc];
+            if(tCell.type!=="station")continue;
+            const isServeTarget=tCell.station==="serve"&&tTargets.includes("_serve");
+            const isStTarget=tTargets.includes(tCell.station);
+            if(isServeTarget||isStTarget){
+              drawTutorialHighlight(ctx,tc*T,tr*T,T,f,tColor,tTargets.length<=3?tNum:undefined);
+              tNum++;
+            }
+          }
+        }
+      }
       drawTapTargetMarker(ctx,T,mobileTapHighlight.current,f);
       if(mapTheme.deco==="catcafe")drawCatCafeAmbient(ctx,T,BW,BH,f);
       drawCustomerArea(ctx,T,BW,BH,g.orders,f);
@@ -3351,12 +3556,12 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
         }
         if(p.processing){const pct=1-(p.processing.end-Date.now())/p.processing.dur;ctx.fillStyle="#000000aa";ctx.fillRect(px,py+T+2,T-4,5);ctx.fillStyle=P.green;ctx.fillRect(px+1,py+T+3,(T-6)*Math.min(1,pct),3);if(pct>.8){ctx.fillStyle="#4caf5044";ctx.fillRect(px-2,py-2,T,T+8);}}
         drawChar(ctx,px+4,py+8,T-8,p.clr,p.dir,p.af,p.squash);
-        ctx.fillStyle=p.clr.main;ctx.font=`bold ${Math.max(8,T*.18)}px monospace`;ctx.textAlign="center";ctx.fillText(`P${p.id+1}`,px+T/2-2,py+T+10);
+        drawTextOutlined(ctx,`P${p.id+1}`,px+T/2-2,py+T+10,p.clr.main,"#120904",`bold ${Math.max(9,T*.2)}px 'Outfit','Silkscreen',sans-serif`);
         const[dr2,dc2]=DIRS[p.dir];ctx.fillStyle=p.clr.main+"55";ctx.fillRect(px+T/2-3+dc2*12,py+T/2+dr2*12,5,5);
         if(p.holding){const hx=px+T-10,hy=py-4,bob=Math.sin(f*.1)*2;ctx.fillStyle="#000000aa";ctx.beginPath();ctx.arc(hx+6,hy+4,10,0,Math.PI*2);ctx.fill();drawCup(ctx,hx-2,hy+bob-4,14,p.holding.ingredients||[]);}
       }
       parts.current.draw(ctx);
-      for(const pp of g.popups){const a=pp.life/pp.ml;ctx.globalAlpha=a;ctx.font=`bold ${pp.type==="combo"?16:12}px monospace`;ctx.textAlign="center";ctx.fillStyle=P.black;ctx.fillText(pp.text,pp.x+1,pp.y+1);ctx.fillStyle=pp.type==="good"?P.gold:pp.type==="combo"?"#ff4081":P.red;ctx.fillText(pp.text,pp.x,pp.y);ctx.globalAlpha=1;}
+      for(const pp of g.popups){const a=pp.life/pp.ml;ctx.globalAlpha=a;const popFont=`bold ${pp.type==="combo"?18:14}px 'Outfit','Silkscreen',sans-serif`;const popFill=pp.type==="good"?P.gold:pp.type==="combo"?"#ff4081":P.red;drawTextOutlined(ctx,pp.text,pp.x,pp.y,popFill,"#120904",popFont);ctx.globalAlpha=1;}
       ctx.restore();
 
       // â”€â”€â”€ DRINK PREVIEW HUD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -4091,7 +4296,7 @@ function TutorialHubScreen({isMobile,onBack,onStartTutorial,completedIds=[],noti
               <CatCoachAvatar size={isMobile?(mobileLandscape?36:42):38}/>
               <div style={{fontSize:isMobile?(mobileLandscape?28:32):24,color:P.gold,textShadow:`0 0 20px ${P.gold}44`}}>TRAINING BAR</div>
             </div>
-            <div style={{fontSize:isMobile?(mobileLandscape?11:12):9,color:"#c4956a",maxWidth:640,lineHeight:1.8}}>
+            <div style={{fontSize:isMobile?(mobileLandscape?12:13):10,color:"#c4956a",maxWidth:640,lineHeight:1.85,fontFamily:"'Outfit','Silkscreen',sans-serif"}}>
               {CAT_COACH.name} the {CAT_COACH.role.toLowerCase()} will walk you through real drink builds one by one. Each lesson runs on the actual cafe stations, but without random rush pressure.
             </div>
             <ShellActionRow appShell={appShell} compact={isMobile&&mobileLandscape} />
@@ -4108,7 +4313,7 @@ function TutorialHubScreen({isMobile,onBack,onStartTutorial,completedIds=[],noti
                     </div>
                     {done.has(track.id)&&<div style={{fontSize:isMobile?(mobileLandscape?9:10):8,color:P.green}}>CLEARED</div>}
                   </div>
-                  <div style={{fontSize:isMobile?(mobileLandscape?10:11):8,color:"#d8b48c",lineHeight:1.75}}>{track.subtitle}</div>
+                  <div style={{fontSize:isMobile?(mobileLandscape?11:12):9,color:"#d8b48c",lineHeight:1.8,fontFamily:"'Outfit','Silkscreen',sans-serif"}}>{track.subtitle}</div>
                   <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
                     {track.drinks.map((drink)=><div key={drink} style={{background:"#2d1b0e",border:"1px solid #4a2a18",borderRadius:999,padding:"4px 8px",fontSize:isMobile?(mobileLandscape?9:10):7,color:getRecipeUiColor(drink)}}>{drink}</div>)}
                   </div>
@@ -4425,7 +4630,7 @@ export default function CafeChaos(){
   return (
     <div style={{width:"100vw",height:"100dvh",minHeight:"100vh",overflow:"hidden",background:P.bg,position:"fixed",inset:0,touchAction:screen==="game"||screen==="tutorial"?"none":"auto"}}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Silkscreen:wght@400;700&display=swap');
         @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
         @keyframes scoreReveal{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
         @keyframes starBounce{0%{transform:scale(0)}50%{transform:scale(1.3)}100%{transform:scale(1)}}
