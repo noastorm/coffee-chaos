@@ -971,6 +971,21 @@ class SFX {
         this._t(1319,.15,"sine",.12,.08); // E6
         break;
       }
+      case "rush":{
+        // Speed boost surge
+        this._sweep(220,880,.18,"sawtooth",.12,0);
+        this._sweep(660,1600,.14,"square",.08,.04);
+        this._t(1320,.1,"sine",.05,.12);
+        break;
+      }
+      case "freeze":{
+        // Time-stop shimmer
+        this._sweep(900,260,.28,"triangle",.12,0);
+        this._t(780,.18,"sine",.06,.04);
+        this._t(1560,.16,"sine",.04,.1);
+        this._n(.08,.03,.02);
+        break;
+      }
     }
   }
   _t(f,d,ty,v,dl=0){
@@ -4221,7 +4236,7 @@ function Game({playerCount,diff,mapKey,charIds,onEnd,onQuit,isMobile,onlineSessi
       g.flow=Math.max(0,(g.flow||0)-POWER_RULES.rushCost);
       g.rushEnd=now+POWER_RULES.rushMs;
       g.shake.mag=Math.max(g.shake.mag,5);
-      sfx.play("combo");haptic("heavy");
+      sfx.play("rush");haptic("heavy");
       addPop("RUSH!",BW/2,T*1.2,"combo");
       for(const player of g.players)parts.current.emit(player.c*T+T/2,player.r*T+T/2,"serve",8);
       setHud(toHudState(g));
@@ -4232,7 +4247,7 @@ function Game({playerCount,diff,mapKey,charIds,onEnd,onQuit,isMobile,onlineSessi
       g.flow=Math.max(0,(g.flow||0)-POWER_RULES.freezeCost);
       g.freezeEnd=now+POWER_RULES.freezeMs;
       g.shake.mag=Math.max(g.shake.mag,4);
-      sfx.play("done");haptic("heavy");
+      sfx.play("freeze");haptic("heavy");
       addPop("TIME STOP!",BW/2,T*1.2,"combo");
       parts.current.emit(BW/2,T*.55,"steam",18);
       setHud(toHudState(g));
