@@ -618,7 +618,15 @@ function useIsMobile(){const[m,s]=useState(false);useEffect(()=>{const c=()=>s(w
 function readViewport(){const vv=window.visualViewport;return{w:Math.round(vv?.width||window.innerWidth),h:Math.round(vv?.height||window.innerHeight)};}
 function useScreen(){const[s,set]=useState(()=>readViewport());useEffect(()=>{const r=()=>set(readViewport());const vv=window.visualViewport;r();window.addEventListener("resize",r);window.addEventListener("orientationchange",r);vv?.addEventListener("resize",r);vv?.addEventListener("scroll",r);return ()=>{window.removeEventListener("resize",r);window.removeEventListener("orientationchange",r);vv?.removeEventListener("resize",r);vv?.removeEventListener("scroll",r);};},[]);return s;}
 
-const haptic=(t="light")=>{try{navigator?.vibrate?.({light:10,medium:25,heavy:50}[t]||10);}catch(e){}};
+const HAPTIC_PATTERNS={
+  tap:8,
+  light:10,
+  medium:[14],
+  heavy:[22],
+  success:[10,28,14],
+  error:[18,22,18],
+};
+const haptic=(t="light")=>{try{navigator?.vibrate?.(HAPTIC_PATTERNS[t]||HAPTIC_PATTERNS.light);}catch(e){}};
 const IOS_RE=/iPad|iPhone|iPod/i;
 
 function isStandaloneDisplay(){
@@ -5001,6 +5009,46 @@ function Game({playerCount,diff,mapKey,charIds,onEnd,onQuit,isMobile,onlineSessi
   const mobileMove=(pid,dir)=>{sfx.init();handleMoveInput(pid,dir);};
   const mobileAct=(pid)=>{sfx.init();handleActionInput(pid);};
   const mobilePower=(kind)=>{handlePowerInput(kind);};
+  const describeTapTarget=useCallback((r,c)=>{
+    const cell=MAP[r]?.[c];
+    const targetKind=cell?.type==="station"?"station":cell?.type==="counter"?"counter":"floor";
+    const targetLabel=cell?.type==="station"
+      ? (cell.station==="serve"?"SERVE":(STATIONS[cell.station]?.short||"USE"))
+      : cell?.type==="counter"
+        ? "DROP"
+        : "GO";
+    const accent=cell?.type==="station"
+      ? (cell.station==="serve"?"#ffd66b":(STATIONS[cell.station]?.clr||P.gold))
+      : cell?.type==="counter"
+        ? "#f4c66b"
+        : "#9de7ff";
+    return {r,c,kind:targetKind,label:targetLabel,accent};
+  },[]);
+  const resolveTapCell=useCallback((x,y)=>{
+    const baseR=clamp(Math.floor(y/T),0,ROWS-1);
+    const baseC=clamp(Math.floor(x/T),0,COLS-1);
+    const baseCell=MAP[baseR]?.[baseC];
+    if(baseCell?.type==="station"||baseCell?.type==="counter")return {r:baseR,c:baseC};
+    let best=null;
+    const hitExpand=T*.22;
+    const threshold=(T*.42)**2;
+    for(let rr=Math.max(0,baseR-1);rr<=Math.min(ROWS-1,baseR+1);rr++){
+      for(let cc=Math.max(0,baseC-1);cc<=Math.min(COLS-1,baseC+1);cc++){
+        const cell=MAP[rr]?.[cc];
+        if(cell?.type!=="station"&&cell?.type!=="counter")continue;
+        const left=cc*T-hitExpand;
+        const right=(cc+1)*T+hitExpand;
+        const top=rr*T-hitExpand;
+        const bottom=(rr+1)*T+hitExpand;
+        const dx=x<left?left-x:x>right?x-right:0;
+        const dy=y<top?top-y:y>bottom?y-bottom:0;
+        const distSq=dx*dx+dy*dy;
+        if(distSq>threshold)continue;
+        if(!best||distSq<best.distSq)best={r:rr,c:cc,distSq};
+      }
+    }
+    return best?{r:best.r,c:best.c}:{r:baseR,c:baseC};
+  },[T]);
   const handleCanvasTarget=useCallback((e)=>{
     const cv=canvasRef.current;
     if(!cv)return;
@@ -5011,17 +5059,16 @@ function Game({playerCount,diff,mapKey,charIds,onEnd,onQuit,isMobile,onlineSessi
     const rect=cv.getBoundingClientRect();
     const x=(point.clientX-rect.left)*(BW/rect.width);
     const y=(point.clientY-rect.top)*(BH/rect.height);
-    const r=Math.max(0,Math.min(ROWS-1,Math.floor(y/T)));
-    const c=Math.max(0,Math.min(COLS-1,Math.floor(x/T)));
-    const cell=MAP[r]?.[c];
-    const targetKind=cell?.type==="station"?"station":cell?.type==="counter"?"counter":"floor";
-    const targetLabel=cell?.type==="station"?(cell.station==="serve"?"SERVE":(STATIONS[cell.station]?.short||"USE")):cell?.type==="counter"?"DROP":"GO";
-    const accent=cell?.type==="station"?(cell.station==="serve"?"#ffd66b":(STATIONS[cell.station]?.clr||P.gold)):cell?.type==="counter"?"#f4c66b":"#9de7ff";
-    mobileTapHighlight.current={r,c,kind:targetKind,label:targetLabel,accent,life:90,ml:90};
+    const {r,c}=resolveTapCell(x,y);
+    mobileTapHighlight.current={...describeTapTarget(r,c),life:90,ml:90};
+    haptic("tap");
     if(online&&!isHost){sendOnlineInput({type:"target",r,c});return;}
     clearAutoTask(localPid);
-    setAutoTarget(localPid,r,c);
-  },[BW,BH,T,online,isHost,sendOnlineInput,setAutoTarget,clearAutoTask,localPid]);
+    if(!setAutoTarget(localPid,r,c)){
+      mobileTapHighlight.current={r,c,kind:"blocked",label:"NO PATH",accent:"#ff6f6f",life:100,ml:100};
+      haptic("error");
+    }
+  },[BW,BH,online,isHost,sendOnlineInput,setAutoTarget,clearAutoTask,localPid,resolveTapCell,describeTapTarget]);
   const handleCanvasPointerDown=useCallback((e)=>{
     if(e.pointerType==="touch")return;
     handleCanvasTarget(e);
@@ -5109,8 +5156,8 @@ function Game({playerCount,diff,mapKey,charIds,onEnd,onQuit,isMobile,onlineSessi
           <div style={{position:"absolute",left:boardLeft-10,top:boardTop-10,width:displayW+20,height:displayH+20,borderRadius:32,background:"linear-gradient(180deg,#ffffff08 0%,transparent 24%,#0000001a 100%)",opacity:.9}}/>
         </div>
 
-        <div style={{position:"absolute",left:boardLeft,top:boardTop,width:displayW,height:displayH,pointerEvents:"none"}}>
-          <canvas ref={canvasRef} width={BW} height={BH} onPointerDown={handleCanvasPointerDown} onTouchStart={handleCanvasTarget} style={{width:displayW,height:displayH,imageRendering:"pixelated",display:"block",cursor:"pointer",borderRadius:26,boxShadow:"0 18px 38px #00000038",touchAction:"manipulation",pointerEvents:"auto"}} />
+          <div style={{position:"absolute",left:boardLeft,top:boardTop,width:displayW,height:displayH,pointerEvents:"none"}}>
+          <canvas ref={canvasRef} width={BW} height={BH} onPointerDown={handleCanvasPointerDown} onTouchStart={handleCanvasTarget} style={{width:displayW,height:displayH,imageRendering:"pixelated",display:"block",cursor:"pointer",borderRadius:26,boxShadow:"0 18px 38px #00000038",touchAction:"none",pointerEvents:"auto"}} />
           <div style={{position:"absolute",inset:0,pointerEvents:"none",borderRadius:26,background:"radial-gradient(circle at center,transparent 56%,#00000012 100%),linear-gradient(180deg,#ffffff09 0%,transparent 22%,#00000020 100%)"}}/>
         </div>
 
@@ -5139,8 +5186,8 @@ function Game({playerCount,diff,mapKey,charIds,onEnd,onQuit,isMobile,onlineSessi
             </div>
           </div>
 
-          <div style={{position:"absolute",top:Math.max(44,boardTop+10),left:boardLeft,width:displayW,display:"flex",justifyContent:"center",pointerEvents:"auto"}}>
-            <div style={{display:"flex",alignItems:"flex-start",justifyContent:"center",gap:6,maxWidth:displayW}}>
+          <div style={{position:"absolute",top:Math.max(44,boardTop+10),left:boardLeft,width:displayW,display:"flex",justifyContent:"center",pointerEvents:"none"}}>
+            <div style={{display:"flex",alignItems:"flex-start",justifyContent:"center",gap:6,maxWidth:displayW,pointerEvents:"auto"}}>
               <FocusOrderCard order={primaryMobileOrder} queueCount={mobileOrders.length?mobileOrders.length-1:0} onToggleQueue={()=>{setMobileQueueOpen((open)=>!open);setMobileUtilityOpen(false);}} />
               {!!mobileOrders.length&&(
                 <div style={{display:"flex",flexDirection:"column",gap:6}}>
@@ -5189,14 +5236,14 @@ function Game({playerCount,diff,mapKey,charIds,onEnd,onQuit,isMobile,onlineSessi
 
           {singleControlMode ? (
             <>
-              <div style={{position:"absolute",left:8,right:8,bottom:8,display:"flex",alignItems:"flex-end",justifyContent:"space-between",gap:8,pointerEvents:"auto"}}>
-                <div style={{...glass,borderRadius:14,padding:"6px 8px",fontSize:7,color:"#e7c39c",textAlign:"left",lineHeight:1.45,maxWidth:136,flex:"0 1 136px"}}>
+              <div style={{position:"absolute",left:8,right:8,bottom:8,display:"flex",alignItems:"flex-end",justifyContent:"space-between",gap:8,pointerEvents:"none"}}>
+                <div style={{...glass,borderRadius:14,padding:"6px 8px",fontSize:7,color:"#e7c39c",textAlign:"left",lineHeight:1.45,maxWidth:136,flex:"0 1 136px",pointerEvents:"none"}}>
                   Tap floor to move.
                   <br />
                   Tap stations and counters to use them.
                 </div>
-                <div style={{display:"flex",alignItems:"stretch",justifyContent:"flex-end",gap:8,marginLeft:"auto",flexWrap:"nowrap"}}>
-                  <div style={{...dockGlass,borderRadius:16,padding:"8px 10px",minWidth:98,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:5}}>
+                <div style={{display:"flex",alignItems:"stretch",justifyContent:"flex-end",gap:8,marginLeft:"auto",flexWrap:"nowrap",pointerEvents:"auto"}}>
+                  <div style={{...dockGlass,borderRadius:16,padding:"8px 10px",minWidth:98,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:5,pointerEvents:"none"}}>
                     <div style={{fontSize:7,color:"#cba27b"}}>{localHolding?"HOLDING":"HANDS FREE"}</div>
                     {!localHolding&&<div style={{fontSize:7,color:"#f5e6d3"}}>TAP TO PICK</div>}
                     {localHolding&&<div style={{display:"flex",gap:4,flexWrap:"wrap",justifyContent:"center"}}>
