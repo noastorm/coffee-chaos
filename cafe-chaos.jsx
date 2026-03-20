@@ -562,6 +562,30 @@ const PLAYER_STYLES = [
   { main:P.p1, dark:P.p1d, apron:"#2196f3", pants:"#1565c0", shoes:"#0d47a1" },
   { main:P.p2, dark:P.p2d, apron:"#e91e63", pants:"#ad1457", shoes:"#880e4f" },
 ];
+const CHARACTERS=[
+  {id:"bean",name:"Bean",type:"human",skin:"#ffcc99",hair:"#5a3018",hat:"#ffffff",apron:"#2196f3",pants:"#1565c0",shoes:"#0d47a1",accent:"#64b5f6"},
+  {id:"mocha",name:"Mocha",type:"human",skin:"#c08050",hair:"#1a0a06",hat:"#fff8e0",apron:"#e91e63",pants:"#ad1457",shoes:"#880e4f",accent:"#f06292"},
+  {id:"matcha",name:"Matcha",type:"human",skin:"#f0c080",hair:"#2d1b10",hat:"#e8f5e9",apron:"#4caf50",pants:"#2e7d32",shoes:"#1b5e20",accent:"#81c784"},
+  {id:"beans",name:"Beans",type:"cat",fur:"#f0c070",earInner:"#f0a0a0",nose:"#e08888",apron:"#5ab97f",pants:"#3d8b5e",shoes:"#2e6b48",accent:"#a5d6a7"},
+  {id:"whiskers",name:"Whiskers",type:"cat",fur:"#d0d0d0",earInner:"#f0b0b0",nose:"#e8a0a0",apron:"#ff9800",pants:"#e65100",shoes:"#bf360c",accent:"#ffb74d"},
+  {id:"caramel",name:"Caramel",type:"human",skin:"#d4a06a",hair:"#8d5524",hat:"#fff3e0",apron:"#ff9800",pants:"#e65100",shoes:"#bf360c",accent:"#ffb74d"},
+  {id:"latte",name:"Latte",type:"girl",skin:"#ffcc99",hair:"#5a2810",bow:"#e91e63",apron:"#e91e63",pants:"#ad1457",shoes:"#880e4f",accent:"#f48fb1"},
+  {id:"frost",name:"Frost",type:"human",skin:"#fce4ec",hair:"#90caf9",hat:"#e3f2fd",apron:"#42a5f5",pants:"#1976d2",shoes:"#0d47a1",accent:"#90caf9"},
+  {id:"shadow",name:"Shadow",type:"cat",fur:"#2a2228",earInner:"#6a4060",nose:"#8a6080",apron:"#7b1fa2",pants:"#4a148c",shoes:"#311b92",accent:"#ce93d8"},
+  {id:"gordo",name:"Gordo Ramsbean",type:"chef",skin:"#f5d0b0",hair:"#e0d4c0",apron:"#ffffff",pants:"#2a2a2a",shoes:"#1a1a1a",accent:"#ff5252",wrinkles:true},
+  {id:"brewbot",name:"Brew-Bot",type:"robot",body:"#b0b8c0",eye:"#4fc3f7",chest:"#78909c",apron:"#ffcc02",pants:"#607d8b",shoes:"#455a64",accent:"#4fc3f7"},
+];
+function charToClr(charDef,pid){
+  const pstyle=PLAYER_STYLES[pid]||PLAYER_STYLES[0];
+  return {
+    main:pstyle.main,dark:pstyle.dark,
+    apron:charDef.apron,pants:charDef.pants,shoes:charDef.shoes,
+    type:charDef.type,skin:charDef.skin,hair:charDef.hair,hat:charDef.hat,
+    fur:charDef.fur,earInner:charDef.earInner,nose:charDef.nose,
+    bow:charDef.bow,wrinkles:charDef.wrinkles,
+    body:charDef.body,eye:charDef.eye,chest:charDef.chest,
+  };
+}
 const CUSTOMER_SKINS=["#ffcc99","#f0c080","#d4a06a","#c08050","#8d5524"];
 const CUSTOMER_STYLES=[
   { shirt:"#7e57c2", accent:"#b39ddb", hair:"#2f1b12" },
@@ -1004,15 +1028,110 @@ function drawChar(ctx,x,y,sz,clr,dir,f,squash){
   ctx.translate(-sz/2,-sz);
   const s=sz/16;
   const px=(a,b,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(a*s,b*s,w*s,h*s);};
-  px(4,6,8,6,clr.apron);px(4,12,3,4,clr.pants);px(9,12,3,4,clr.pants);
-  const l=Math.abs(Math.sin(f*.4))>.5;
-  px(l?5:4,14,l?2:3,2,clr.shoes);px(l?9:9,14,l?2:3,2,clr.shoes);
-  px(4,1,8,5,P.skin);px(3,-2,10,3,P.white);px(5,-4,6,2,P.white);px(6,-5,4,1,P.white);
-  if(dir==="up"){px(5,3,2,1,clr.main);px(9,3,2,1,clr.main);}
-  else if(dir==="left"){px(4,3,2,2,P.black);px(8,3,2,2,P.black);}
-  else if(dir==="right"){px(6,3,2,2,P.black);px(10,3,2,2,P.black);}
-  else{px(5,3,2,2,P.black);px(9,3,2,2,P.black);px(6,3,1,1,P.white);px(10,3,1,1,P.white);}
-  px(1,7,3,2,P.skin);px(12,7,3,2,P.skin);px(6,7,4,1,P.white);px(7,8,2,3,clr.main);
+  if(clr.type==="cat"){
+    // cat body
+    px(4,6,8,6,clr.apron);px(4,12,3,4,clr.pants);px(9,12,3,4,clr.pants);
+    const l=Math.abs(Math.sin(f*.4))>.5;
+    px(l?5:4,14,l?2:3,2,clr.shoes);px(l?9:9,14,l?2:3,2,clr.shoes);
+    // cat head
+    px(4,1,8,5,clr.fur);
+    // ears
+    px(3,-2,3,3,clr.fur);px(10,-2,3,3,clr.fur);
+    px(4,-1,1,2,clr.earInner);px(11,-1,1,2,clr.earInner);
+    // eyes
+    if(dir==="up"){px(5,3,2,1,clr.main);px(9,3,2,1,clr.main);}
+    else if(dir==="left"){px(4,3,2,2,"#332014");px(8,3,2,2,"#332014");}
+    else if(dir==="right"){px(6,3,2,2,"#332014");px(10,3,2,2,"#332014");}
+    else{px(5,3,2,2,"#332014");px(9,3,2,2,"#332014");px(6,3,1,1,P.white);px(10,3,1,1,P.white);}
+    // nose
+    px(7,4,2,1,clr.nose);
+    // whiskers
+    ctx.fillStyle=clr.fur+"88";ctx.fillRect(1*s,3.5*s,3*s,.5*s);ctx.fillRect(12*s,3.5*s,3*s,.5*s);
+    // arms & apron tie
+    px(1,7,3,2,clr.fur);px(12,7,3,2,clr.fur);px(6,7,4,1,P.white);px(7,8,2,3,clr.main);
+    // tail
+    const tailWag=Math.sin(f*.3)*1.5;
+    ctx.fillStyle=clr.fur;ctx.fillRect((14+tailWag)*s,8*s,2*s,1*s);ctx.fillRect((15+tailWag)*s,7*s,1*s,2*s);
+  }else if(clr.type==="girl"){
+    // girl body with hair & bow
+    px(4,6,8,6,clr.apron);px(4,12,3,4,clr.pants);px(9,12,3,4,clr.pants);
+    const l=Math.abs(Math.sin(f*.4))>.5;
+    px(l?5:4,14,l?2:3,2,clr.shoes);px(l?9:9,14,l?2:3,2,clr.shoes);
+    px(4,1,8,5,clr.skin||P.skin);
+    // hair (longer, flowing)
+    px(3,-1,10,3,clr.hair||"#5a2810");px(4,-2,8,2,clr.hair||"#5a2810");
+    px(3,1,1,5,clr.hair||"#5a2810");px(12,1,1,5,clr.hair||"#5a2810");
+    // side hair strands
+    px(2,3,2,4,clr.hair||"#5a2810");px(12,3,2,4,clr.hair||"#5a2810");
+    // bow on top
+    px(9,-2,2,1,clr.bow||"#e91e63");px(8,-1,1,1,clr.bow||"#e91e63");px(11,-1,1,1,clr.bow||"#e91e63");
+    // eyes (slightly bigger/rounder)
+    if(dir==="up"){px(5,3,2,1,clr.main);px(9,3,2,1,clr.main);}
+    else if(dir==="left"){px(4,3,2,2,P.black);px(8,3,2,2,P.black);}
+    else if(dir==="right"){px(6,3,2,2,P.black);px(10,3,2,2,P.black);}
+    else{px(5,3,2,2,P.black);px(9,3,2,2,P.black);px(6,3,1,1,P.white);px(10,3,1,1,P.white);px(5,2,2,1,P.black);px(9,2,2,1,P.black);}
+    // blush
+    px(4,4,2,1,"#ffaaaa44");px(10,4,2,1,"#ffaaaa44");
+    // arms & apron tie
+    px(1,7,3,2,clr.skin||P.skin);px(12,7,3,2,clr.skin||P.skin);px(6,7,4,1,P.white);px(7,8,2,3,clr.main);
+  }else if(clr.type==="chef"){
+    // Gordon Ramsay parody - tall chef hat, angry eyebrows, white jacket
+    px(4,6,8,6,clr.apron);px(4,12,3,4,clr.pants);px(9,12,3,4,clr.pants);
+    const l=Math.abs(Math.sin(f*.4))>.5;
+    px(l?5:4,14,l?2:3,2,clr.shoes);px(l?9:9,14,l?2:3,2,clr.shoes);
+    px(4,1,8,5,clr.skin||P.skin);
+    // tall chef hat (toque)
+    px(4,-1,8,3,P.white);px(5,-4,6,3,P.white);px(6,-6,4,2,P.white);px(7,-7,2,1,P.white);
+    // blonde/grey spiky hair peeking
+    px(3,0,2,2,clr.hair);px(11,0,2,2,clr.hair);
+    // angry eyebrows
+    px(4,2,3,1,"#5a3018");px(9,2,3,1,"#5a3018");
+    // eyes
+    if(dir==="up"){px(5,3,2,1,clr.main);px(9,3,2,1,clr.main);}
+    else{px(5,3,2,2,P.black);px(9,3,2,2,P.black);px(6,3,1,1,P.white);px(10,3,1,1,P.white);}
+    // wrinkle lines
+    if(clr.wrinkles){px(4,5,1,1,"#d4a06a44");px(11,5,1,1,"#d4a06a44");}
+    // frown
+    px(6,5,4,1,"#8d5a3b");
+    // arms & apron tie
+    px(1,7,3,2,clr.skin||P.skin);px(12,7,3,2,clr.skin||P.skin);px(6,7,4,1,"#cccccc");px(7,8,2,3,clr.main);
+  }else if(clr.type==="robot"){
+    // cute Wall-E style robot
+    px(4,6,8,6,clr.apron||"#ffcc02");px(4,12,3,4,clr.pants);px(9,12,3,4,clr.pants);
+    const l=Math.abs(Math.sin(f*.4))>.5;
+    px(l?5:4,14,l?2:3,2,clr.shoes);px(l?9:9,14,l?2:3,2,clr.shoes);
+    // boxy head
+    px(3,0,10,6,clr.body||"#b0b8c0");px(4,1,8,4,clr.chest||"#78909c");
+    // antenna
+    px(7,-2,2,2,clr.body||"#b0b8c0");px(8,-3,1,1,clr.eye||"#4fc3f7");
+    // big round eyes (binocular style)
+    const blink=Math.sin(f*.06)>.95;
+    if(blink){px(5,2,2,1,clr.eye);px(9,2,2,1,clr.eye);}
+    else{px(5,2,2,2,clr.eye||"#4fc3f7");px(9,2,2,2,clr.eye||"#4fc3f7");px(5,2,1,1,"#fff");px(9,2,1,1,"#fff");}
+    // eye frames
+    px(4,1,4,1,clr.body);px(8,1,4,1,clr.body);px(4,4,4,1,clr.body);px(8,4,4,1,clr.body);
+    // mouth - small happy line
+    px(7,4,2,1,"#455a64");
+    // mechanical arms
+    px(1,7,3,2,clr.body||"#90a4ae");px(12,7,3,2,clr.body||"#90a4ae");
+    // chest panel
+    px(6,7,4,1,"#455a64");px(7,8,2,2,clr.eye||"#4fc3f7");
+  }else{
+    // human body (original)
+    px(4,6,8,6,clr.apron);px(4,12,3,4,clr.pants);px(9,12,3,4,clr.pants);
+    const l=Math.abs(Math.sin(f*.4))>.5;
+    px(l?5:4,14,l?2:3,2,clr.shoes);px(l?9:9,14,l?2:3,2,clr.shoes);
+    px(4,1,8,5,clr.skin||P.skin);
+    // hat
+    px(3,-2,10,3,clr.hat||P.white);px(5,-4,6,2,clr.hat||P.white);px(6,-5,4,1,clr.hat||P.white);
+    // eyes
+    if(dir==="up"){px(5,3,2,1,clr.main);px(9,3,2,1,clr.main);}
+    else if(dir==="left"){px(4,3,2,2,P.black);px(8,3,2,2,P.black);}
+    else if(dir==="right"){px(6,3,2,2,P.black);px(10,3,2,2,P.black);}
+    else{px(5,3,2,2,P.black);px(9,3,2,2,P.black);px(6,3,1,1,P.white);px(10,3,1,1,P.white);}
+    // arms & apron tie
+    px(1,7,3,2,clr.skin||P.skin);px(12,7,3,2,clr.skin||P.skin);px(6,7,4,1,P.white);px(7,8,2,3,clr.main);
+  }
   ctx.restore();
 }
 
@@ -2978,7 +3097,8 @@ function mkTutorialOrder(drink,stepIdx=0){
 }
 
 // â”€â”€â”€ JOYSTICK â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function createPlayerState(id, r, c){
+function createPlayerState(id, r, c, charId){
+  const charDef=charId?CHARACTERS.find(ch=>ch.id===charId):null;
   return {
     id,
     r,
@@ -2990,11 +3110,11 @@ function createPlayerState(id, r, c){
     vr:r,
     vc:c,
     squash:{sx:1,sy:1,t:0},
-    clr:PLAYER_STYLES[id] || PLAYER_STYLES[0],
+    clr:charDef?charToClr(charDef,id):(PLAYER_STYLES[id] || PLAYER_STYLES[0]),
   };
 }
 
-function createGameState(playerCount, diff, mapKey="classic"){
+function createGameState(playerCount, diff, mapKey="classic", charIds=[]){
   const mapDef=setActiveMap(mapKey);
   const counters = {};
   for (let r = 0; r < ROWS; r += 1) {
@@ -3008,8 +3128,8 @@ function createGameState(playerCount, diff, mapKey="classic"){
   return {
     mapKey:mapDef.id,
     players:[
-      createPlayerState(0, ...(mapDef.spawns[0]||[4,6])),
-      ...(playerCount===2 ? [createPlayerState(1, ...(mapDef.spawns[1]||[4,11]))] : []),
+      createPlayerState(0, ...(mapDef.spawns[0]||[4,6]), charIds[0]),
+      ...(playerCount===2 ? [createPlayerState(1, ...(mapDef.spawns[1]||[4,11]), charIds[1])] : []),
     ],
     orders:[mkOrder(0, diff)],
     score:0,
@@ -3589,6 +3709,230 @@ function MapLogo({deco,size=48}){
   );
 }
 
+function CharacterPreview({char,size=64,selected=false,pid=0}){
+  const s=size/16;
+  const c=char;
+  const accent=c.accent||"#888";
+  if(c.type==="cat"){
+    return (
+      <svg width={size} height={size*1.2} viewBox="0 0 16 19" style={{display:"block"}}>
+        {/* shadow */}
+        <ellipse cx="8" cy="18" rx="5" ry="1" fill="#00000033"/>
+        {/* body */}
+        <rect x="4" y="9" width="8" height="5" rx="1" fill={c.apron}/>
+        <rect x="4" y="14" width="3" height="3" fill={c.pants}/>
+        <rect x="9" y="14" width="3" height="3" fill={c.pants}/>
+        <rect x="5" y="17" width="2" height="1" fill={c.shoes}/>
+        <rect x="9" y="17" width="2" height="1" fill={c.shoes}/>
+        {/* arms */}
+        <rect x="1" y="10" width="3" height="2" rx=".5" fill={c.fur}/>
+        <rect x="12" y="10" width="3" height="2" rx=".5" fill={c.fur}/>
+        {/* head */}
+        <ellipse cx="8" cy="6" rx="5" ry="4.5" fill={c.fur}/>
+        {/* ears */}
+        <polygon points="3,4 5,0 7,4" fill={c.fur}/>
+        <polygon points="9,4 11,0 13,4" fill={c.fur}/>
+        <polygon points="4,3.5 5.5,1 6.5,3.5" fill={c.earInner}/>
+        <polygon points="9.5,3.5 10.5,1 12,3.5" fill={c.earInner}/>
+        {/* eyes */}
+        <ellipse cx="6" cy="5.5" rx="1.2" ry="1.4" fill="#332014"/>
+        <ellipse cx="10" cy="5.5" rx="1.2" ry="1.4" fill="#332014"/>
+        <circle cx="6.4" cy="5" r=".5" fill="#fff"/>
+        <circle cx="10.4" cy="5" r=".5" fill="#fff"/>
+        {/* nose */}
+        <ellipse cx="8" cy="7.2" rx=".8" ry=".5" fill={c.nose}/>
+        {/* whiskers */}
+        <line x1="0" y1="6.5" x2="4.5" y2="7" stroke="#c4956a" strokeWidth=".3" opacity=".5"/>
+        <line x1="0" y1="7.5" x2="4.5" y2="7.5" stroke="#c4956a" strokeWidth=".3" opacity=".5"/>
+        <line x1="16" y1="6.5" x2="11.5" y2="7" stroke="#c4956a" strokeWidth=".3" opacity=".5"/>
+        <line x1="16" y1="7.5" x2="11.5" y2="7.5" stroke="#c4956a" strokeWidth=".3" opacity=".5"/>
+        {/* tail */}
+        <path d="M12,13 Q15,12 14,10" stroke={c.fur} strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+        {/* apron tie */}
+        <rect x="7" y="10" width="2" height="2" rx=".5" fill="#fff"/>
+      </svg>
+    );
+  }
+  if(c.type==="girl"){
+    return (
+      <svg width={size} height={size*1.2} viewBox="0 0 16 19" style={{display:"block"}}>
+        <ellipse cx="8" cy="18" rx="5" ry="1" fill="#00000033"/>
+        {/* body */}
+        <rect x="4" y="9" width="8" height="5" rx="1" fill={c.apron}/>
+        <rect x="4" y="14" width="3" height="3" fill={c.pants}/>
+        <rect x="9" y="14" width="3" height="3" fill={c.pants}/>
+        <rect x="5" y="17" width="2" height="1" fill={c.shoes}/>
+        <rect x="9" y="17" width="2" height="1" fill={c.shoes}/>
+        {/* arms */}
+        <rect x="1" y="10" width="3" height="2" rx=".5" fill={c.skin}/>
+        <rect x="12" y="10" width="3" height="2" rx=".5" fill={c.skin}/>
+        {/* head */}
+        <ellipse cx="8" cy="5.5" rx="4.5" ry="4" fill={c.skin}/>
+        {/* hair */}
+        <ellipse cx="8" cy="3.5" rx="5" ry="3" fill={c.hair}/>
+        <rect x="3" y="3.5" width="2" height="5" rx=".5" fill={c.hair}/>
+        <rect x="11" y="3.5" width="2" height="5" rx=".5" fill={c.hair}/>
+        {/* bow */}
+        <polygon points="10,1.5 11.5,0.5 11.5,2.5" fill={c.bow}/>
+        <polygon points="12.5,1.5 11.5,0.5 11.5,2.5" fill={c.bow}/>
+        <circle cx="11.5" cy="1.5" r=".5" fill={c.bow}/>
+        {/* eyes */}
+        <ellipse cx="6" cy="5.5" rx="1.2" ry="1.5" fill="#332014"/>
+        <ellipse cx="10" cy="5.5" rx="1.2" ry="1.5" fill="#332014"/>
+        <circle cx="6.4" cy="5" r=".6" fill="#fff"/>
+        <circle cx="10.4" cy="5" r=".6" fill="#fff"/>
+        {/* blush */}
+        <ellipse cx="4.5" cy="7" rx="1" ry=".5" fill="#ffaaaa55"/>
+        <ellipse cx="11.5" cy="7" rx="1" ry=".5" fill="#ffaaaa55"/>
+        {/* smile */}
+        <path d="M6.5,7.5 Q8,9 9.5,7.5" stroke="#8d5a3b" strokeWidth=".6" fill="none" strokeLinecap="round"/>
+        {/* apron tie */}
+        <rect x="7" y="10" width="2" height="2" rx=".5" fill="#fff"/>
+      </svg>
+    );
+  }
+  if(c.type==="chef"){
+    return (
+      <svg width={size} height={size*1.2} viewBox="0 0 16 19" style={{display:"block"}}>
+        <ellipse cx="8" cy="18" rx="5" ry="1" fill="#00000033"/>
+        {/* body */}
+        <rect x="4" y="9" width="8" height="5" rx="1" fill={c.apron}/>
+        <rect x="4" y="14" width="3" height="3" fill={c.pants}/>
+        <rect x="9" y="14" width="3" height="3" fill={c.pants}/>
+        <rect x="5" y="17" width="2" height="1" fill={c.shoes}/>
+        <rect x="9" y="17" width="2" height="1" fill={c.shoes}/>
+        {/* arms */}
+        <rect x="1" y="10" width="3" height="2" rx=".5" fill={c.skin}/>
+        <rect x="12" y="10" width="3" height="2" rx=".5" fill={c.skin}/>
+        {/* head */}
+        <ellipse cx="8" cy="6" rx="4.5" ry="4" fill={c.skin}/>
+        {/* tall chef hat */}
+        <rect x="4" y="1" width="8" height="3" rx="1" fill="#fff"/>
+        <rect x="5" y="-2" width="6" height="3.5" rx="1" fill="#fff"/>
+        <rect x="6" y="-4" width="4" height="2.5" rx="1" fill="#fff"/>
+        {/* spiky blonde hair */}
+        <rect x="3" y="3" width="2" height="2" fill={c.hair}/>
+        <rect x="11" y="3" width="2" height="2" fill={c.hair}/>
+        {/* angry eyebrows */}
+        <line x1="4.5" y1="4" x2="7" y2="4.8" stroke="#5a3018" strokeWidth=".8"/>
+        <line x1="11.5" y1="4" x2="9" y2="4.8" stroke="#5a3018" strokeWidth=".8"/>
+        {/* eyes */}
+        <ellipse cx="6" cy="5.5" rx="1" ry="1.2" fill="#332014"/>
+        <ellipse cx="10" cy="5.5" rx="1" ry="1.2" fill="#332014"/>
+        <circle cx="6.3" cy="5" r=".4" fill="#fff"/>
+        <circle cx="10.3" cy="5" r=".4" fill="#fff"/>
+        {/* frown */}
+        <path d="M6,8 Q8,7 10,8" stroke="#8d5a3b" strokeWidth=".6" fill="none"/>
+        {/* wrinkles */}
+        <line x1="3.5" y1="6.5" x2="4.5" y2="6" stroke="#d4a06a" strokeWidth=".3" opacity=".5"/>
+        <line x1="12.5" y1="6.5" x2="11.5" y2="6" stroke="#d4a06a" strokeWidth=".3" opacity=".5"/>
+      </svg>
+    );
+  }
+  if(c.type==="robot"){
+    return (
+      <svg width={size} height={size*1.2} viewBox="0 0 16 19" style={{display:"block"}}>
+        <ellipse cx="8" cy="18" rx="5" ry="1" fill="#00000033"/>
+        {/* body */}
+        <rect x="4" y="9" width="8" height="5" rx="1" fill={c.apron||"#ffcc02"}/>
+        <rect x="4" y="14" width="3" height="3" fill={c.pants}/>
+        <rect x="9" y="14" width="3" height="3" fill={c.pants}/>
+        <rect x="5" y="17" width="2" height="1" fill={c.shoes}/>
+        <rect x="9" y="17" width="2" height="1" fill={c.shoes}/>
+        {/* mechanical arms */}
+        <rect x="1" y="10" width="3" height="2" rx=".5" fill={c.body}/>
+        <rect x="12" y="10" width="3" height="2" rx=".5" fill={c.body}/>
+        <circle cx="2" cy="11" r=".8" fill={c.chest}/>
+        <circle cx="14" cy="11" r=".8" fill={c.chest}/>
+        {/* boxy head */}
+        <rect x="3" y="1" width="10" height="7" rx="1.5" fill={c.body}/>
+        <rect x="4" y="2" width="8" height="5" rx="1" fill={c.chest}/>
+        {/* antenna */}
+        <rect x="7.5" y="-1" width="1" height="2" fill={c.body}/>
+        <circle cx="8" cy="-1.5" r="1" fill={c.eye}/>
+        {/* binocular eyes */}
+        <circle cx="6" cy="4.5" r="2" fill={c.body}/>
+        <circle cx="10" cy="4.5" r="2" fill={c.body}/>
+        <circle cx="6" cy="4.5" r="1.4" fill={c.eye}/>
+        <circle cx="10" cy="4.5" r="1.4" fill={c.eye}/>
+        <circle cx="5.5" cy="4" r=".5" fill="#fff"/>
+        <circle cx="9.5" cy="4" r=".5" fill="#fff"/>
+        {/* happy mouth */}
+        <path d="M6.5,6.5 Q8,7.5 9.5,6.5" stroke="#455a64" strokeWidth=".5" fill="none"/>
+        {/* chest panel */}
+        <rect x="6" y="10" width="4" height="2" rx=".5" fill="#455a64"/>
+        <rect x="7" y="10.5" width="2" height="1" rx=".3" fill={c.eye} opacity=".7"/>
+      </svg>
+    );
+  }
+  // default human
+  return (
+    <svg width={size} height={size*1.2} viewBox="0 0 16 19" style={{display:"block"}}>
+      <ellipse cx="8" cy="18" rx="5" ry="1" fill="#00000033"/>
+      {/* body */}
+      <rect x="4" y="9" width="8" height="5" rx="1" fill={c.apron}/>
+      <rect x="4" y="14" width="3" height="3" fill={c.pants}/>
+      <rect x="9" y="14" width="3" height="3" fill={c.pants}/>
+      <rect x="5" y="17" width="2" height="1" fill={c.shoes}/>
+      <rect x="9" y="17" width="2" height="1" fill={c.shoes}/>
+      {/* arms */}
+      <rect x="1" y="10" width="3" height="2" rx=".5" fill={c.skin}/>
+      <rect x="12" y="10" width="3" height="2" rx=".5" fill={c.skin}/>
+      {/* head */}
+      <ellipse cx="8" cy="5.5" rx="4.5" ry="4" fill={c.skin}/>
+      {/* chef hat */}
+      <rect x="3" y="1" width="10" height="2.5" rx="1" fill={c.hat||"#fff"}/>
+      <rect x="5" y="-1" width="6" height="2.5" rx="1" fill={c.hat||"#fff"}/>
+      <rect x="6" y="-2" width="4" height="1.5" rx=".8" fill={c.hat||"#fff"}/>
+      {/* eyes */}
+      <ellipse cx="6" cy="5.5" rx="1" ry="1.2" fill="#332014"/>
+      <ellipse cx="10" cy="5.5" rx="1" ry="1.2" fill="#332014"/>
+      <circle cx="6.3" cy="5" r=".5" fill="#fff"/>
+      <circle cx="10.3" cy="5" r=".5" fill="#fff"/>
+      {/* smile */}
+      <path d="M6.5,7.5 Q8,8.5 9.5,7.5" stroke="#8d5a3b" strokeWidth=".5" fill="none"/>
+      {/* apron tie */}
+      <rect x="7" y="10" width="2" height="2" rx=".5" fill="#fff"/>
+    </svg>
+  );
+}
+
+function CharacterSelectGrid({p1Char,p2Char,onSelectP1,onSelectP2,playerCount,isMobile}){
+  const screen=useScreen();
+  const mobileLandscape=isMobile&&screen.w>screen.h;
+  const cols=isMobile?(mobileLandscape?5:3):5;
+  const cardSize=isMobile?(mobileLandscape?52:56):56;
+  return (
+    <div style={{display:"flex",flexDirection:"column",gap:8,alignItems:"center",width:"100%"}}>
+      {[0,...(playerCount===2?[1]:[])].map(pid=>(
+        <div key={pid} style={{width:"100%"}}>
+          <div style={{fontSize:isMobile?12:10,color:pid===0?P.p1:P.p2,fontFamily:"'Silkscreen',monospace",marginBottom:4,textAlign:"center"}}>
+            P{pid+1} — {CHARACTERS.find(c=>c.id===(pid===0?p1Char:p2Char))?.name||"?"}
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:`repeat(${cols}, minmax(0, 1fr))`,gap:isMobile?8:6,justifyContent:"center",maxWidth:isMobile?mobileLandscape?420:340:480,margin:"0 auto"}}>
+            {CHARACTERS.map(ch=>{
+              const sel=pid===0?(p1Char===ch.id):(p2Char===ch.id);
+              const otherSel=pid===0?(p2Char===ch.id):(p1Char===ch.id);
+              return (
+                <button key={ch.id} onClick={()=>pid===0?onSelectP1(ch.id):onSelectP2(ch.id)} style={{
+                  fontFamily:"'Silkscreen',monospace",background:sel?"#2d1b0e":"#1a0f08dd",
+                  border:`2px solid ${sel?(pid===0?P.p1:P.p2)+"cc":"#3a2215"}`,
+                  borderRadius:12,padding:isMobile?8:6,cursor:"pointer",display:"flex",flexDirection:"column",
+                  alignItems:"center",gap:4,opacity:otherSel?.5:1,
+                  boxShadow:sel?`0 0 12px ${pid===0?P.p1:P.p2}44`:"none",
+                }}>
+                  <CharacterPreview char={ch} size={cardSize} selected={sel} pid={pid} />
+                  <div style={{fontSize:isMobile?9:7,color:sel?(pid===0?P.p1:P.p2):"#d8b48c",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:cardSize+10}}>{ch.name}</div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function MapMini({mapDef,active=false,compact=false}){
   const screen=useScreen();
   const isMobile=screen.w<900;
@@ -3665,7 +4009,7 @@ function InstallHelpModal({appShell}){
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // GAME
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,audioUi,tutorialTrack,onTutorialExit,onTutorialComplete}){
+function Game({playerCount,diff,mapKey,charIds,onEnd,isMobile,onlineSession,appShell,audioUi,tutorialTrack,onTutorialExit,onTutorialComplete}){
   const canvasRef=useRef(null);const gs=useRef(null);const keys=useRef(new Set());
   const frame=useRef(0);const lastMove=useRef({0:0,1:0});
   const[hud,setHud]=useState({score:0,time:DIFF[diff].time,combo:0,flow:0,rushLeft:0,freezeLeft:0,orders:[],holding:[null,null]});
@@ -3770,7 +4114,7 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
   },[tutorialLesson,applyTutorialStepState,addPop,BW,T,onTutorialComplete]);
 
   useEffect(()=>{
-    gs.current=createGameState(playerCount,diff,mapKey);
+    gs.current=createGameState(playerCount,diff,mapKey,charIds||[]);
     if(tutorialMode&&tutorialLesson){
       tutorialStepRef.current=0;
       applyTutorialStepState(gs.current,0);
@@ -4910,6 +5254,7 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
 // â”€â”€â”€ TITLE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function TitleScreen({onStart,onOpenOnline,onOpenTraining,isMobile,forceMode,setForceMode,appShell,audioUi,initialMapKey="classic"}){
   const[mode,setMode]=useState(null);const[dif,setDif]=useState(null);const[help,setHelp]=useState(false);const[mapKey,setMapKey]=useState(initialMapKey);
+  const[p1Char,setP1Char]=useState("bean");const[p2Char,setP2Char]=useState("mocha");
   const canvasRef=useRef(null);
   const screen=useScreen();
   const mobileLandscape=isMobile&&screen.w>screen.h;
@@ -5024,8 +5369,10 @@ function TitleScreen({onStart,onOpenOnline,onOpenTraining,isMobile,forceMode,set
                 <div style={{fontSize:isMobile?(mobileLandscape?15:17):12,color:P.gold,textAlign:"center"}}>{mode===1?"SOLO":"DUO"} - {DIFF[dif].label}</div>
                 <div style={{fontSize:isMobile?(mobileLandscape?12:13):9,color:"#c4956a",textAlign:"center",lineHeight:1.8}}>Choose your cafe layout:</div>
                 <MapChoiceGrid selected={mapKey} onSelect={setMapKey} isMobile={isMobile} />
+                <div style={{fontSize:isMobile?(mobileLandscape?12:13):9,color:"#c4956a",textAlign:"center",lineHeight:1.8,marginTop:6}}>Choose your barista{mode===2?"s":""}:</div>
+                <CharacterSelectGrid p1Char={p1Char} p2Char={p2Char} onSelectP1={setP1Char} onSelectP2={setP2Char} playerCount={mode} isMobile={isMobile} />
                 <div style={{display:"grid",gridTemplateColumns:isMobile&&!mobileLandscape?"1fr":"repeat(2, minmax(0, 1fr))",gap:isMobile?12:10,width:"100%"}}>
-                  <Bt onClick={()=>{sfx.init();onStart(mode,dif,mapKey);}} big wide={isMobile}>START SHIFT</Bt>
+                  <Bt onClick={()=>{sfx.init();onStart(mode,dif,mapKey,p1Char,p2Char);}} big wide={isMobile}>START SHIFT</Bt>
                   <Bt onClick={()=>setDif(null)} dim wide={isMobile}>BACK</Bt>
                 </div>
               </div>
@@ -5099,6 +5446,7 @@ function OnlineRoomScreen({isMobile,onBack,onLaunch,initialRoomCode,appShell,aud
   const [error,setError]=useState("");
   const [diff,setDiff]=useState("normal");
   const [mapKey,setMapKey]=useState(initialMapKey);
+  const [p1Char,setP1Char]=useState("bean");const[p2Char,setP2Char]=useState("mocha");
   const [busy,setBusy]=useState(false);
   const [copied,setCopied]=useState(false);
   const launched=useRef(false);
@@ -5145,7 +5493,7 @@ function OnlineRoomScreen({isMobile,onBack,onLaunch,initialRoomCode,appShell,aud
       onStatus:(next)=>setStatus(next),
       onStart:(payload)=>{
         launched.current=true;
-        onLaunch({session:roomSession,diff:payload?.diff||"normal",mapKey:payload?.mapKey||"classic"});
+        onLaunch({session:roomSession,diff:payload?.diff||"normal",mapKey:payload?.mapKey||"classic",charIds:payload?.charIds||["bean","mocha"]});
       },
     });
     return ()=>roomSession.setHandlers({});
@@ -5181,8 +5529,8 @@ function OnlineRoomScreen({isMobile,onBack,onLaunch,initialRoomCode,appShell,aud
   const startOnlineGame=useCallback(()=>{
     if(!roomSession||roomSession.role!=="host"||members.length<2)return;
     launched.current=true;
-    roomSession.sendStart({diff,mapKey}).catch(()=>{});
-    onLaunch({session:roomSession,diff,mapKey});
+    roomSession.sendStart({diff,mapKey,charIds:[p1Char,p2Char]}).catch(()=>{});
+    onLaunch({session:roomSession,diff,mapKey,charIds:[p1Char,p2Char]});
   },[roomSession,members.length,diff,mapKey,onLaunch]);
 
   const copyInvite=useCallback(async ()=>{
@@ -5250,6 +5598,8 @@ function OnlineRoomScreen({isMobile,onBack,onLaunch,initialRoomCode,appShell,aud
                     </div>
                     <div style={{fontSize:isMobile?(mobileLandscape?12:13):10,color:"#c4956a",marginTop:4}}>Choose the floor plan for this room</div>
                     <MapChoiceGrid selected={mapKey} onSelect={setMapKey} isMobile={isMobile} compact={isMobile} />
+                    <div style={{fontSize:isMobile?(mobileLandscape?12:13):10,color:"#c4956a",marginTop:4}}>Choose your baristas:</div>
+                    <CharacterSelectGrid p1Char={p1Char} p2Char={p2Char} onSelectP1={setP1Char} onSelectP2={setP2Char} playerCount={2} isMobile={isMobile} />
                     <button onClick={startOnlineGame} disabled={!roomReady} style={{fontFamily:"'Silkscreen',monospace",fontWeight:"bold",fontSize:isMobile?(mobileLandscape?16:18):13,padding:isMobile?(mobileLandscape?"16px 20px":"18px 24px"):"14px 22px",background:roomReady?"#6b3a1f":"#3a2215",color:roomReady?"#f5e6d3":"#8a6a4a",border:`2px solid ${roomReady?P.gold+"88":"#5a3a20"}`,borderRadius:14,cursor:roomReady?"pointer":"not-allowed",width:"100%"}}>START ONLINE SHIFT</button>
                     {!roomReady&&<div style={{fontSize:isMobile?(mobileLandscape?10:11):8,color:"#8a6a4a",lineHeight:1.8}}>Share the link or room code and wait for player 2.</div>}
                   </div>
@@ -5340,23 +5690,26 @@ export default function CafeChaos(){
     setScreen("title");
   },[onlineSession]);
 
-  const startLocalGame=useCallback((n,d,nextMapKey="classic")=>{
+  const[charIds,setCharIds]=useState(["bean","mocha"]);
+  const startLocalGame=useCallback((n,d,nextMapKey="classic",c1="bean",c2="mocha")=>{
     if(onlineSession){onlineSession.destroy().catch(()=>{});}
     setOnlineSession(null);
     setTutorialKey(null);
     setPc(n);
     setDiff(d);
     setMapKey(nextMapKey);
+    setCharIds([c1,c2]);
     setGameKey((key)=>key+1);
     setScreen("game");
   },[onlineSession]);
 
-  const startOnlineGame=useCallback(({session,diff:nextDiff,mapKey:nextMapKey="classic"})=>{
+  const startOnlineGame=useCallback(({session,diff:nextDiff,mapKey:nextMapKey="classic",charIds:nextCharIds})=>{
     setTutorialKey(null);
     setOnlineSession(session);
     setPc(2);
     setDiff(nextDiff);
     setMapKey(nextMapKey);
+    if(nextCharIds)setCharIds(nextCharIds);
     setGameKey((key)=>key+1);
     setScreen("game");
   },[]);
@@ -5397,8 +5750,8 @@ export default function CafeChaos(){
       {screen==="title"&&<TitleScreen audioUi={audioUi} appShell={appShell} isMobile={isMobile} forceMode={forceMode} setForceMode={setForceMode} initialMapKey={mapKey} onStart={startLocalGame} onOpenOnline={()=>setScreen("online")} onOpenTraining={()=>setScreen("training")}/>}
       {screen==="training"&&<TutorialHubScreen audioUi={audioUi} appShell={appShell} isMobile={isMobile} completedIds={completedTraining} notice={trainingNotice} onBack={returnToTitle} onStartTutorial={startTutorial}/>}
       {screen==="online"&&<OnlineRoomScreen audioUi={audioUi} appShell={appShell} isMobile={isMobile} initialMapKey={mapKey} initialRoomCode={initialRoomCode} onBack={returnToTitle} onLaunch={startOnlineGame}/>}
-      {screen==="game"&&<Game key={gameKey} audioUi={audioUi} appShell={appShell} playerCount={pCount} diff={diff} mapKey={mapKey} isMobile={isMobile} onlineSession={onlineSession} onEnd={s=>{setFs(s);setScreen("over");}}/>}
-      {screen==="tutorial"&&tutorialKey&&<Game key={gameKey} audioUi={audioUi} appShell={appShell} playerCount={1} diff="chill" mapKey={mapKey} isMobile={isMobile} tutorialTrack={tutorialKey} onTutorialExit={()=>setScreen("training")} onTutorialComplete={completeTutorial} onEnd={()=>setScreen("training")} />}
+      {screen==="game"&&<Game key={gameKey} audioUi={audioUi} appShell={appShell} playerCount={pCount} diff={diff} mapKey={mapKey} charIds={charIds} isMobile={isMobile} onlineSession={onlineSession} onEnd={s=>{setFs(s);setScreen("over");}}/>}
+      {screen==="tutorial"&&tutorialKey&&<Game key={gameKey} audioUi={audioUi} appShell={appShell} playerCount={1} diff="chill" mapKey={mapKey} charIds={charIds} isMobile={isMobile} tutorialTrack={tutorialKey} onTutorialExit={()=>setScreen("training")} onTutorialComplete={completeTutorial} onEnd={()=>setScreen("training")} />}
       {screen==="over"&&<GameOver score={finalScore} diff={diff} isMobile={isMobile} onRestart={returnToTitle}/>}
       <InstallHelpModal appShell={appShell} />
     </div>
