@@ -3402,10 +3402,10 @@ function OrderQueueChip({order,extraLabel,onClick}){
   );
 }
 
-function MobileUtilityMenu({appShell,audioUi,onClose}){
+function MobileUtilityMenu({appShell,audioUi,onClose,onQuit,quitLabel="MAIN MENU"}){
   const hasInstall=!!appShell?.showInstallAction;
   const hasFullscreen=!!appShell?.showFullscreenAction;
-  const hasMenu=hasInstall||hasFullscreen||audioUi;
+  const hasMenu=hasInstall||hasFullscreen||audioUi||onQuit;
   if(!hasMenu)return null;
   const btnStyle=(active=true)=>({
     fontFamily:"'Silkscreen',monospace",
@@ -3422,6 +3422,7 @@ function MobileUtilityMenu({appShell,audioUi,onClose}){
   return (
     <div onPointerDown={onClose} onTouchStart={onClose} style={{position:"absolute",inset:0,pointerEvents:"auto"}}>
       <div onPointerDown={(e)=>e.stopPropagation()} onTouchStart={(e)=>e.stopPropagation()} style={{position:"absolute",top:"calc(max(env(safe-area-inset-top), 10px) + 48px)",right:"max(env(safe-area-inset-right), 10px)",display:"flex",flexDirection:"column",gap:8,minWidth:156,padding:"10px",borderRadius:18,background:"linear-gradient(180deg,#22120cd9 0%,#120904cc 100%)",border:"1px solid #c89f7340",boxShadow:"0 18px 36px #0000003a",backdropFilter:"blur(18px) saturate(1.2)"}}>
+        {onQuit&&<button onClick={()=>{onClose?.();onQuit();}} style={btnStyle(true)}>{quitLabel}</button>}
         {hasInstall&&<button onClick={()=>{appShell.promptInstall();onClose();}} style={btnStyle(true)}>INSTALL APP</button>}
         {hasFullscreen&&<button onClick={()=>{appShell.toggleFullscreen();onClose();}} style={btnStyle(true)}>{appShell.isFullscreen?"EXIT FULL":"FULLSCREEN"}</button>}
         {audioUi&&<button onClick={audioUi.toggleMusic} disabled={!audioUi.hasMusic} style={btnStyle(!!audioUi.hasMusic)}>{audioUi.hasMusic?(audioUi.prefs.music?"MUSIC ON":"MUSIC OFF"):"ADD MUSIC"}</button>}
@@ -4009,7 +4010,7 @@ function InstallHelpModal({appShell}){
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // GAME
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-function Game({playerCount,diff,mapKey,charIds,onEnd,isMobile,onlineSession,appShell,audioUi,tutorialTrack,onTutorialExit,onTutorialComplete}){
+function Game({playerCount,diff,mapKey,charIds,onEnd,onQuit,isMobile,onlineSession,appShell,audioUi,tutorialTrack,onTutorialExit,onTutorialComplete}){
   const canvasRef=useRef(null);const gs=useRef(null);const keys=useRef(new Set());
   const frame=useRef(0);const lastMove=useRef({0:0,1:0});
   const[hud,setHud]=useState({score:0,time:DIFF[diff].time,combo:0,flow:0,rushLeft:0,freezeLeft:0,orders:[],holding:[null,null]});
@@ -4204,12 +4205,6 @@ function Game({playerCount,diff,mapKey,charIds,onEnd,isMobile,onlineSession,appS
     return null;
   },[]);
 
-  const setAutoTarget=useCallback((pid,r,c)=>{
-    const next=planAutoTask(pid,r,c);
-    autoTasks.current[pid]=next;
-    return !!next;
-  },[planAutoTask]);
-
   const usePower=useCallback((kind)=>{
     const g=gs.current;if(!g||g.over)return false;
     const now=Date.now();
@@ -4302,6 +4297,27 @@ function Game({playerCount,diff,mapKey,charIds,onEnd,isMobile,onlineSession,appS
       p.holding.ingredients.push(st.adds);sfx.play("add");haptic("light");parts.current.emit(tc*T+T/2,tr*T+T/2,"steam",3);
     }
   },[addPop,T,tutorialMode,tutorialLesson,completeTutorialStep]);
+
+  const tryImmediateTarget=useCallback((pid,r,c)=>{
+    const g=gs.current;if(!g||g.over)return false;
+    const player=g.players.find((pl)=>pl.id===pid);if(!player)return false;
+    const dr=r-player.r,dc=c-player.c;
+    if(Math.abs(dr)+Math.abs(dc)!==1)return false;
+    const dir=dr===-1?"up":dr===1?"down":dc===-1?"left":"right";
+    player.dir=dir;
+    doAction(pid);
+    return true;
+  },[doAction]);
+
+  const setAutoTarget=useCallback((pid,r,c)=>{
+    if(tryImmediateTarget(pid,r,c)){
+      autoTasks.current[pid]=null;
+      return true;
+    }
+    const next=planAutoTask(pid,r,c);
+    autoTasks.current[pid]=next;
+    return !!next;
+  },[planAutoTask,tryImmediateTarget]);
 
   const advanceAutoTask=useCallback((pid)=>{
     const task=autoTasks.current[pid];
@@ -4451,7 +4467,7 @@ function Game({playerCount,diff,mapKey,charIds,onEnd,isMobile,onlineSession,appS
           for(const input of queued){
             if(input?.type==="move"&&input.dir){clearAutoTask(1);tryMove(1,input.dir);}
             if(input?.type==="action"){clearAutoTask(1);doAction(1);}
-            if(input?.type==="target"&&Number.isInteger(input.r)&&Number.isInteger(input.c))setAutoTarget(1,input.r,input.c);
+            if(input?.type==="target"&&Number.isInteger(input.r)&&Number.isInteger(input.c)){clearAutoTask(1);setAutoTarget(1,input.r,input.c);}
             if(input?.type==="power"&&input.power)usePower(input.power);
           }
         }
@@ -4666,7 +4682,8 @@ function Game({playerCount,diff,mapKey,charIds,onEnd,isMobile,onlineSession,appS
       // â”€â”€â”€ DRINK PREVIEW HUD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       const p0 = g.players[0];
       const hasItem = p0.holding && p0.holding.type === "cup";
-      if (hasItem) {
+      const showP0DrinkPreview = hasItem && (!online || localPid === 0);
+      if (showP0DrinkPreview) {
         const ings = p0.holding.ingredients || [];
         const isProc = !!p0.processing;
         const procPct = isProc ? Math.min(1, 1 - (p0.processing.end - Date.now()) / p0.processing.dur) : 0;
@@ -4922,9 +4939,10 @@ function Game({playerCount,diff,mapKey,charIds,onEnd,isMobile,onlineSession,appS
       }
 
       // â”€â”€â”€ P2 DRINK PREVIEW â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-      if (playerCount === 2) {
+      if (playerCount === 2 || online) {
         const p1b = g.players[1];
-        if (p1b && p1b.holding && p1b.holding.type === "cup") {
+        const showP1DrinkPreview = p1b && p1b.holding && p1b.holding.type === "cup" && (!online || localPid === 1);
+        if (showP1DrinkPreview) {
           const ings2 = p1b.holding.ingredients || [];
           const pw2 = Math.min(100, BW * 0.2);
           const ph2 = pw2 * 1.35;
@@ -5001,8 +5019,9 @@ function Game({playerCount,diff,mapKey,charIds,onEnd,isMobile,onlineSession,appS
     const accent=cell?.type==="station"?(cell.station==="serve"?"#ffd66b":(STATIONS[cell.station]?.clr||P.gold)):cell?.type==="counter"?"#f4c66b":"#9de7ff";
     mobileTapHighlight.current={r,c,kind:targetKind,label:targetLabel,accent,life:90,ml:90};
     if(online&&!isHost){sendOnlineInput({type:"target",r,c});return;}
+    clearAutoTask(localPid);
     setAutoTarget(localPid,r,c);
-  },[BW,BH,T,online,isHost,sendOnlineInput,setAutoTarget,localPid]);
+  },[BW,BH,T,online,isHost,sendOnlineInput,setAutoTarget,clearAutoTask,localPid]);
   const handleCanvasPointerDown=useCallback((e)=>{
     if(e.pointerType==="touch")return;
     handleCanvasTarget(e);
@@ -5151,7 +5170,7 @@ function Game({playerCount,diff,mapKey,charIds,onEnd,isMobile,onlineSession,appS
             </div>
           )}
 
-          {mobileUtilityOpen&&<MobileUtilityMenu appShell={appShell} audioUi={audioUi} onClose={()=>setMobileUtilityOpen(false)} />}
+          {mobileUtilityOpen&&<MobileUtilityMenu appShell={appShell} audioUi={audioUi} onClose={()=>setMobileUtilityOpen(false)} onQuit={onQuit} quitLabel={tutorialMode?"TRAINING HUB":"MAIN MENU"} />}
 
           {tutorialMode&&coachOpen&&singleControlMode&&(
             <div style={{position:"absolute",top:48,left:0,right:0,display:"flex",justifyContent:"center",pointerEvents:"none",zIndex:5}}>
@@ -5160,7 +5179,7 @@ function Game({playerCount,diff,mapKey,charIds,onEnd,isMobile,onlineSession,appS
           )}
 
           {tutorialMode&&!coachOpen&&singleControlMode&&(
-            <div style={{position:"absolute",left:8,bottom:8,pointerEvents:"auto"}}>
+            <div style={{position:"absolute",left:8,bottom:58,pointerEvents:"auto"}}>
               <button onClick={()=>setCoachOpen(true)} style={{display:"flex",alignItems:"center",gap:4,background:"linear-gradient(180deg,#21120cd9 0%,#120904c7 100%)",border:`1px solid ${tutorialLesson?.color||"#8fce7e"}66`,borderRadius:999,padding:"4px 10px 4px 5px",cursor:"pointer",boxShadow:"0 4px 12px #00000020",backdropFilter:"blur(12px)",fontFamily:"'Silkscreen',monospace"}}>
                 <CatCoachAvatar size={24}/>
                 <span style={{fontSize:7,color:"#c4956a"}}>?</span>
@@ -5170,16 +5189,14 @@ function Game({playerCount,diff,mapKey,charIds,onEnd,isMobile,onlineSession,appS
 
           {singleControlMode ? (
             <>
-              <div style={{position:"absolute",left:8,bottom:tutorialMode&&!coachOpen?42:8,pointerEvents:"auto"}}>
-                <div style={{...glass,borderRadius:14,padding:"6px 8px",fontSize:7,color:"#e7c39c",textAlign:"left",lineHeight:1.45,maxWidth:132}}>
+              <div style={{position:"absolute",left:8,right:8,bottom:8,display:"flex",alignItems:"flex-end",justifyContent:"space-between",gap:8,pointerEvents:"auto"}}>
+                <div style={{...glass,borderRadius:14,padding:"6px 8px",fontSize:7,color:"#e7c39c",textAlign:"left",lineHeight:1.45,maxWidth:136,flex:"0 1 136px"}}>
                   Tap floor to move.
                   <br />
                   Tap stations and counters to use them.
                 </div>
-              </div>
-              <div style={{position:"absolute",right:6,bottom:6,display:"flex",flexDirection:"column",alignItems:"center",gap:6,pointerEvents:"auto"}}>
-                <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6,minWidth:96}}>
-                  <div style={{...dockGlass,borderRadius:16,padding:"7px 9px",minWidth:96,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}>
+                <div style={{display:"flex",alignItems:"stretch",justifyContent:"flex-end",gap:8,marginLeft:"auto",flexWrap:"nowrap"}}>
+                  <div style={{...dockGlass,borderRadius:16,padding:"8px 10px",minWidth:98,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:5}}>
                     <div style={{fontSize:7,color:"#cba27b"}}>{localHolding?"HOLDING":"HANDS FREE"}</div>
                     {!localHolding&&<div style={{fontSize:7,color:"#f5e6d3"}}>TAP TO PICK</div>}
                     {localHolding&&<div style={{display:"flex",gap:4,flexWrap:"wrap",justifyContent:"center"}}>
@@ -5187,7 +5204,7 @@ function Game({playerCount,diff,mapKey,charIds,onEnd,isMobile,onlineSession,appS
                         localHolding.ingredients?.map((ing,i)=><div key={i} style={{width:11,height:11,borderRadius:3,background:ING_C[ing],border:"1px solid #fff2",boxShadow:"inset 0 1px 0 #ffffff22"}}/>)}
                     </div>}
                   </div>
-                  {!tutorialMode&&<div style={{...dockGlass,borderRadius:16,padding:"4px 5px"}}><PowerButtons hud={hud} onUsePower={mobilePower} compact stack /></div>}
+                  {!tutorialMode&&<div style={{...dockGlass,borderRadius:16,padding:"6px 8px",display:"flex",alignItems:"center"}}><PowerButtons hud={hud} onUsePower={mobilePower} compact /></div>}
                 </div>
               </div>
             </>
@@ -5771,8 +5788,8 @@ export default function CafeChaos(){
       {screen==="title"&&<TitleScreen audioUi={audioUi} appShell={appShell} isMobile={isMobile} forceMode={forceMode} setForceMode={setForceMode} initialMapKey={mapKey} onStart={startLocalGame} onOpenOnline={()=>setScreen("online")} onOpenTraining={()=>setScreen("training")}/>}
       {screen==="training"&&<TutorialHubScreen audioUi={audioUi} appShell={appShell} isMobile={isMobile} completedIds={completedTraining} notice={trainingNotice} onBack={returnToTitle} onStartTutorial={startTutorial}/>}
       {screen==="online"&&<OnlineRoomScreen audioUi={audioUi} appShell={appShell} isMobile={isMobile} initialMapKey={mapKey} initialRoomCode={initialRoomCode} onBack={returnToTitle} onLaunch={startOnlineGame}/>}
-      {screen==="game"&&<Game key={gameKey} audioUi={audioUi} appShell={appShell} playerCount={pCount} diff={diff} mapKey={mapKey} charIds={charIds} isMobile={isMobile} onlineSession={onlineSession} onEnd={s=>{setFs(s);setScreen("over");}}/>}
-      {screen==="tutorial"&&tutorialKey&&<Game key={gameKey} audioUi={audioUi} appShell={appShell} playerCount={1} diff="chill" mapKey={mapKey} charIds={charIds} isMobile={isMobile} tutorialTrack={tutorialKey} onTutorialExit={()=>setScreen("training")} onTutorialComplete={completeTutorial} onEnd={()=>setScreen("training")} />}
+      {screen==="game"&&<Game key={gameKey} audioUi={audioUi} appShell={appShell} playerCount={pCount} diff={diff} mapKey={mapKey} charIds={charIds} isMobile={isMobile} onlineSession={onlineSession} onQuit={returnToTitle} onEnd={s=>{setFs(s);setScreen("over");}}/>}
+      {screen==="tutorial"&&tutorialKey&&<Game key={gameKey} audioUi={audioUi} appShell={appShell} playerCount={1} diff="chill" mapKey={mapKey} charIds={charIds} isMobile={isMobile} tutorialTrack={tutorialKey} onTutorialExit={()=>setScreen("training")} onTutorialComplete={completeTutorial} onQuit={()=>setScreen("training")} onEnd={()=>setScreen("training")} />}
       {screen==="over"&&<GameOver score={finalScore} diff={diff} isMobile={isMobile} onRestart={returnToTitle}/>}
       <InstallHelpModal appShell={appShell} />
     </div>
