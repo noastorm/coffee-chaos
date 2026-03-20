@@ -189,14 +189,18 @@ const MAPS = {
   },
 };
 
-const TRAINING_GUIDE={
-  name:"Mara Vale",
-  role:"Lead Barista Coach",
-  skin:"#f2c795",
-  hair:"#3a2415",
+const CAT_COACH={
+  name:"Beans",
+  role:"Barista Cat",
+  fur:"#f0c070",
+  earInner:"#f0a0a0",
+  nose:"#e08888",
+  skin:"#f0c070",
+  hair:"#f0c070",
   shirt:"#5ab97f",
   accent:"#dff3e4",
 };
+const CAT_CONGRATS=["Purrfect!","Meow-velous!","That's the way!","Nailed it, nya~!","You're a natural!","Fur-tastic work!","Purr-ecisely right!","Great job, meow!"];
 
 const TRAINING_TRACKS={
   coffee_basics:{
@@ -324,6 +328,106 @@ const TRAINING_TRACKS={
     ],
   },
 };
+
+function CatCoachAvatar({size=36,talking=false,blink=false}){
+  return (
+    <svg width={size} height={size} viewBox="0 0 36 36" style={{flexShrink:0,display:"block"}}>
+      <polygon points="4,14 9,2 15,13" fill="#f0c070"/>
+      <polygon points="21,13 27,2 32,14" fill="#f0c070"/>
+      <polygon points="7,13 10,5 13,12" fill="#f0a0a0"/>
+      <polygon points="23,12 26,5 29,13" fill="#f0a0a0"/>
+      <ellipse cx="18" cy="22" rx="14" ry="13" fill="#f0c070"/>
+      {blink
+        ?<><rect x="9" y="20" width="6" height="1.5" rx="0.75" fill="#332014"/><rect x="21" y="20" width="6" height="1.5" rx="0.75" fill="#332014"/></>
+        :<><ellipse cx="12" cy="20" rx="2.5" ry="3" fill="#332014"/><ellipse cx="24" cy="20" rx="2.5" ry="3" fill="#332014"/>
+          <circle cx="13.2" cy="18.8" r="1.2" fill="#fff"/><circle cx="25.2" cy="18.8" r="1.2" fill="#fff"/></>}
+      <ellipse cx="18" cy="25" rx="2" ry="1.5" fill="#e08888"/>
+      {talking
+        ?<ellipse cx="18" cy="28.5" rx="3.5" ry="2.5" fill="#c04040"/>
+        :<><line x1="14.5" y1="27.5" x2="18" y2="29" stroke="#a06040" strokeWidth="1.2" strokeLinecap="round"/><line x1="21.5" y1="27.5" x2="18" y2="29" stroke="#a06040" strokeWidth="1.2" strokeLinecap="round"/></>}
+      <line x1="0" y1="23" x2="9" y2="24.5" stroke="#c4956a" strokeWidth="0.8" opacity="0.5"/>
+      <line x1="0" y1="26" x2="9" y2="25.5" stroke="#c4956a" strokeWidth="0.8" opacity="0.5"/>
+      <line x1="36" y1="23" x2="27" y2="24.5" stroke="#c4956a" strokeWidth="0.8" opacity="0.5"/>
+      <line x1="36" y1="26" x2="27" y2="25.5" stroke="#c4956a" strokeWidth="0.8" opacity="0.5"/>
+    </svg>
+  );
+}
+
+function CatCoachBubble({text,type="step",tip,ingredients=[],stepLabel="",trackColor="#8fce7e",isMobile,onClose,onReset,onExit}){
+  const[talking,setTalking]=useState(false);
+  const[blinking,setBlinking]=useState(false);
+  const talkRef=useRef(null);
+  const autoRef=useRef(null);
+  const blinkRef=useRef(null);
+
+  useEffect(()=>{
+    clearInterval(talkRef.current);clearTimeout(autoRef.current);
+    if(!text){setTalking(false);return;}
+    let mouth=true;setTalking(true);
+    talkRef.current=setInterval(()=>{mouth=!mouth;setTalking(mouth);},180);
+    const dur=Math.min(3500,Math.max(1200,text.length*40));
+    const stopTalk=setTimeout(()=>{clearInterval(talkRef.current);setTalking(false);},dur);
+    autoRef.current=setTimeout(()=>onClose?.(),type==="congrats"?3500:12000);
+    return ()=>{clearInterval(talkRef.current);clearTimeout(autoRef.current);clearTimeout(stopTalk);};
+  },[text,type]);
+
+  useEffect(()=>{
+    blinkRef.current=setInterval(()=>{setBlinking(true);setTimeout(()=>setBlinking(false),150);},3000+Math.random()*2000);
+    return ()=>clearInterval(blinkRef.current);
+  },[]);
+
+  if(!text)return null;
+
+  return (
+    <div style={{
+      display:"flex",alignItems:"flex-start",gap:isMobile?6:10,
+      background:"linear-gradient(180deg,#21120cd9 0%,#120904c7 100%)",
+      border:`1px solid ${trackColor}66`,borderRadius:isMobile?14:18,
+      padding:isMobile?"7px 10px 6px":"10px 14px 8px",
+      boxShadow:"0 12px 28px #0000002e",
+      backdropFilter:"blur(16px) saturate(1.12)",
+      maxWidth:isMobile?380:420,width:isMobile?"min(92vw,380px)":undefined,
+      pointerEvents:"auto",animation:"catBubbleIn .22s ease-out",
+      cursor:type==="step"?"pointer":"default",
+    }} onClick={type==="step"?onClose:undefined}>
+      <div style={{position:"relative",flexShrink:0}}>
+        <CatCoachAvatar size={isMobile?30:38} talking={talking} blink={blinking}/>
+      </div>
+      <div style={{flex:1,minWidth:0,display:"flex",flexDirection:"column",gap:isMobile?3:5}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:6}}>
+          <div style={{display:"flex",alignItems:"center",gap:6}}>
+            <span style={{fontSize:isMobile?8:9,color:trackColor,fontFamily:"'Silkscreen',monospace"}}>{CAT_COACH.name}</span>
+            {stepLabel&&<span style={{fontSize:7,color:"#8a6a4a",fontFamily:"'Silkscreen',monospace"}}>{stepLabel}</span>}
+          </div>
+          {type==="step"&&<span style={{fontSize:6,color:"#4a2a1899",fontFamily:"'Silkscreen',monospace"}}>TAP TO CLOSE</span>}
+        </div>
+        <div style={{
+          fontSize:isMobile?(type==="congrats"?12:9):(type==="congrats"?14:10),
+          color:type==="congrats"?P.gold:"#f3e2cb",
+          lineHeight:1.65,fontFamily:"'Silkscreen',monospace",
+          ...(type==="congrats"?{textShadow:`0 0 10px ${P.gold}44`}:{}),
+        }}>{text}</div>
+        {type==="step"&&tip&&<div style={{fontSize:isMobile?7:8,color:"#9de7ff",lineHeight:1.5,fontFamily:"'Silkscreen',monospace"}}>{tip}</div>}
+        {type==="step"&&ingredients.length>0&&(
+          <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
+            {ingredients.map((ing,idx)=>(
+              <div key={idx} style={{display:"flex",alignItems:"center",gap:3,background:"#2d1b0e",border:"1px solid #4a2a18",borderRadius:999,padding:"2px 6px",fontSize:isMobile?7:7,color:"#f5e6d3"}}>
+                <div style={{width:8,height:8,borderRadius:2,background:ING_C[ing],border:"1px solid #fff2"}}/>
+                <span>{ing.replaceAll("_"," ")}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        {type==="step"&&(
+          <div style={{display:"flex",gap:6,marginTop:1}} onClick={e=>e.stopPropagation()}>
+            <button onClick={onReset} style={{fontFamily:"'Silkscreen',monospace",fontSize:isMobile?7:8,padding:"4px 8px",borderRadius:8,border:"1px solid #6b3a1f88",background:"#2d1b0e",color:"#f5e6d3",cursor:"pointer"}}>RESET</button>
+            <button onClick={onExit} style={{fontFamily:"'Silkscreen',monospace",fontSize:isMobile?7:8,padding:"4px 8px",borderRadius:8,border:"1px solid #3a2215",background:"transparent",color:"#8a6a4a",cursor:"pointer"}}>EXIT</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function buildMapGrid(raw){
   const grid=[];
@@ -2125,11 +2229,11 @@ function mkTutorialOrder(drink,stepIdx=0){
     patience:999,
     elapsed:0,
     cust:{
-      name:TRAINING_GUIDE.name.split(" ")[0],
-      skin:TRAINING_GUIDE.skin,
-      shirt:TRAINING_GUIDE.shirt,
-      accent:TRAINING_GUIDE.accent,
-      hair:TRAINING_GUIDE.hair,
+      name:CAT_COACH.name,
+      skin:CAT_COACH.skin,
+      shirt:CAT_COACH.shirt,
+      accent:CAT_COACH.accent,
+      hair:CAT_COACH.hair,
     },
   };
 }
@@ -2656,6 +2760,10 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
   const[mobileQueueOpen,setMobileQueueOpen]=useState(false);
   const[mobileUtilityOpen,setMobileUtilityOpen]=useState(false);
   const[tutorialStepIdx,setTutorialStepIdx]=useState(0);
+  const[coachOpen,setCoachOpen]=useState(true);
+  const[coachMsg,setCoachMsg]=useState("");
+  const[coachMsgType,setCoachMsgType]=useState("step");
+  const[coachTip,setCoachTip]=useState("");
   const parts=useRef(new Particles());const screen=useScreen();
   const online = !!onlineSession;
   const isHost = !online || onlineSession.role === "host";
@@ -2727,6 +2835,8 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
     const idx=tutorialStepRef.current;
     const step=tutorialLesson.steps[idx];
     if(!step||step.drink!==servedDrink)return false;
+    const congrats=CAT_CONGRATS[Math.floor(Math.random()*CAT_CONGRATS.length)];
+    setCoachMsg(congrats);setCoachTip("");setCoachMsgType("congrats");setCoachOpen(true);
     if(idx>=tutorialLesson.steps.length-1){
       g.orders=[];
       g.over=true;
@@ -2740,6 +2850,10 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
     applyTutorialStepState(g,nextIdx);
     addPop("NEXT DRINK",BW/2,T*.95,"combo");
     setHud(toHudState(g));
+    setTimeout(()=>{
+      const ns=tutorialLesson.steps[nextIdx];
+      if(ns){setCoachMsg(ns.mentor);setCoachTip(ns.tip||"");setCoachMsgType("step");setCoachOpen(true);}
+    },2800);
     return true;
   },[tutorialLesson,applyTutorialStepState,addPop,BW,T,onTutorialComplete]);
 
@@ -2748,6 +2862,8 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
     if(tutorialMode&&tutorialLesson){
       tutorialStepRef.current=0;
       applyTutorialStepState(gs.current,0);
+      const firstStep=tutorialLesson.steps[0];
+      if(firstStep){setCoachMsg(firstStep.mentor);setCoachTip(firstStep.tip||"");setCoachMsgType("step");setCoachOpen(true);}
     }
     setHud(toHudState(gs.current));
     frame.current=0;
@@ -3684,7 +3800,10 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
             </div>
             <div style={{display:"flex",justifyContent:"center"}}>
               {tutorialMode
-                ? <div style={{...glass,borderRadius:16,padding:"8px 12px",minWidth:164,maxWidth:250,width:"min(44vw,250px)",pointerEvents:"auto",fontSize:8,color:"#f5e6d3",textAlign:"center",lineHeight:1.5}}>{tutorialLabel}</div>
+                ? <button onClick={()=>setCoachOpen(true)} style={{...glass,borderRadius:16,padding:"6px 10px",minWidth:164,maxWidth:260,width:"min(46vw,260px)",pointerEvents:"auto",fontSize:8,color:"#f5e6d3",textAlign:"center",lineHeight:1.5,display:"flex",alignItems:"center",justifyContent:"center",gap:6,cursor:"pointer",fontFamily:"'Silkscreen',monospace",border:`1px solid ${tutorialLesson?.color||"#c79c72"}28`}}>
+                    <CatCoachAvatar size={18}/>
+                    <span>{tutorialLabel}</span>
+                  </button>
                 : <div style={{...glass,borderRadius:16,padding:"7px 10px",minWidth:150,maxWidth:220,width:"min(38vw,220px)",pointerEvents:"auto"}}>
                     <PowerMeter hud={hud} compact />
                   </div>}
@@ -3730,15 +3849,24 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
 
           {mobileUtilityOpen&&<MobileUtilityMenu appShell={appShell} audioUi={audioUi} onClose={()=>setMobileUtilityOpen(false)} />}
 
-          {tutorialMode&&singleControlMode&&(
+          {tutorialMode&&coachOpen&&singleControlMode&&(
+            <div style={{position:"absolute",top:48,left:0,right:0,display:"flex",justifyContent:"center",pointerEvents:"none",zIndex:5}}>
+              <CatCoachBubble text={coachMsg} type={coachMsgType} tip={coachTip} ingredients={RECIPES[tutorialStep?.drink]?.ing||[]} stepLabel={`${tutorialStepIdx+1}/${tutorialLesson.steps.length}`} trackColor={tutorialLesson.color} isMobile onClose={()=>setCoachOpen(false)} onReset={()=>{const g=gs.current;if(g){applyTutorialStepState(g,tutorialStepRef.current);setHud(toHudState(g));const s=tutorialLesson?.steps[tutorialStepRef.current];if(s){setCoachMsg(s.mentor);setCoachTip(s.tip||"");setCoachMsgType("step");setCoachOpen(true);}}}} onExit={()=>onTutorialExit?.()} />
+            </div>
+          )}
+
+          {tutorialMode&&!coachOpen&&singleControlMode&&(
             <div style={{position:"absolute",left:8,bottom:8,pointerEvents:"auto"}}>
-              <TutorialCoachPanel track={tutorialLesson} step={tutorialStep} stepIndex={tutorialStepIdx} totalSteps={tutorialLesson.steps.length} isMobile onReset={()=>{const g=gs.current;if(g){applyTutorialStepState(g,tutorialStepRef.current);setHud(toHudState(g));}}} onExit={()=>onTutorialExit?.()} />
+              <button onClick={()=>setCoachOpen(true)} style={{display:"flex",alignItems:"center",gap:4,background:"linear-gradient(180deg,#21120cd9 0%,#120904c7 100%)",border:`1px solid ${tutorialLesson?.color||"#8fce7e"}66`,borderRadius:999,padding:"4px 10px 4px 5px",cursor:"pointer",boxShadow:"0 4px 12px #00000020",backdropFilter:"blur(12px)",fontFamily:"'Silkscreen',monospace"}}>
+                <CatCoachAvatar size={24}/>
+                <span style={{fontSize:7,color:"#c4956a"}}>?</span>
+              </button>
             </div>
           )}
 
           {singleControlMode ? (
             <>
-              <div style={{position:"absolute",left:tutorialMode?236:8,bottom:8,pointerEvents:"auto"}}>
+              <div style={{position:"absolute",left:8,bottom:tutorialMode&&!coachOpen?42:8,pointerEvents:"auto"}}>
                 <div style={{...glass,borderRadius:14,padding:"6px 8px",fontSize:7,color:"#e7c39c",textAlign:"left",lineHeight:1.45,maxWidth:132}}>
                   Tap floor to move.
                   <br />
@@ -3792,7 +3920,13 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
       </div>
       {tutorialMode
         ? <div style={{display:"flex",gap:10,maxWidth:BW+12,padding:"0 10px 8px",justifyContent:"center",alignItems:"center",flexWrap:"wrap",flexShrink:0}}>
-            <div style={{background:"#1a0f08dd",border:`1px solid ${tutorialLesson.color}66`,borderRadius:16,padding:"8px 12px",fontSize:9,color:"#f5e6d3"}}>{tutorialLabel}</div>
+            {coachOpen
+              ? <CatCoachBubble text={coachMsg} type={coachMsgType} tip={coachTip} ingredients={RECIPES[tutorialStep?.drink]?.ing||[]} stepLabel={`${tutorialStepIdx+1}/${tutorialLesson.steps.length}`} trackColor={tutorialLesson.color} onClose={()=>setCoachOpen(false)} onReset={()=>{const g=gs.current;if(g){applyTutorialStepState(g,tutorialStepRef.current);setHud(toHudState(g));const s=tutorialLesson?.steps[tutorialStepRef.current];if(s){setCoachMsg(s.mentor);setCoachTip(s.tip||"");setCoachMsgType("step");setCoachOpen(true);}}}} onExit={()=>onTutorialExit?.()} />
+              : <button onClick={()=>setCoachOpen(true)} style={{display:"flex",alignItems:"center",gap:6,background:"#1a0f08dd",border:`1px solid ${tutorialLesson.color}66`,borderRadius:16,padding:"6px 12px",cursor:"pointer",fontFamily:"'Silkscreen',monospace"}}>
+                  <CatCoachAvatar size={22}/>
+                  <span style={{fontSize:9,color:"#f5e6d3"}}>{tutorialLabel}</span>
+                  <span style={{fontSize:7,color:"#c4956a"}}>CLICK FOR HELP</span>
+                </button>}
           </div>
         : <div style={{display:"flex",gap:10,maxWidth:BW+12,padding:"0 10px 8px",justifyContent:"center",alignItems:"center",flexWrap:"wrap",flexShrink:0}}>
             <PowerMeter hud={hud} />
@@ -3801,9 +3935,6 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
       <div style={{display:"flex",gap:6,maxWidth:BW+18,padding:"0 10px 8px",overflowX:"auto",flexShrink:0,minHeight:72}}>
         {hud.orders.map(o=><OrderTicket key={o.id} o={o}/>)}{!hud.orders.length&&<span style={{color:"#6b3a1f",fontSize:9,padding:12}}>Waiting for customers...</span>}
       </div>
-      {tutorialMode&&<div style={{display:"flex",maxWidth:BW+18,width:"100%",padding:"0 10px 8px",justifyContent:"center",flexShrink:0}}>
-        <TutorialCoachPanel track={tutorialLesson} step={tutorialStep} stepIndex={tutorialStepIdx} totalSteps={tutorialLesson.steps.length} onReset={()=>{const g=gs.current;if(g){applyTutorialStepState(g,tutorialStepRef.current);setHud(toHudState(g));}}} onExit={()=>onTutorialExit?.()} />
-      </div>}
       <canvas ref={canvasRef} width={BW} height={BH} onPointerDown={handleCanvasPointerDown} onTouchStart={handleCanvasTarget} style={{width:BW,height:BH,imageRendering:"pixelated",flexShrink:0,borderTop:`2px solid ${P.wallLine}`,borderBottom:`2px solid ${P.wallLine}`,boxShadow:"0 16px 30px #0000004d",cursor:"pointer",touchAction:"manipulation"}}/>
       <div style={{display:"flex",flexWrap:"wrap",gap:4,maxWidth:BW+18,padding:"8px 10px 6px",justifyContent:"center",flexShrink:0}}>
         {Object.entries(RECIPES).map(([n,r])=><div key={n} style={{background:"#2d1b0e",borderRadius:6,padding:"4px 7px",fontSize:7,color:"#9f7d59",border:"1px solid #4a2a18",display:"flex",alignItems:"center",gap:3,fontFamily:"'Silkscreen',monospace",boxShadow:"inset 0 1px 0 #ffffff12"}}>
@@ -3956,9 +4087,12 @@ function TutorialHubScreen({isMobile,onBack,onStartTutorial,completedIds=[],noti
       <div style={{position:"absolute",inset:0,overflowY:"auto",WebkitOverflowScrolling:"touch",touchAction:"pan-y pinch-zoom"}}>
         <div style={{minHeight:"100%",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:isMobile?"flex-start":"center",paddingTop:`max(env(safe-area-inset-top), ${isMobile?(mobileLandscape?18:28):22}px)`,paddingBottom:`max(env(safe-area-inset-bottom), ${isMobile?(mobileLandscape?44:56):24}px)`,paddingLeft:"max(env(safe-area-inset-left), 14px)",paddingRight:"max(env(safe-area-inset-right), 14px)"}}>
           <div style={{width:panelWidth,maxWidth:"100%",display:"flex",flexDirection:"column",alignItems:"center",gap:isMobile?(mobileLandscape?14:18):14,padding:isMobile?(mobileLandscape?"18px 16px 24px":"24px 18px 30px"):"24px 22px",background:isMobile?"linear-gradient(180deg,#120904ee 0%,#1a0f08dd 100%)":"transparent",border:isMobile?"1px solid #6b3a1f66":"none",borderRadius:isMobile?26:0,boxShadow:isMobile?"0 24px 48px #00000044,inset 0 1px 0 #ffffff08":"none",textAlign:"center"}}>
-            <div style={{fontSize:isMobile?(mobileLandscape?28:32):24,color:P.gold,textShadow:`0 0 20px ${P.gold}44`}}>TRAINING BAR</div>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:isMobile?10:12}}>
+              <CatCoachAvatar size={isMobile?(mobileLandscape?36:42):38}/>
+              <div style={{fontSize:isMobile?(mobileLandscape?28:32):24,color:P.gold,textShadow:`0 0 20px ${P.gold}44`}}>TRAINING BAR</div>
+            </div>
             <div style={{fontSize:isMobile?(mobileLandscape?11:12):9,color:"#c4956a",maxWidth:640,lineHeight:1.8}}>
-              {TRAINING_GUIDE.name}, your {TRAINING_GUIDE.role.toLowerCase()}, will walk you through real drink builds one by one. Each lesson runs on the actual cafe stations, but without random rush pressure.
+              {CAT_COACH.name} the {CAT_COACH.role.toLowerCase()} will walk you through real drink builds one by one. Each lesson runs on the actual cafe stations, but without random rush pressure.
             </div>
             <ShellActionRow appShell={appShell} compact={isMobile&&mobileLandscape} />
             <AudioToggleRow audioUi={audioUi} compact={isMobile&&mobileLandscape} />
@@ -3979,7 +4113,7 @@ function TutorialHubScreen({isMobile,onBack,onStartTutorial,completedIds=[],noti
                     {track.drinks.map((drink)=><div key={drink} style={{background:"#2d1b0e",border:"1px solid #4a2a18",borderRadius:999,padding:"4px 8px",fontSize:isMobile?(mobileLandscape?9:10):7,color:getRecipeUiColor(drink)}}>{drink}</div>)}
                   </div>
                   <div style={{fontSize:isMobile?(mobileLandscape?10:11):8,color:"#c4956a",lineHeight:1.7}}>
-                    {TRAINING_GUIDE.name.split(" ")[0]} explains not just what to add, but why the recipe works that way.
+                    {CAT_COACH.name} explains not just what to add, but why the recipe works that way.
                   </div>
                   <button onClick={()=>onStartTutorial(track.id)} style={{fontFamily:"'Silkscreen',monospace",fontWeight:"bold",fontSize:isMobile?(mobileLandscape?12:13):10,padding:isMobile?(mobileLandscape?"13px 16px":"14px 18px"):"10px 16px",background:"#6b3a1f",color:"#f5e6d3",border:`2px solid ${track.color}88`,borderRadius:12,cursor:"pointer",width:"100%"}}>START LESSON</button>
                 </div>
@@ -3994,38 +4128,7 @@ function TutorialHubScreen({isMobile,onBack,onStartTutorial,completedIds=[],noti
   );
 }
 
-function TutorialCoachPanel({track,step,stepIndex,totalSteps,isMobile,onReset,onExit}){
-  if(!track||!step)return null;
-  const ingredients=RECIPES[step.drink]?.ing||[];
-  return (
-    <div style={{background:"linear-gradient(180deg,#21120cd9 0%,#120904c7 100%)",border:`1px solid ${track.color}66`,borderRadius:18,padding:isMobile?"12px 12px 10px":"14px 14px 12px",boxShadow:"0 16px 30px #0000002e",backdropFilter:"blur(16px) saturate(1.12)",display:"flex",flexDirection:"column",gap:isMobile?8:10,maxWidth:isMobile?220:290,color:"#f5e6d3",pointerEvents:"auto"}}>
-      <div style={{display:"flex",alignItems:"center",gap:10}}>
-        <div style={{width:isMobile?34:38,height:isMobile?34:38,borderRadius:"50%",background:`radial-gradient(circle at 40% 35%,${TRAINING_GUIDE.skin},#d6a46c)`,border:"2px solid #ffffff14",position:"relative",flexShrink:0}}>
-          <div style={{position:"absolute",top:4,left:6,right:6,height:8,borderRadius:6,background:TRAINING_GUIDE.hair}}/>
-          <div style={{position:"absolute",bottom:4,left:7,right:7,height:10,borderRadius:8,background:TRAINING_GUIDE.shirt}}/>
-        </div>
-        <div style={{minWidth:0}}>
-          <div style={{fontSize:isMobile?9:10,color:track.color}}>{TRAINING_GUIDE.name}</div>
-          <div style={{fontSize:isMobile?7:8,color:"#8a6a4a"}}>{TRAINING_GUIDE.role} • {stepIndex+1}/{totalSteps}</div>
-        </div>
-      </div>
-      <div style={{fontSize:isMobile?11:12,color:P.gold}}>{step.drink}</div>
-      <div style={{fontSize:isMobile?8:9,color:"#f3e2cb",lineHeight:1.7}}>{step.mentor}</div>
-      <div style={{fontSize:isMobile?7:8,color:"#d7b48d",lineHeight:1.7}}>{step.why}</div>
-      <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
-        {ingredients.map((ing,idx)=><div key={`${step.drink}-${ing}-${idx}`} style={{display:"flex",alignItems:"center",gap:4,background:"#2d1b0e",border:"1px solid #4a2a18",borderRadius:999,padding:"4px 7px",fontSize:isMobile?7:8,color:"#f5e6d3"}}>
-          <div style={{width:9,height:9,borderRadius:2,background:ING_C[ing],border:"1px solid #fff2"}}/>
-          <span>{ing.replaceAll("_"," ")}</span>
-        </div>)}
-      </div>
-      <div style={{fontSize:isMobile?7:8,color:"#9de7ff",lineHeight:1.6}}>{step.tip}</div>
-      <div style={{display:"flex",gap:8}}>
-        <button onClick={onReset} style={{fontFamily:"'Silkscreen',monospace",fontSize:isMobile?8:9,padding:"8px 10px",borderRadius:10,border:"1px solid #6b3a1f88",background:"#2d1b0e",color:"#f5e6d3",cursor:"pointer",flex:1}}>RESET STEP</button>
-        <button onClick={onExit} style={{fontFamily:"'Silkscreen',monospace",fontSize:isMobile?8:9,padding:"8px 10px",borderRadius:10,border:"1px solid #3a2215",background:"transparent",color:"#8a6a4a",cursor:"pointer",flex:1}}>EXIT</button>
-      </div>
-    </div>
-  );
-}
+/* TutorialCoachPanel removed — replaced by CatCoachBubble */
 
 function OnlineRoomScreen({isMobile,onBack,onLaunch,initialRoomCode,appShell,audioUi,initialMapKey="classic"}){
   const [stage,setStage]=useState(initialRoomCode?"join":"menu");
@@ -4326,6 +4429,7 @@ export default function CafeChaos(){
         @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
         @keyframes scoreReveal{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
         @keyframes starBounce{0%{transform:scale(0)}50%{transform:scale(1.3)}100%{transform:scale(1)}}
+        @keyframes catBubbleIn{from{opacity:0;transform:translateY(-6px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
         *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;}
         html,body,#root{width:100%;height:100%;margin:0;padding:0;background:#1a0f08;overflow:hidden;}
         body{overscroll-behavior:none;}
