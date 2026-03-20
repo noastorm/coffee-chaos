@@ -103,11 +103,11 @@ const MAPS = {
     raw:[
       "WSSSSSSSSSSSSSSSSW",
       "W................W",
-      "E..CC....CC....A.W",
-      "e..............B.W",
-      "M..CC....CC....T.W",
-      "m..............HQW",
-      "F..U.I..R..X...C.W",
+      "WE..CC....CC..A..W",
+      "We............B..W",
+      "WM..CC....CC..T..W",
+      "Wm........H.Q....W",
+      "WF.U.I..R..X...C.W",
       "WWWWWWWWWWWWWWWWWW",
     ],
     theme:{
@@ -131,13 +131,13 @@ const MAPS = {
     name:"Catpuccino",
     desc:"Cozy cat cafe with window perches, chalkboard menus, and sleepy regulars.",
     raw:[
-      "WSSSSSSSSSSSSSSSW",
+      "WSSSSSSSSSSSSSSSSW",
       "W................W",
-      "EA.CC......CC..T.W",
-      "e..............B.W",
-      "M..CC......CC..H.W",
-      "m..............Q.W",
-      "F..U.I..R..X.....W",
+      "WEA.CC....CC..T..W",
+      "We............B..W",
+      "WM..CC....CC..H..W",
+      "Wm...........Q...W",
+      "WF.U.I..R..X.....W",
       "WWWWWWWWWWWWWWWWWW",
     ],
     theme:{
@@ -162,11 +162,11 @@ const MAPS = {
     desc:"Sky-high couch cafe with city windows up top and the order line at the bottom.",
     raw:[
       "WWWWWWWWWWWWWWWWWW",
-      "WE..CC....CC....AW",
-      "We..............BW",
-      "WM..CC....CC....TW",
-      "Wm..............HW",
-      "WF..U.I..R..X...QW",
+      "WE..CC....CC..A..W",
+      "We............B..W",
+      "WM..CC....CC..T..W",
+      "Wm........H.Q....W",
+      "WF.U.I..R..X.....W",
       "W................W",
       "WSSSSSSSSSSSSSSSSW",
     ],
@@ -1684,6 +1684,42 @@ function drawOrderBubble(ctx,x,y,T,order){
   ctx.fillRect(rx+4,ry+h-5,(w-8)*Math.max(0,Math.min(1,pct)),2);
 }
 
+function drawTapTargetMarker(ctx,T,target,f){
+  if(!target||target.life<=0)return;
+  const x=target.c*T,y=target.r*T;
+  const pct=target.life/target.ml;
+  const pulse=(Math.sin(f*.24)+1)/2;
+  const inset=3+Math.round((1-pulse)*2);
+  ctx.save();
+  ctx.globalAlpha=Math.max(.22,pct*.85);
+  ctx.fillStyle=target.accent||P.gold;
+  if(target.kind==="floor"){
+    ctx.beginPath();
+    ctx.arc(x+T/2,y+T/2,Math.max(8,T*.16)+pulse*2,0,Math.PI*2);
+    ctx.fill();
+    ctx.globalAlpha=Math.max(.55,pct);
+    ctx.strokeStyle="#fff8d6";
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.arc(x+T/2,y+T/2,Math.max(10,T*.22)+pulse*3,0,Math.PI*2);
+    ctx.stroke();
+  }else{
+    ctx.fillRect(x+inset,y+inset,T-inset*2,T-inset*2);
+    ctx.globalAlpha=Math.max(.55,pct);
+    ctx.strokeStyle="#fff6d8";
+    ctx.lineWidth=2;
+    ctx.strokeRect(x+inset-.5,y+inset-.5,T-(inset*2)+1,T-(inset*2)+1);
+  }
+  ctx.globalAlpha=Math.max(.72,pct);
+  ctx.fillStyle="#120904dd";
+  ctx.fillRect(x+T*.14,y+T*.08,T*.34,T*.18);
+  ctx.fillStyle="#fff2d6";
+  ctx.font=`bold ${Math.max(7,T*.14)}px monospace`;
+  ctx.textAlign="center";
+  ctx.fillText(target.label||"GO",x+T*.31,y+T*.2);
+  ctx.restore();
+}
+
 function drawCustomerArea(ctx,T,BW,BH,orders,f){
   const mapTheme=getActiveMapDef().theme||{};
   ctx.save();
@@ -2472,6 +2508,7 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
   const hasShellActions = !!(appShell?.showInstallAction || appShell?.showFullscreenAction);
   const remoteInputs=useRef([]);
   const autoTasks=useRef({0:null,1:null});
+  const mobileTapHighlight=useRef(null);
   const lastSnapshot=useRef(0);
   const endedRemotely=useRef(false);
 
@@ -2481,13 +2518,13 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
   const computeT = useCallback(() => {
     if (isMobile) {
       const landscape = screen.w >= screen.h;
-      const reservedH = landscape ? (hasShellActions ? 154 : 138) : 190;
-      const byWidth = Math.floor((screen.w - 20) / COLS);
+      const reservedH = landscape ? 92 : 190;
+      const byWidth = Math.floor((screen.w - (landscape ? 8 : 20)) / COLS);
       const byHeight = Math.floor((screen.h - reservedH) / ROWS);
-      return Math.max(20, Math.min(byWidth, byHeight, landscape ? 42 : 56));
+      return Math.max(20, Math.min(byWidth, byHeight, landscape ? 50 : 56));
     }
     return Math.min(Math.floor((screen.w - 40) / COLS), Math.floor((screen.h - 200) / ROWS), 56);
-  }, [isMobile, screen, hasShellActions]);
+  }, [isMobile, screen]);
   const T = computeT();
   const BW = COLS * T, BH = ROWS * T;
 
@@ -2499,6 +2536,7 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
     moveBuffer.current={0:null,1:null};
     remoteInputs.current=[];
     autoTasks.current={0:null,1:null};
+    mobileTapHighlight.current=null;
     lastSnapshot.current=0;
     endedRemotely.current=false;
     parts.current=new Particles();
@@ -2883,6 +2921,10 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
           }else if(p.squash){p.squash.sx=1;p.squash.sy=1;}
         }
         parts.current.update();
+        if(mobileTapHighlight.current){
+          mobileTapHighlight.current.life-=1;
+          if(mobileTapHighlight.current.life<=0)mobileTapHighlight.current=null;
+        }
       }
 
       // RENDER
@@ -2922,6 +2964,7 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
           else drawSt(ctx,x,y,T,cell.station,f);
         }
       }
+      drawTapTargetMarker(ctx,T,mobileTapHighlight.current,f);
       if(mapTheme.deco==="catcafe")drawCatCafeAmbient(ctx,T,BW,BH,f);
       drawCustomerArea(ctx,T,BW,BH,g.orders,f);
       drawLighting(ctx,T,BW,BH,f,g);
@@ -3291,6 +3334,11 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
     const y=(point.clientY-rect.top)*(BH/rect.height);
     const r=Math.max(0,Math.min(ROWS-1,Math.floor(y/T)));
     const c=Math.max(0,Math.min(COLS-1,Math.floor(x/T)));
+    const cell=MAP[r]?.[c];
+    const targetKind=cell?.type==="station"?"station":cell?.type==="counter"?"counter":"floor";
+    const targetLabel=cell?.type==="station"?(cell.station==="serve"?"SERVE":(STATIONS[cell.station]?.short||"USE")):cell?.type==="counter"?"DROP":"GO";
+    const accent=cell?.type==="station"?(cell.station==="serve"?"#ffd66b":(STATIONS[cell.station]?.clr||P.gold)):cell?.type==="counter"?"#f4c66b":"#9de7ff";
+    mobileTapHighlight.current={r,c,kind:targetKind,label:targetLabel,accent,life:90,ml:90};
     if(online&&!isHost){sendOnlineInput({type:"target",r,c});return;}
     setAutoTarget(localPid,r,c);
   },[BW,BH,T,online,isHost,sendOnlineInput,setAutoTarget,localPid]);
@@ -3346,7 +3394,6 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
 
     const shortSide=Math.min(screen.w,screen.h);
     const joySize=singleControlMode?Math.min(98,Math.max(80,Math.round(shortSide*.23))):Math.min(84,Math.max(68,Math.round(shortSide*.19)));
-    const actSize=singleControlMode?Math.min(84,Math.max(68,Math.round(shortSide*.19))):52;
     const duoActW=60,duoActH=34;
     const mapTheme=getActiveMapDef().theme||{};
     const glowRgb=mapTheme.glow||"210,169,121";
@@ -3441,17 +3488,25 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
 
           {singleControlMode ? (
             <>
-              <div style={{position:"absolute",left:6,bottom:6,pointerEvents:"auto"}}>
-                <div style={{...dockGlass,borderRadius:20,padding:"4px",display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
-                  <Joystick onMove={d => mobileMove(localPid,d)} color={localColor} label={online ? `P${localPid+1}` : "MOVE"} side="left" size={joySize} />
+              <div style={{position:"absolute",left:8,bottom:8,pointerEvents:"auto"}}>
+                <div style={{...glass,borderRadius:14,padding:"6px 8px",fontSize:7,color:"#e7c39c",textAlign:"left",lineHeight:1.45,maxWidth:132}}>
+                  Tap floor to move.
+                  <br />
+                  Tap stations and counters to use them.
                 </div>
               </div>
               <div style={{position:"absolute",right:6,bottom:6,display:"flex",flexDirection:"column",alignItems:"center",gap:6,pointerEvents:"auto"}}>
-                <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6,minWidth:Math.max(actSize+14,96)}}>
-                  <ActBtn onAction={() => mobileAct(localPid)} color={localColor} holding={localHolding} sz={actSize} />
+                <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6,minWidth:96}}>
+                  <div style={{...dockGlass,borderRadius:16,padding:"7px 9px",minWidth:96,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}>
+                    <div style={{fontSize:7,color:"#cba27b"}}>{localHolding?"HOLDING":"HANDS FREE"}</div>
+                    {!localHolding&&<div style={{fontSize:7,color:"#f5e6d3"}}>TAP TO PICK</div>}
+                    {localHolding&&<div style={{display:"flex",gap:4,flexWrap:"wrap",justifyContent:"center"}}>
+                      {localHolding.ingredients?.length===0?<span style={{fontSize:8,color:"#f5e6d3"}}>CUP</span>:
+                        localHolding.ingredients?.map((ing,i)=><div key={i} style={{width:11,height:11,borderRadius:3,background:ING_C[ing],border:"1px solid #fff2",boxShadow:"inset 0 1px 0 #ffffff22"}}/>)}
+                    </div>}
+                  </div>
                   <div style={{...dockGlass,borderRadius:16,padding:"4px 5px"}}><PowerButtons hud={hud} onUsePower={mobilePower} compact stack /></div>
                 </div>
-                <div style={{...glass,borderRadius:14,padding:"6px 8px",fontSize:7,color:"#e7c39c",textAlign:"center",lineHeight:1.45,maxWidth:118}}>Tap stations to auto-walk</div>
               </div>
             </>
           ) : (
@@ -3572,13 +3627,13 @@ function TitleScreen({onStart,onOpenOnline,isMobile,forceMode,setForceMode,appSh
             {help?
               <div style={{background:"#1a0f08ee",borderRadius:18,padding:isMobile?(mobileLandscape?"18px 18px 20px":"22px 18px 24px"):16,border:`2px solid ${P.gold}44`,width:"100%",fontSize:isMobile?(mobileLandscape?11:12):10,lineHeight:2,color:"#c4956a"}}>
                 <div style={{color:P.gold,textAlign:"center",marginBottom:10,fontSize:isMobile?(mobileLandscape?16:18):12}}>HOW TO PLAY</div>
-                {["1. Grab a cup from the cup station.","2. Tap a station to auto-walk there, or move manually.","3. Some stations brew, so watch the progress bar.","4. Place cups on counters to free your hands.","5. Serve at the bell counter when the recipe matches.","6. Great serves add time back to the clock.","7. Missed or bad orders burn clock time.","8. Chain serves to fill FLOW for powers."].map((t,i)=><div key={i} style={{color:"#e8a87c"}}>{t}</div>)}
+                {["1. Grab a cup from the cup station.","2. On phones, tap floors to move and tap stations or counters to use them.","3. Some stations brew, so watch the progress bar.","4. Place cups on counters to free your hands.","5. Serve at the bell counter when the recipe matches.","6. Great serves add time back to the clock.","7. Missed or bad orders burn clock time.","8. Chain serves to fill FLOW for powers."].map((t,i)=><div key={i} style={{color:"#e8a87c"}}>{t}</div>)}
                 {!isMobile&&<div style={{marginTop:8,borderTop:"1px solid #3a2215",paddingTop:8}}>
                   <div>P1: <span style={{color:P.p1}}>WASD</span> + <span style={{color:P.p1}}>E/Space</span></div>
                   <div>P2: <span style={{color:P.p2}}>Arrows</span> + <span style={{color:P.p2}}>/</span></div>
                   <div>Powers: <span style={{color:P.gold}}>Q = Rush</span> and <span style={{color:"#9de7ff"}}>R = Freeze</span></div>
                 </div>}
-                {isMobile&&<div style={{marginTop:10,color:"#8a6a4a",textAlign:"center"}}>Tap the map to auto-walk, or use the joystick and ACT button.</div>}
+                {isMobile&&<div style={{marginTop:10,color:"#8a6a4a",textAlign:"center"}}>Tap floors to move and tap stations or counters to use them.</div>}
                 <div style={{textAlign:"center",marginTop:18}}><Bt onClick={()=>setHelp(false)} wide={isMobile}>BACK</Bt></div>
               </div>
             : !mode ?
