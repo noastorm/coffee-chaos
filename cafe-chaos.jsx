@@ -189,6 +189,142 @@ const MAPS = {
   },
 };
 
+const TRAINING_GUIDE={
+  name:"Mara Vale",
+  role:"Lead Barista Coach",
+  skin:"#f2c795",
+  hair:"#3a2415",
+  shirt:"#5ab97f",
+  accent:"#dff3e4",
+};
+
+const TRAINING_TRACKS={
+  coffee_basics:{
+    id:"coffee_basics",
+    title:"Coffee Basics",
+    subtitle:"Pull espresso, steam milk, and learn what makes a macchiato distinct.",
+    mapKey:"classic",
+    color:"#8fce7e",
+    drinks:["Espresso","Cafe Latte","Macchiato","Double Espresso"],
+    steps:[
+      {
+        drink:"Espresso",
+        headline:"Start with the base shot",
+        mentor:"Every coffee lesson starts with espresso. Pull it into an empty cup from the ESP machine.",
+        why:"Espresso is the concentrated coffee base. Everything in this lesson builds on that shot.",
+        tip:"Timed stations like ESP need a moment to finish brewing before the ingredient drops into your cup.",
+      },
+      {
+        drink:"Cafe Latte",
+        headline:"Milk changes the body",
+        mentor:"Now turn that shot into a latte with steamed milk.",
+        why:"Steamed milk makes a latte silky and mellow. Plain milk stays cold and won't count as a proper cafe latte here.",
+        tip:"Use the steam wand station, not the plain milk station.",
+      },
+      {
+        drink:"Macchiato",
+        headline:"Foam, not milk",
+        mentor:"A macchiato is espresso marked with foam, not filled with milk.",
+        why:"Foam keeps the drink sharp and airy. If you use regular milk, you soften the espresso and drift toward latte territory instead.",
+        tip:"Build it as espresso plus foam, then serve it at the bell.",
+      },
+      {
+        drink:"Double Espresso",
+        headline:"Same machine, twice",
+        mentor:"For a double espresso, pull two shots into the same cup.",
+        why:"You're stacking intensity, not changing texture. That is why this recipe is just espresso plus espresso again.",
+        tip:"Use ESP and then 2X ESP, or pull two espresso shots if the map offers both lanes.",
+      },
+    ],
+  },
+  iced_lab:{
+    id:"iced_lab",
+    title:"Iced Lab",
+    subtitle:"Practice cold drinks, caramel builds, and the difference between milk and foam.",
+    mapKey:"classic",
+    color:"#f0c989",
+    drinks:["Iced Latte","Iced Caramel Latte","Caramel Macchiato"],
+    steps:[
+      {
+        drink:"Iced Latte",
+        headline:"Cool the latte down",
+        mentor:"Build an iced latte with espresso, milk, and ice.",
+        why:"Milk keeps the drink creamy even when chilled. Ice changes temperature and texture, but it does not replace the milk itself.",
+        tip:"The easiest order is usually espresso first, then milk, then ice.",
+      },
+      {
+        drink:"Iced Caramel Latte",
+        headline:"Add sweetness last",
+        mentor:"Now add caramel to that iced latte formula.",
+        why:"Caramel is a flavor layer. It doesn't replace the espresso, milk, or ice; it sits on top of that base and sweetens it.",
+        tip:"Think of this one as iced latte plus caramel.",
+      },
+      {
+        drink:"Caramel Macchiato",
+        headline:"Macchiato logic still matters",
+        mentor:"This one keeps the macchiato structure: espresso, foam, and caramel.",
+        why:"The caramel adds sweetness, but foam still matters because the drink should stay brighter and more layered than a latte.",
+        tip:"If you use milk instead of foam, the recipe won't match.",
+      },
+    ],
+  },
+  matcha_lab:{
+    id:"matcha_lab",
+    title:"Matcha Lab",
+    subtitle:"Learn how matcha pairs differently with steamed milk, cold milk, and berry syrup.",
+    mapKey:"speedway",
+    color:"#8fce7e",
+    drinks:["Matcha Latte","Iced Matcha","Strawberry Matcha"],
+    steps:[
+      {
+        drink:"Matcha Latte",
+        headline:"Warm and smooth",
+        mentor:"Start with a matcha latte: matcha plus steamed milk.",
+        why:"Steamed milk rounds out the grassy matcha flavor and makes the drink feel soft instead of sharp.",
+        tip:"Use the steam wand, not plain milk, for this one.",
+      },
+      {
+        drink:"Iced Matcha",
+        headline:"Cold version, different texture",
+        mentor:"Now make the iced version with matcha, milk, and ice.",
+        why:"Cold milk keeps the drink clean and refreshing. Steam would turn it into the hot latte profile instead.",
+        tip:"No espresso belongs in any of the matcha tutorials.",
+      },
+      {
+        drink:"Strawberry Matcha",
+        headline:"Fruit on top of the matcha base",
+        mentor:"Finish with strawberry matcha by adding berry syrup to the iced matcha formula.",
+        why:"Berry brightens the earthy matcha and pushes the drink toward dessert without changing its chilled base.",
+        tip:"Build the iced matcha first, then add berry.",
+      },
+    ],
+  },
+  tea_house:{
+    id:"tea_house",
+    title:"Tea House",
+    subtitle:"Understand when tea wants hot water and when it wants a chilled finish instead.",
+    mapKey:"crossroads",
+    color:"#d9784f",
+    drinks:["Hot Tea","Iced Tea"],
+    steps:[
+      {
+        drink:"Hot Tea",
+        headline:"Steep with heat",
+        mentor:"Hot tea is simply tea plus hot water.",
+        why:"Hot water is what actually steeps the tea and opens the flavor. Plain cold water would leave the drink unfinished.",
+        tip:"Tea is a timed station, so wait for it to finish before adding the hot water.",
+      },
+      {
+        drink:"Iced Tea",
+        headline:"Chill it properly",
+        mentor:"For iced tea, use tea, water, and ice.",
+        why:"Once the tea is brewed, regular water and ice cool it down cleanly. Hot water would keep the drink in the hot-tea lane instead.",
+        tip:"This is tea plus water plus ice, not tea plus hot water plus ice.",
+      },
+    ],
+  },
+};
+
 function buildMapGrid(raw){
   const grid=[];
   for(let r=0;r<ROWS;r++){
@@ -1980,6 +2116,24 @@ function mkOrder(elapsed,diff){
     cust:{name:CUST[~~(Math.random()*CUST.length)],skin:CUSTOMER_SKINS[~~(Math.random()*CUSTOMER_SKINS.length)],shirt:look.shirt,accent:look.accent,hair:look.hair}};
 }
 
+function mkTutorialOrder(drink,stepIdx=0){
+  const recipe=RECIPES[drink];
+  return {
+    id:`tutorial-${stepIdx}-${drink}`,
+    drink,
+    recipe,
+    patience:999,
+    elapsed:0,
+    cust:{
+      name:TRAINING_GUIDE.name.split(" ")[0],
+      skin:TRAINING_GUIDE.skin,
+      shirt:TRAINING_GUIDE.shirt,
+      accent:TRAINING_GUIDE.accent,
+      hair:TRAINING_GUIDE.hair,
+    },
+  };
+}
+
 // â”€â”€â”€ JOYSTICK â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function createPlayerState(id, r, c){
   return {
@@ -2495,12 +2649,13 @@ function InstallHelpModal({appShell}){
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // GAME
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,audioUi}){
+function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,audioUi,tutorialTrack,onTutorialExit,onTutorialComplete}){
   const canvasRef=useRef(null);const gs=useRef(null);const keys=useRef(new Set());
   const frame=useRef(0);const lastMove=useRef({0:0,1:0});
   const[hud,setHud]=useState({score:0,time:DIFF[diff].time,combo:0,flow:0,rushLeft:0,freezeLeft:0,orders:[],holding:[null,null]});
   const[mobileQueueOpen,setMobileQueueOpen]=useState(false);
   const[mobileUtilityOpen,setMobileUtilityOpen]=useState(false);
+  const[tutorialStepIdx,setTutorialStepIdx]=useState(0);
   const parts=useRef(new Particles());const screen=useScreen();
   const online = !!onlineSession;
   const isHost = !online || onlineSession.role === "host";
@@ -2509,8 +2664,12 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
   const remoteInputs=useRef([]);
   const autoTasks=useRef({0:null,1:null});
   const mobileTapHighlight=useRef(null);
+  const tutorialStepRef=useRef(0);
   const lastSnapshot=useRef(0);
   const endedRemotely=useRef(false);
+  const tutorialMode=!!tutorialTrack;
+  const tutorialLesson=tutorialTrack?TRAINING_TRACKS[tutorialTrack]:null;
+  const tutorialStep=tutorialLesson?.steps[tutorialStepIdx]||null;
 
   // Movement buffer: store pending direction per player
   const moveBuffer=useRef({0:null,1:null});
@@ -2529,7 +2688,67 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
   const BW = COLS * T, BH = ROWS * T;
 
   useEffect(()=>{
+    tutorialStepRef.current=0;
+    setTutorialStepIdx(0);
+  },[tutorialTrack]);
+
+  const addPop=useCallback((text,x,y,type="good")=>{if(gs.current)gs.current.popups.push({text,x,y,type,life:60,ml:60});},[]);
+
+  const applyTutorialStepState=useCallback((g,stepIndex)=>{
+    if(!tutorialLesson)return;
+    const step=tutorialLesson.steps[stepIndex];
+    if(!step)return;
+    Object.keys(g.counters).forEach((key)=>{g.counters[key]=null;});
+    const mapDef=getActiveMapDef();
+    g.players.forEach((player,idx)=>{
+      const spawn=mapDef.spawns[idx]||mapDef.spawns[0]||[4,6];
+      player.r=spawn[0];
+      player.c=spawn[1];
+      player.vr=spawn[0];
+      player.vc=spawn[1];
+      player.dir="down";
+      player.holding=null;
+      player.processing=null;
+      player.af=0;
+      player.squash={sx:1,sy:1,t:0};
+    });
+    autoTasks.current={0:null,1:null};
+    mobileTapHighlight.current=null;
+    g.orders=[mkTutorialOrder(step.drink,stepIndex)];
+    g.combo=0;
+    g.comboT=0;
+    g.flow=0;
+    g.nextOrd=9999;
+    g.timeLeft=Math.max(g.timeLeft,599);
+  },[tutorialLesson]);
+
+  const completeTutorialStep=useCallback((servedDrink,g)=>{
+    if(!tutorialLesson)return false;
+    const idx=tutorialStepRef.current;
+    const step=tutorialLesson.steps[idx];
+    if(!step||step.drink!==servedDrink)return false;
+    if(idx>=tutorialLesson.steps.length-1){
+      g.orders=[];
+      g.over=true;
+      setHud(toHudState(g));
+      setTimeout(()=>onTutorialComplete?.(tutorialLesson.id),450);
+      return true;
+    }
+    const nextIdx=idx+1;
+    tutorialStepRef.current=nextIdx;
+    setTutorialStepIdx(nextIdx);
+    applyTutorialStepState(g,nextIdx);
+    addPop("NEXT DRINK",BW/2,T*.95,"combo");
+    setHud(toHudState(g));
+    return true;
+  },[tutorialLesson,applyTutorialStepState,addPop,BW,T,onTutorialComplete]);
+
+  useEffect(()=>{
     gs.current=createGameState(playerCount,diff,mapKey);
+    if(tutorialMode&&tutorialLesson){
+      tutorialStepRef.current=0;
+      applyTutorialStepState(gs.current,0);
+    }
     setHud(toHudState(gs.current));
     frame.current=0;
     lastMove.current={0:0,1:0};
@@ -2540,7 +2759,7 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
     lastSnapshot.current=0;
     endedRemotely.current=false;
     parts.current=new Particles();
-  },[playerCount,diff,mapKey]);
+  },[playerCount,diff,mapKey,tutorialMode,tutorialLesson,applyTutorialStepState]);
 
   useEffect(()=>{
     sfx.setMusicRate(hud.rushLeft>0?1.16:1);
@@ -2557,8 +2776,6 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
     setMobileQueueOpen(false);
     setMobileUtilityOpen(false);
   },[playerCount,diff,mapKey,onlineSession]);
-
-  const addPop=useCallback((text,x,y,type="good")=>{if(gs.current)gs.current.popups.push({text,x,y,type,life:60,ml:60});},[]);
 
   const tryMove=useCallback((pid,dir)=>{
     const g=gs.current;if(!g||g.over)return;
@@ -2665,11 +2882,32 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
     if(cell.station==="serve"){
       if(!p.holding||!p.holding.ingredients?.length)return;
       const dn=matchRecipe(p.holding.ingredients);
-      if(!dn){g.combo=0;g.flow=Math.max(0,(g.flow||0)-POWER_RULES.failPenalty);g.timeLeft=Math.max(0,g.timeLeft-TIMER_RULES.failPenalty);sfx.play("fail");haptic("heavy");addPop(`Wrong! -${TIMER_RULES.failPenalty}s`,tc*T+T/2,tr*T,"bad");parts.current.emit(tc*T+T/2,tr*T+T/2,"fail",6);setHud(toHudState(g));return;}
+      if(!dn){
+        sfx.play("fail");haptic("heavy");parts.current.emit(tc*T+T/2,tr*T+T/2,"fail",6);
+        if(tutorialMode){addPop("Check the coach card",tc*T+T/2,tr*T,"bad");setHud(toHudState(g));return;}
+        g.combo=0;g.flow=Math.max(0,(g.flow||0)-POWER_RULES.failPenalty);g.timeLeft=Math.max(0,g.timeLeft-TIMER_RULES.failPenalty);addPop(`Wrong! -${TIMER_RULES.failPenalty}s`,tc*T+T/2,tr*T,"bad");setHud(toHudState(g));return;
+      }
       const oi=g.orders.findIndex(o=>o.drink===dn);
-      if(oi===-1){g.combo=0;g.flow=Math.max(0,(g.flow||0)-POWER_RULES.failPenalty);g.timeLeft=Math.max(0,g.timeLeft-TIMER_RULES.failPenalty);sfx.play("fail");haptic("heavy");addPop(`No order! -${TIMER_RULES.failPenalty}s`,tc*T+T/2,tr*T,"bad");parts.current.emit(tc*T+T/2,tr*T+T/2,"fail",6);setHud(toHudState(g));return;}
+      if(oi===-1){
+        sfx.play("fail");haptic("heavy");parts.current.emit(tc*T+T/2,tr*T+T/2,"fail",6);
+        if(tutorialMode){addPop("Not the lesson drink",tc*T+T/2,tr*T,"bad");setHud(toHudState(g));return;}
+        g.combo=0;g.flow=Math.max(0,(g.flow||0)-POWER_RULES.failPenalty);g.timeLeft=Math.max(0,g.timeLeft-TIMER_RULES.failPenalty);addPop(`No order! -${TIMER_RULES.failPenalty}s`,tc*T+T/2,tr*T,"bad");setHud(toHudState(g));return;
+      }
       const ord=g.orders[oi];const tb=Math.max(0,~~((1-ord.elapsed/ord.patience)*15));
-      const pts=RECIPES[dn].pts+tb;g.combo++;g.comboT=180;
+      const pts=RECIPES[dn].pts+tb;
+      if(tutorialMode){
+        g.score+=pts;
+        g.orders.splice(oi,1);
+        p.holding=null;
+        g.shake.mag=5;
+        sfx.play("serve");haptic("medium");
+        addPop(tutorialStepRef.current>=tutorialLesson.steps.length-1?"TRAINING CLEAR":"STEP CLEAR",tc*T+T/2,tr*T-8,"combo");
+        parts.current.emit(tc*T+T/2,tr*T+T/2,"serve",14);
+        setHud(toHudState(g));
+        completeTutorialStep(dn,g);
+        return;
+      }
+      g.combo++;g.comboT=180;
       const flowGain=flowGainForCombo(g.combo);
       const timeGain=timeGainForServe(ord,g.combo,diff);
       g.flow=clamp((g.flow||0)+flowGain,0,POWER_RULES.maxFlow);
@@ -2691,7 +2929,7 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
       if(st.time){p.processing={ingredient:st.adds,end:Date.now()+st.time,dur:st.time,st:{r:tr,c:tc}};sfx.play("process");return;}
       p.holding.ingredients.push(st.adds);sfx.play("add");haptic("light");parts.current.emit(tc*T+T/2,tr*T+T/2,"steam",3);
     }
-  },[addPop,T]);
+  },[addPop,T,tutorialMode,tutorialLesson,completeTutorialStep]);
 
   const advanceAutoTask=useCallback((pid)=>{
     const task=autoTasks.current[pid];
@@ -2848,31 +3086,34 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
 
       const now=Date.now();
       if(now-lastSec>=1000){
-        lastSec=now;g.timeLeft--;g.elapsed++;
+        lastSec=now;g.elapsed++;
         g.comboT=Math.max(0,g.comboT-60);if(g.comboT<=0)g.combo=0;
-        if(g.timeLeft<=10&&g.timeLeft>0)sfx.play("tick");
-        const freezeActive=now<(g.freezeEnd||0);
-        if(!freezeActive){
-          g.nextOrd--;
-          if(g.nextOrd<=0&&g.orders.length<6){
-            g.orders.push(mkOrder(g.elapsed,diff));
-            g.nextOrd=Math.max(d.spawnMin,d.spawnBase-~~(g.elapsed/30))+~~(Math.random()*4);
-            sfx.play("neworder");
+        if(!tutorialMode){
+          g.timeLeft--;
+          if(g.timeLeft<=10&&g.timeLeft>0)sfx.play("tick");
+          const freezeActive=now<(g.freezeEnd||0);
+          if(!freezeActive){
+            g.nextOrd--;
+            if(g.nextOrd<=0&&g.orders.length<6){
+              g.orders.push(mkOrder(g.elapsed,diff));
+              g.nextOrd=Math.max(d.spawnMin,d.spawnBase-~~(g.elapsed/30))+~~(Math.random()*4);
+              sfx.play("neworder");
+            }
+            g.orders=g.orders.map(o=>({...o,elapsed:o.elapsed+1}));
+            const exp=g.orders.filter(o=>o.elapsed>=o.patience);
+            if(exp.length){
+              const timeLoss=(TIMER_RULES.missPenalty[diff]??9)*exp.length;
+              g.combo=0;
+              g.flow=Math.max(0,(g.flow||0)-POWER_RULES.missPenalty*exp.length);
+              g.timeLeft=Math.max(0,g.timeLeft-timeLoss);
+              sfx.play("warn");
+              addPop(`${exp.length>1?"ORDERS LOST":"ORDER LOST"} -${timeLoss}s`,BW/2,T*.95,"bad");
+              setHud(toHudState(g));
+            }
+            g.orders=g.orders.filter(o=>o.elapsed<o.patience);
           }
-          g.orders=g.orders.map(o=>({...o,elapsed:o.elapsed+1}));
-          const exp=g.orders.filter(o=>o.elapsed>=o.patience);
-          if(exp.length){
-            const timeLoss=(TIMER_RULES.missPenalty[diff]??9)*exp.length;
-            g.combo=0;
-            g.flow=Math.max(0,(g.flow||0)-POWER_RULES.missPenalty*exp.length);
-            g.timeLeft=Math.max(0,g.timeLeft-timeLoss);
-            sfx.play("warn");
-            addPop(`${exp.length>1?"ORDERS LOST":"ORDER LOST"} -${timeLoss}s`,BW/2,T*.95,"bad");
-            setHud(toHudState(g));
-          }
-          g.orders=g.orders.filter(o=>o.elapsed<o.patience);
         }
-        if(g.timeLeft<=0){g.over=true;if(onlineSession)onlineSession.sendGameOver({score:g.score,diff}).catch(()=>{});onEnd(g.score);return;}
+        if(!tutorialMode&&g.timeLeft<=0){g.over=true;if(onlineSession)onlineSession.sendGameOver({score:g.score,diff}).catch(()=>{});onEnd(g.score);return;}
         setHud(toHudState(g));
       }
 
@@ -3317,7 +3558,7 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
       requestAnimationFrame(loop);
     };
     requestAnimationFrame(loop);return ()=>{run=false;};
-  },[onEnd,T,BW,BH,diff,isHost,online,onlineSession,doAction,tryMove,clearAutoTask,setAutoTarget,usePower,addPop]);
+  },[onEnd,T,BW,BH,diff,isHost,online,onlineSession,doAction,tryMove,clearAutoTask,setAutoTarget,usePower,addPop,tutorialMode]);
 
   const mobileMove=(pid,dir)=>{sfx.init();handleMoveInput(pid,dir);};
   const mobileAct=(pid)=>{sfx.init();handleActionInput(pid);};
@@ -3361,6 +3602,7 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
   const primaryMobileOrder=mobileOrders[0]||null;
   const queuedMobileOrders=mobileOrders.slice(1,3);
   const hiddenMobileOrders=Math.max(0,mobileOrders.length-3);
+  const tutorialLabel=tutorialLesson?`${tutorialLesson.title} ${tutorialStepIdx+1}/${tutorialLesson.steps.length}`:null;
 
   if (isMobile) {
     if (isPortraitMobile) {
@@ -3441,9 +3683,11 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
               {hud.combo>=2&&<span style={{color:"#ff7ab8",fontSize:7,animation:"pulse .5s infinite"}}>x{hud.combo}</span>}
             </div>
             <div style={{display:"flex",justifyContent:"center"}}>
-              <div style={{...glass,borderRadius:16,padding:"7px 10px",minWidth:150,maxWidth:220,width:"min(38vw,220px)",pointerEvents:"auto"}}>
-                <PowerMeter hud={hud} compact />
-              </div>
+              {tutorialMode
+                ? <div style={{...glass,borderRadius:16,padding:"8px 12px",minWidth:164,maxWidth:250,width:"min(44vw,250px)",pointerEvents:"auto",fontSize:8,color:"#f5e6d3",textAlign:"center",lineHeight:1.5}}>{tutorialLabel}</div>
+                : <div style={{...glass,borderRadius:16,padding:"7px 10px",minWidth:150,maxWidth:220,width:"min(38vw,220px)",pointerEvents:"auto"}}>
+                    <PowerMeter hud={hud} compact />
+                  </div>}
             </div>
             <div style={{display:"flex",justifyContent:"flex-end",alignItems:"center",gap:8}}>
               <div style={{...hudPill,display:"flex",alignItems:"center",justifyContent:"center",minWidth:74}}>
@@ -3486,9 +3730,15 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
 
           {mobileUtilityOpen&&<MobileUtilityMenu appShell={appShell} audioUi={audioUi} onClose={()=>setMobileUtilityOpen(false)} />}
 
+          {tutorialMode&&singleControlMode&&(
+            <div style={{position:"absolute",left:8,bottom:8,pointerEvents:"auto"}}>
+              <TutorialCoachPanel track={tutorialLesson} step={tutorialStep} stepIndex={tutorialStepIdx} totalSteps={tutorialLesson.steps.length} isMobile onReset={()=>{const g=gs.current;if(g){applyTutorialStepState(g,tutorialStepRef.current);setHud(toHudState(g));}}} onExit={()=>onTutorialExit?.()} />
+            </div>
+          )}
+
           {singleControlMode ? (
             <>
-              <div style={{position:"absolute",left:8,bottom:8,pointerEvents:"auto"}}>
+              <div style={{position:"absolute",left:tutorialMode?236:8,bottom:8,pointerEvents:"auto"}}>
                 <div style={{...glass,borderRadius:14,padding:"6px 8px",fontSize:7,color:"#e7c39c",textAlign:"left",lineHeight:1.45,maxWidth:132}}>
                   Tap floor to move.
                   <br />
@@ -3505,7 +3755,7 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
                         localHolding.ingredients?.map((ing,i)=><div key={i} style={{width:11,height:11,borderRadius:3,background:ING_C[ing],border:"1px solid #fff2",boxShadow:"inset 0 1px 0 #ffffff22"}}/>)}
                     </div>}
                   </div>
-                  <div style={{...dockGlass,borderRadius:16,padding:"4px 5px"}}><PowerButtons hud={hud} onUsePower={mobilePower} compact stack /></div>
+                  {!tutorialMode&&<div style={{...dockGlass,borderRadius:16,padding:"4px 5px"}}><PowerButtons hud={hud} onUsePower={mobilePower} compact stack /></div>}
                 </div>
               </div>
             </>
@@ -3540,13 +3790,20 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
         <ShellActionRow appShell={appShell} compact />
         <AudioToggleRow audioUi={audioUi} compact />
       </div>
-      <div style={{display:"flex",gap:10,maxWidth:BW+12,padding:"0 10px 8px",justifyContent:"center",alignItems:"center",flexWrap:"wrap",flexShrink:0}}>
-        <PowerMeter hud={hud} />
-        <PowerButtons hud={hud} onUsePower={handlePowerInput} />
-      </div>
+      {tutorialMode
+        ? <div style={{display:"flex",gap:10,maxWidth:BW+12,padding:"0 10px 8px",justifyContent:"center",alignItems:"center",flexWrap:"wrap",flexShrink:0}}>
+            <div style={{background:"#1a0f08dd",border:`1px solid ${tutorialLesson.color}66`,borderRadius:16,padding:"8px 12px",fontSize:9,color:"#f5e6d3"}}>{tutorialLabel}</div>
+          </div>
+        : <div style={{display:"flex",gap:10,maxWidth:BW+12,padding:"0 10px 8px",justifyContent:"center",alignItems:"center",flexWrap:"wrap",flexShrink:0}}>
+            <PowerMeter hud={hud} />
+            <PowerButtons hud={hud} onUsePower={handlePowerInput} />
+          </div>}
       <div style={{display:"flex",gap:6,maxWidth:BW+18,padding:"0 10px 8px",overflowX:"auto",flexShrink:0,minHeight:72}}>
         {hud.orders.map(o=><OrderTicket key={o.id} o={o}/>)}{!hud.orders.length&&<span style={{color:"#6b3a1f",fontSize:9,padding:12}}>Waiting for customers...</span>}
       </div>
+      {tutorialMode&&<div style={{display:"flex",maxWidth:BW+18,width:"100%",padding:"0 10px 8px",justifyContent:"center",flexShrink:0}}>
+        <TutorialCoachPanel track={tutorialLesson} step={tutorialStep} stepIndex={tutorialStepIdx} totalSteps={tutorialLesson.steps.length} onReset={()=>{const g=gs.current;if(g){applyTutorialStepState(g,tutorialStepRef.current);setHud(toHudState(g));}}} onExit={()=>onTutorialExit?.()} />
+      </div>}
       <canvas ref={canvasRef} width={BW} height={BH} onPointerDown={handleCanvasPointerDown} onTouchStart={handleCanvasTarget} style={{width:BW,height:BH,imageRendering:"pixelated",flexShrink:0,borderTop:`2px solid ${P.wallLine}`,borderBottom:`2px solid ${P.wallLine}`,boxShadow:"0 16px 30px #0000004d",cursor:"pointer",touchAction:"manipulation"}}/>
       <div style={{display:"flex",flexWrap:"wrap",gap:4,maxWidth:BW+18,padding:"8px 10px 6px",justifyContent:"center",flexShrink:0}}>
         {Object.entries(RECIPES).map(([n,r])=><div key={n} style={{background:"#2d1b0e",borderRadius:6,padding:"4px 7px",fontSize:7,color:"#9f7d59",border:"1px solid #4a2a18",display:"flex",alignItems:"center",gap:3,fontFamily:"'Silkscreen',monospace",boxShadow:"inset 0 1px 0 #ffffff12"}}>
@@ -3560,7 +3817,7 @@ function Game({playerCount,diff,mapKey,onEnd,isMobile,onlineSession,appShell,aud
 }
 
 // â”€â”€â”€ TITLE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function TitleScreen({onStart,onOpenOnline,isMobile,forceMode,setForceMode,appShell,audioUi,initialMapKey="classic"}){
+function TitleScreen({onStart,onOpenOnline,onOpenTraining,isMobile,forceMode,setForceMode,appShell,audioUi,initialMapKey="classic"}){
   const[mode,setMode]=useState(null);const[dif,setDif]=useState(null);const[help,setHelp]=useState(false);const[mapKey,setMapKey]=useState(initialMapKey);
   const canvasRef=useRef(null);
   const screen=useScreen();
@@ -3645,8 +3902,9 @@ function TitleScreen({onStart,onOpenOnline,isMobile,forceMode,setForceMode,appSh
                 </div>
                 <div style={{display:"grid",gridTemplateColumns:isMobile&&!mobileLandscape?"1fr":"repeat(2, minmax(0, 1fr))",gap:isMobile?12:10,width:"100%"}}>
                   <Bt onClick={()=>setHelp(true)} dim wide={isMobile}>HOW TO PLAY</Bt>
-                  <Bt onClick={onOpenOnline} big clr={P.gold} wide={isMobile}>ONLINE ROOM</Bt>
+                  <Bt onClick={onOpenTraining} clr={P.p1} wide={isMobile}>TRAINING</Bt>
                 </div>
+                <Bt onClick={onOpenOnline} big clr={P.gold} wide>ONLINE ROOM</Bt>
               </div>
             : !dif ?
               <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:isMobile?(mobileLandscape?12:14):10,marginTop:4,width:"100%"}}>
@@ -3687,6 +3945,88 @@ function TitleScreen({onStart,onOpenOnline,isMobile,forceMode,setForceMode,appSh
     </div>
   );
 }
+
+function TutorialHubScreen({isMobile,onBack,onStartTutorial,completedIds=[],notice="",appShell,audioUi}){
+  const screen=useScreen();
+  const mobileLandscape=isMobile&&screen.w>screen.h;
+  const panelWidth=isMobile?(mobileLandscape?"min(100%, 860px)":"min(100%, 430px)"):"min(100%, 820px)";
+  const done=new Set(completedIds);
+  return (
+    <div style={{position:"relative",width:"100%",height:"100%",overflow:"hidden",background:"radial-gradient(circle at top,#3a2215 0%,#1a0f08 55%,#120904 100%)",fontFamily:"'Silkscreen',monospace",color:"#f5e6d3"}}>
+      <div style={{position:"absolute",inset:0,overflowY:"auto",WebkitOverflowScrolling:"touch",touchAction:"pan-y pinch-zoom"}}>
+        <div style={{minHeight:"100%",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:isMobile?"flex-start":"center",paddingTop:`max(env(safe-area-inset-top), ${isMobile?(mobileLandscape?18:28):22}px)`,paddingBottom:`max(env(safe-area-inset-bottom), ${isMobile?(mobileLandscape?44:56):24}px)`,paddingLeft:"max(env(safe-area-inset-left), 14px)",paddingRight:"max(env(safe-area-inset-right), 14px)"}}>
+          <div style={{width:panelWidth,maxWidth:"100%",display:"flex",flexDirection:"column",alignItems:"center",gap:isMobile?(mobileLandscape?14:18):14,padding:isMobile?(mobileLandscape?"18px 16px 24px":"24px 18px 30px"):"24px 22px",background:isMobile?"linear-gradient(180deg,#120904ee 0%,#1a0f08dd 100%)":"transparent",border:isMobile?"1px solid #6b3a1f66":"none",borderRadius:isMobile?26:0,boxShadow:isMobile?"0 24px 48px #00000044,inset 0 1px 0 #ffffff08":"none",textAlign:"center"}}>
+            <div style={{fontSize:isMobile?(mobileLandscape?28:32):24,color:P.gold,textShadow:`0 0 20px ${P.gold}44`}}>TRAINING BAR</div>
+            <div style={{fontSize:isMobile?(mobileLandscape?11:12):9,color:"#c4956a",maxWidth:640,lineHeight:1.8}}>
+              {TRAINING_GUIDE.name}, your {TRAINING_GUIDE.role.toLowerCase()}, will walk you through real drink builds one by one. Each lesson runs on the actual cafe stations, but without random rush pressure.
+            </div>
+            <ShellActionRow appShell={appShell} compact={isMobile&&mobileLandscape} />
+            <AudioToggleRow audioUi={audioUi} compact={isMobile&&mobileLandscape} />
+            {notice&&<div style={{width:"100%",maxWidth:520,background:"#2d1b0e",border:`2px solid ${P.green}88`,borderRadius:16,padding:isMobile?14:12,fontSize:isMobile?(mobileLandscape?11:12):9,color:"#dff3e4"}}>{notice}</div>}
+
+            <div style={{display:"grid",gridTemplateColumns:isMobile?(mobileLandscape?"repeat(2, minmax(0, 1fr))":"1fr"):"repeat(2, minmax(0, 1fr))",gap:isMobile?12:14,width:"100%"}}>
+              {Object.values(TRAINING_TRACKS).map((track)=>(
+                <div key={track.id} style={{background:"#1a0f08dd",border:`2px solid ${track.color}66`,borderRadius:18,padding:isMobile?(mobileLandscape?"16px 14px":"18px 16px"):16,display:"flex",flexDirection:"column",gap:10,textAlign:"left",boxShadow:done.has(track.id)?"0 0 0 1px #ffffff10, 0 14px 30px #0000002c":"none"}}>
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10}}>
+                    <div>
+                      <div style={{fontSize:isMobile?(mobileLandscape?14:15):12,color:track.color}}>{track.title}</div>
+                      <div style={{fontSize:isMobile?(mobileLandscape?10:11):8,color:"#8a6a4a",marginTop:4}}>{track.steps.length} lessons</div>
+                    </div>
+                    {done.has(track.id)&&<div style={{fontSize:isMobile?(mobileLandscape?9:10):8,color:P.green}}>CLEARED</div>}
+                  </div>
+                  <div style={{fontSize:isMobile?(mobileLandscape?10:11):8,color:"#d8b48c",lineHeight:1.75}}>{track.subtitle}</div>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                    {track.drinks.map((drink)=><div key={drink} style={{background:"#2d1b0e",border:"1px solid #4a2a18",borderRadius:999,padding:"4px 8px",fontSize:isMobile?(mobileLandscape?9:10):7,color:getRecipeUiColor(drink)}}>{drink}</div>)}
+                  </div>
+                  <div style={{fontSize:isMobile?(mobileLandscape?10:11):8,color:"#c4956a",lineHeight:1.7}}>
+                    {TRAINING_GUIDE.name.split(" ")[0]} explains not just what to add, but why the recipe works that way.
+                  </div>
+                  <button onClick={()=>onStartTutorial(track.id)} style={{fontFamily:"'Silkscreen',monospace",fontWeight:"bold",fontSize:isMobile?(mobileLandscape?12:13):10,padding:isMobile?(mobileLandscape?"13px 16px":"14px 18px"):"10px 16px",background:"#6b3a1f",color:"#f5e6d3",border:`2px solid ${track.color}88`,borderRadius:12,cursor:"pointer",width:"100%"}}>START LESSON</button>
+                </div>
+              ))}
+            </div>
+
+            <button onClick={onBack} style={{fontFamily:"'Silkscreen',monospace",fontWeight:"bold",fontSize:isMobile?(mobileLandscape?13:14):10,padding:isMobile?(mobileLandscape?"13px 18px":"14px 18px"):"10px 16px",background:"transparent",color:"#8a6a4a",border:"2px solid #3a2215",borderRadius:12,cursor:"pointer",width:isMobile?"100%":undefined,maxWidth:260}}>BACK</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TutorialCoachPanel({track,step,stepIndex,totalSteps,isMobile,onReset,onExit}){
+  if(!track||!step)return null;
+  const ingredients=RECIPES[step.drink]?.ing||[];
+  return (
+    <div style={{background:"linear-gradient(180deg,#21120cd9 0%,#120904c7 100%)",border:`1px solid ${track.color}66`,borderRadius:18,padding:isMobile?"12px 12px 10px":"14px 14px 12px",boxShadow:"0 16px 30px #0000002e",backdropFilter:"blur(16px) saturate(1.12)",display:"flex",flexDirection:"column",gap:isMobile?8:10,maxWidth:isMobile?220:290,color:"#f5e6d3",pointerEvents:"auto"}}>
+      <div style={{display:"flex",alignItems:"center",gap:10}}>
+        <div style={{width:isMobile?34:38,height:isMobile?34:38,borderRadius:"50%",background:`radial-gradient(circle at 40% 35%,${TRAINING_GUIDE.skin},#d6a46c)`,border:"2px solid #ffffff14",position:"relative",flexShrink:0}}>
+          <div style={{position:"absolute",top:4,left:6,right:6,height:8,borderRadius:6,background:TRAINING_GUIDE.hair}}/>
+          <div style={{position:"absolute",bottom:4,left:7,right:7,height:10,borderRadius:8,background:TRAINING_GUIDE.shirt}}/>
+        </div>
+        <div style={{minWidth:0}}>
+          <div style={{fontSize:isMobile?9:10,color:track.color}}>{TRAINING_GUIDE.name}</div>
+          <div style={{fontSize:isMobile?7:8,color:"#8a6a4a"}}>{TRAINING_GUIDE.role} • {stepIndex+1}/{totalSteps}</div>
+        </div>
+      </div>
+      <div style={{fontSize:isMobile?11:12,color:P.gold}}>{step.drink}</div>
+      <div style={{fontSize:isMobile?8:9,color:"#f3e2cb",lineHeight:1.7}}>{step.mentor}</div>
+      <div style={{fontSize:isMobile?7:8,color:"#d7b48d",lineHeight:1.7}}>{step.why}</div>
+      <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+        {ingredients.map((ing,idx)=><div key={`${step.drink}-${ing}-${idx}`} style={{display:"flex",alignItems:"center",gap:4,background:"#2d1b0e",border:"1px solid #4a2a18",borderRadius:999,padding:"4px 7px",fontSize:isMobile?7:8,color:"#f5e6d3"}}>
+          <div style={{width:9,height:9,borderRadius:2,background:ING_C[ing],border:"1px solid #fff2"}}/>
+          <span>{ing.replaceAll("_"," ")}</span>
+        </div>)}
+      </div>
+      <div style={{fontSize:isMobile?7:8,color:"#9de7ff",lineHeight:1.6}}>{step.tip}</div>
+      <div style={{display:"flex",gap:8}}>
+        <button onClick={onReset} style={{fontFamily:"'Silkscreen',monospace",fontSize:isMobile?8:9,padding:"8px 10px",borderRadius:10,border:"1px solid #6b3a1f88",background:"#2d1b0e",color:"#f5e6d3",cursor:"pointer",flex:1}}>RESET STEP</button>
+        <button onClick={onExit} style={{fontFamily:"'Silkscreen',monospace",fontSize:isMobile?8:9,padding:"8px 10px",borderRadius:10,border:"1px solid #3a2215",background:"transparent",color:"#8a6a4a",cursor:"pointer",flex:1}}>EXIT</button>
+      </div>
+    </div>
+  );
+}
+
 function OnlineRoomScreen({isMobile,onBack,onLaunch,initialRoomCode,appShell,audioUi,initialMapKey="classic"}){
   const [stage,setStage]=useState(initialRoomCode?"join":"menu");
   const [joinCode,setJoinCode]=useState(normalizeRoomCode(initialRoomCode));
@@ -3890,6 +4230,9 @@ export default function CafeChaos(){
   const initialRoomCode=getRoomCodeFromLocation();
   const[screen,setScreen]=useState(initialRoomCode?"online":"title");const[pCount,setPc]=useState(1);
   const[diff,setDiff]=useState("normal");const[mapKey,setMapKey]=useState("classic");const[finalScore,setFs]=useState(0);
+  const[tutorialKey,setTutorialKey]=useState(null);
+  const[completedTraining,setCompletedTraining]=useState([]);
+  const[trainingNotice,setTrainingNotice]=useState("");
   const[onlineSession,setOnlineSession]=useState(null);
   const[gameKey,setGameKey]=useState(0);
   const appShell=useShellActions();
@@ -3904,7 +4247,7 @@ export default function CafeChaos(){
   },[audioPrefs]);
 
   useEffect(()=>{
-    sfx.setMusicMode(screen==="game"?"gameplay":"menu");
+    sfx.setMusicMode(screen==="game"||screen==="tutorial"?"gameplay":"menu");
   },[screen]);
 
   useEffect(()=>{
@@ -3929,6 +4272,7 @@ export default function CafeChaos(){
   const returnToTitle=useCallback(()=>{
     if(onlineSession){onlineSession.destroy().catch(()=>{});}
     setOnlineSession(null);
+    setTutorialKey(null);
     setRoomCodeInLocation("");
     setScreen("title");
   },[onlineSession]);
@@ -3936,6 +4280,7 @@ export default function CafeChaos(){
   const startLocalGame=useCallback((n,d,nextMapKey="classic")=>{
     if(onlineSession){onlineSession.destroy().catch(()=>{});}
     setOnlineSession(null);
+    setTutorialKey(null);
     setPc(n);
     setDiff(d);
     setMapKey(nextMapKey);
@@ -3944,6 +4289,7 @@ export default function CafeChaos(){
   },[onlineSession]);
 
   const startOnlineGame=useCallback(({session,diff:nextDiff,mapKey:nextMapKey="classic"})=>{
+    setTutorialKey(null);
     setOnlineSession(session);
     setPc(2);
     setDiff(nextDiff);
@@ -3952,8 +4298,29 @@ export default function CafeChaos(){
     setScreen("game");
   },[]);
 
+  const startTutorial=useCallback((trackId)=>{
+    if(onlineSession){onlineSession.destroy().catch(()=>{});}
+    const track=TRAINING_TRACKS[trackId];
+    if(!track)return;
+    setOnlineSession(null);
+    setTutorialKey(trackId);
+    setTrainingNotice("");
+    setPc(1);
+    setDiff("chill");
+    setMapKey(track.mapKey||"classic");
+    setGameKey((key)=>key+1);
+    setScreen("tutorial");
+  },[onlineSession]);
+
+  const completeTutorial=useCallback((trackId)=>{
+    const track=TRAINING_TRACKS[trackId];
+    setCompletedTraining((prev)=>prev.includes(trackId)?prev:[...prev,trackId]);
+    setTrainingNotice(track?`${track.title} complete!`:"Lesson complete!");
+    setScreen("training");
+  },[]);
+
   return (
-    <div style={{width:"100vw",height:"100dvh",minHeight:"100vh",overflow:"hidden",background:P.bg,position:"fixed",inset:0,touchAction:screen==="game"?"none":"auto"}}>
+    <div style={{width:"100vw",height:"100dvh",minHeight:"100vh",overflow:"hidden",background:P.bg,position:"fixed",inset:0,touchAction:screen==="game"||screen==="tutorial"?"none":"auto"}}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap');
         @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
@@ -3963,9 +4330,11 @@ export default function CafeChaos(){
         html,body,#root{width:100%;height:100%;margin:0;padding:0;background:#1a0f08;overflow:hidden;}
         body{overscroll-behavior:none;}
       `}</style>
-      {screen==="title"&&<TitleScreen audioUi={audioUi} appShell={appShell} isMobile={isMobile} forceMode={forceMode} setForceMode={setForceMode} initialMapKey={mapKey} onStart={startLocalGame} onOpenOnline={()=>setScreen("online")}/>}
+      {screen==="title"&&<TitleScreen audioUi={audioUi} appShell={appShell} isMobile={isMobile} forceMode={forceMode} setForceMode={setForceMode} initialMapKey={mapKey} onStart={startLocalGame} onOpenOnline={()=>setScreen("online")} onOpenTraining={()=>setScreen("training")}/>}
+      {screen==="training"&&<TutorialHubScreen audioUi={audioUi} appShell={appShell} isMobile={isMobile} completedIds={completedTraining} notice={trainingNotice} onBack={returnToTitle} onStartTutorial={startTutorial}/>}
       {screen==="online"&&<OnlineRoomScreen audioUi={audioUi} appShell={appShell} isMobile={isMobile} initialMapKey={mapKey} initialRoomCode={initialRoomCode} onBack={returnToTitle} onLaunch={startOnlineGame}/>}
       {screen==="game"&&<Game key={gameKey} audioUi={audioUi} appShell={appShell} playerCount={pCount} diff={diff} mapKey={mapKey} isMobile={isMobile} onlineSession={onlineSession} onEnd={s=>{setFs(s);setScreen("over");}}/>}
+      {screen==="tutorial"&&tutorialKey&&<Game key={gameKey} audioUi={audioUi} appShell={appShell} playerCount={1} diff="chill" mapKey={mapKey} isMobile={isMobile} tutorialTrack={tutorialKey} onTutorialExit={()=>setScreen("training")} onTutorialComplete={completeTutorial} onEnd={()=>setScreen("training")} />}
       {screen==="over"&&<GameOver score={finalScore} diff={diff} isMobile={isMobile} onRestart={returnToTitle}/>}
       <InstallHelpModal appShell={appShell} />
     </div>
